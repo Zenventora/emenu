@@ -15,35 +15,44 @@ import publicRouter from './routes/public'
 
 const app = express()
 const PORT = process.env.PORT || 4000
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'
+const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet({
-  // Allow inline scripts in app.html (standalone mode)
+  // Allow inline scripts in app.html (standalone single-file app)
   contentSecurityPolicy: false,
 }))
+
+// Same-origin architecture: Express serves app.html AND the API.
+// CORS only matters for cross-origin callers. Allow APP_URL + localhost for dev.
 app.use(cors({
-  origin: [CLIENT_URL, `http://localhost:${PORT}`],
+  origin: (origin, cb) => {
+    // Allow same-origin requests (no Origin header) + configured origins
+    if (!origin) return cb(null, true)
+    const allowed = [APP_URL, `http://localhost:${PORT}`, 'http://localhost:4000']
+    cb(null, allowed.includes(origin))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 }))
-app.use(express.json({ limit: '20mb' }))   // 20mb for base64 logo images
+
+app.use(express.json({ limit: '20mb' }))   // 20mb for base64 images
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-// ─── Static: serve app.html from root ────────────────────────────────────────
-// When you open http://localhost:5000 you get app.html (same origin as the API)
-// Local dev (ts-node): __dirname = server/src  → ../../ = Emenu/
-// Production Docker:   __dirname = dist/       → ../   = /app (where app.html is copied)
+// ─── Static: serve app.html ──────────────────────────────────────────────────
+// Local dev  (ts-node): __dirname = server/src  → ../../ = Emenu/
+// Production (Docker):  __dirname = dist/       → ../   = /app  (app.html copied here)
 const staticRoot = process.env.NODE_ENV === 'production'
   ? path.join(__dirname, '../')
   : path.join(__dirname, '../../')
+
 app.use(express.static(staticRoot, {
   index: 'app.html',
   extensions: ['html'],
 }))
 
-// Static uploads folder
+// Uploads (local dev only — in production use object storage)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
@@ -53,23 +62,22 @@ app.use('/api/menu',     menuRouter)
 app.use('/api/qr',       qrRouter)
 app.use('/api/public',   publicRouter)
 
-// Health check
+// Health check — used by Render / UptimeRobot
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  res.json({ status: 'ok', env: process.env.NODE_ENV, timestamp: new Date().toISOString() })
 })
 
-// ─── Public menu page (customer-facing) ──────────────────────────────────────
-// When a customer scans a QR they land on /menu/:slug
-// This serves the same app.html which renders the public menu client-side
+// ─── Customer menu page (QR scan) ────────────────────────────────────────────
+// /menu/:slug serves app.html — client-side renders the public menu
 app.get('/menu/:slug', (_req, res) => {
   res.sendFile(path.join(staticRoot, 'app.html'))
 })
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 E-Menu server  →  http://localhost:${PORT}`)
-  console.log(`📋 API base       →  http://localhost:${PORT}/api`)
-  console.log(`🌐 App (owner)    →  http://localhost:${PORT}/app.html`)
+  console.log(`🚀 E-Menu → ${APP_URL}`)
+  console.log(`📋 API    → ${APP_URL}/api`)
+  console.log(`🌍 ENV    → ${process.env.NODE_ENV || 'development'}`)
 })
 
 export default app

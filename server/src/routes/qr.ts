@@ -6,7 +6,7 @@ import prisma from '../lib/prisma'
 const router = Router()
 router.use(requireAuth)
 
-const MENU_BASE_URL = process.env.MENU_BASE_URL || 'http://localhost:5000/menu'
+const MENU_BASE_URL = process.env.MENU_BASE_URL || 'http://localhost:4000/menu'
 
 // ─── GET /api/qr/:menuId ─────────────────────────────────────────────────────
 router.get('/:menuId', async (req: AuthRequest, res: Response): Promise<void> => {
