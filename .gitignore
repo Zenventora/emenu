@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Build output
+dist/
+server/dist/
+
+# Environment secrets — NEVER commit
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+
+# Uploads
+uploads/
+server/uploads/
+
+# OS / Editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Deployment notes (contains secrets)
+DEPLOY.md
+
+# Prisma generated
+server/prisma/generated/
