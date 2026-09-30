@@ -10,9 +10,13 @@ const DAY_ABBR = ['sun','mon','tue','wed','thu','fri','sat']
 // Customer-facing: returns full menu data for a business by slug
 router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => {
   try {
+    // Prefer client-supplied local date (passed from customer browser via ?localDate=YYYY-MM-DD)
+    // so disabledDate always matches the restaurant timezone, not server UTC
     const now = new Date()
-    // Use local date so it matches the restaurant owner's browser timezone
-    const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0')
+    const serverDate = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0')
+    const todayStr: string = (typeof req.query.localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.localDate))
+      ? req.query.localDate
+      : serverDate
     const todayAbbr = DAY_ABBR[now.getDay()] // e.g. 'mon'
 
     const business = await prisma.business.findUnique({
@@ -39,15 +43,15 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
 
     if (!business) { res.status(404).json({ message: 'Menu not found' }); return }
 
-    // Check if any menu exists (published or not) — for "closed today" UX
+    // Check if menu exists but is unpublished (not the same as "closed today")
     const anyMenu = await prisma.menu.findFirst({ where: { businessId: business.id } })
-    const menu = business.menus[0]
+    const menu = business.menus[0]  // only published menus
 
     if (!menu) {
       if (anyMenu) {
-        // Business exists but closed today
+        // Menu exists but owner hasn't published it yet — show "coming soon" not "closed"
         res.status(200).json({
-          closed: true,
+          comingSoon: true,
           business: { name: business.name, logoUrl: business.logoUrl, tagline: business.tagline },
         })
       } else {

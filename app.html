@@ -1254,7 +1254,7 @@ async function init(){
   var pathParts=window.location.pathname.split('/');
   var mSlug=(pathParts[1]==='menu'&&pathParts[2])?pathParts[2]:new URLSearchParams(window.location.search).get('m');
   if(mSlug){
-    try { var pubData=await api('GET','/public/menu/'+mSlug); S._qrMenuData=pubData; show('s-menu'); return; }
+    try { var _ld=new Date(),_td=_ld.getFullYear()+'-'+String(_ld.getMonth()+1).padStart(2,'0')+'-'+String(_ld.getDate()).padStart(2,'0'); var pubData=await api('GET','/public/menu/'+mSlug+'?localDate='+_td); S._qrMenuData=pubData; show('s-menu'); return; }
     catch(e){ show('s-landing'); return; }
   }
   S._qrMenuData=null;
@@ -2538,26 +2538,31 @@ async function previewMenu(){
 function renderPubMenu(){
   var isQR=!!(new URLSearchParams(window.location.search).get('m'))||(window.location.pathname.split('/')[1]==='menu');
   var raw=S._qrMenuData; // from /api/public/menu/:slug
-  // Handle "Closed Today" response
-  if(raw&&raw.closed){
-    var closedBiz=raw.business||{};
-    var closedHtml='<div style="min-height:100vh;background:#f8fafc;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;padding:24px">'
+  // Handle "Closed Today" or "Coming Soon" responses
+  if(raw&&(raw.closed||raw.comingSoon)){
+    var statusBiz=raw.business||{};
+    var isClosed=!!raw.closed;
+    var statusHtml='<div style="min-height:100vh;background:#f8fafc;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;padding:24px">'
       +'<div style="text-align:center;max-width:320px">'
-      +(closedBiz.logoUrl?'<img src="'+closedBiz.logoUrl+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin-bottom:16px">':'<div style="font-size:3rem;margin-bottom:16px">🍽️</div>')
-      +'<h2 style="font-size:1.3rem;font-weight:800;color:#111;margin:0 0 8px">'+closedBiz.name+'</h2>'
-      +'<p style="color:#6b7280;font-size:.9rem;margin-bottom:24px">'+(closedBiz.tagline||'')+'</p>'
+      +(statusBiz.logoUrl?'<img src="'+statusBiz.logoUrl+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin-bottom:16px">':'<div style="font-size:3rem;margin-bottom:16px">🍽️</div>')
+      +'<h2 style="font-size:1.3rem;font-weight:800;color:#111;margin:0 0 8px">'+statusBiz.name+'</h2>'
+      +'<p style="color:#6b7280;font-size:.9rem;margin-bottom:24px">'+(statusBiz.tagline||'')+'</p>'
       +'<div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.08)">'
-      +'<div style="font-size:2.5rem;margin-bottom:12px">🔴</div>'
-      +'<p style="font-weight:800;font-size:1rem;color:#111;margin:0 0 6px">We\'re closed today</p>'
-      +'<p style="color:#9ca3af;font-size:.82rem;margin:0">Please visit us again tomorrow!</p>'
+      +(isClosed
+        +'<div style="font-size:2.5rem;margin-bottom:12px">🔴</div>'
+        +'<p style="font-weight:800;font-size:1rem;color:#111;margin:0 0 6px">We\'re closed today</p>'
+        +'<p style="color:#9ca3af;font-size:.82rem;margin:0">Please visit us again tomorrow!</p>'
+        :'<div style="font-size:2.5rem;margin-bottom:12px">🚧</div>'
+        +'<p style="font-weight:800;font-size:1rem;color:#111;margin:0 0 6px">Menu coming soon!</p>'
+        +'<p style="color:#9ca3af;font-size:.82rem;margin:0">We\'re still setting things up. Check back later!</p>')
       +'</div></div></div>';
     if(isQR){
       document.getElementById('s-menu-fullpage').style.display='block';
-      document.getElementById('pub-menu-full').innerHTML=closedHtml;
+      document.getElementById('pub-menu-full').innerHTML=statusHtml;
     } else {
       document.getElementById('s-menu-preview').style.display='';
       document.getElementById('s-menu-fullpage').style.display='none';
-      document.getElementById('pub-menu-frame').innerHTML=closedHtml;
+      document.getElementById('pub-menu-frame').innerHTML=statusHtml;
     }
     return;
   }
