@@ -1098,6 +1098,7 @@ async function doGoogleAuth(profile){
   if(!email){ toast('Could not get email from Google','error'); return; }
   var gPass='__google__'+profile.sub;
   try {
+    resetState();
     try {
       var r=await api('POST','/auth/login',{email,password:gPass}); S.user=r.user;
     } catch(loginErr) {
@@ -1129,7 +1130,7 @@ async function api(method, path, body, _retry) {
       if (rf.ok) return api(method, path, body, true);
     } catch(e) {}
     // Refresh failed — redirect to login
-    S.user = null; S.data = null; S.biz = null;
+    resetState();
     show('s-landing');
     toast('Session expired — please log in again', 'error');
     throw new Error('Session expired');
@@ -1157,10 +1158,20 @@ var S = {
   _dragCatIdx: null, _dragProdIdx: null, _editCatName: null
 };
 
+// Full state reset — call before loading any new user's data
+function resetState() {
+  S.user = null; S.biz = null; S.menuId = null; S.data = null;
+  S.fpEmail = ''; S.fpOTP = '';
+  S.obStep = 1; S.selTmpl = 0;
+  S.edCat = null; S.editProdIdx = null;
+  S.rec = null; S.listening = false;
+  S._dragCatIdx = null; S._dragProdIdx = null; S._editCatName = null;
+}
+
 // Build legacy S.data from API objects — keeps all existing UI functions working
 function syncFromAPI(biz, menu) {
   S.biz    = biz   || null;
-  S.menuId = menu  ? menu.id : (S.menuId || null);
+  S.menuId = menu  ? menu.id : null;  // never carry over a previous user's menuId
   if (!biz) { S.data = null; return; }
   S.data = {
     biz: {
@@ -1324,6 +1335,7 @@ async function doLogin(){
   var btn=document.querySelector('#s-login .btn-primary');
   if(btn){btn.disabled=true;btn.textContent='Signing in…';}
   try {
+    resetState();
     var r=await api('POST','/auth/login',{email,password:pass});
     S.user=r.user;
     var bizRes=await api('GET','/business/me');
@@ -1350,6 +1362,7 @@ async function doSignup(){
   var btn=document.querySelector('#s-signup .btn-primary');
   if(btn){btn.disabled=true;btn.textContent='Creating account…';}
   try {
+    resetState();
     var r=await api('POST','/auth/signup',{name,phone,email,password:pass});
     S.user=r.user; syncFromAPI(null,null);
     toast('Account created! Let\'s set up your menu 🎉');
@@ -2655,7 +2668,7 @@ function buildFullPageMenu(d,t){
 async function doLogout(){
   if(!confirm('Log out of E-Menu?')) return;
   try{await api('POST','/auth/logout');}catch(e){}
-  S.user=null;S.biz=null;S.menuId=null;S.data=null;
+  resetState();
   toast('Logged out','info'); show('s-landing');
 }
 
