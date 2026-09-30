@@ -41,6 +41,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .ig label{font-size:.83rem;font-weight:600;color:#374151}
 .ig input,.ig select,.ig textarea{padding:12px 16px;border-radius:12px;border:1.5px solid #e2e8f0;font-family:'Inter',sans-serif;font-size:.9rem;color:#111;transition:border-color .2s,box-shadow .2s;background:#fff;outline:none;width:100%}
 .ig input:focus,.ig select:focus,.ig textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,165,164,.12)}
+.ig select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer}
 .ig textarea{resize:vertical;min-height:80px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
@@ -190,8 +191,8 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .nav-icon{width:17px;height:17px;flex-shrink:0}
 .sb-user{padding:14px;border-top:1px solid #f0f0f0;display:flex;align-items:center;gap:10px}
 .u-avatar{width:34px;height:34px;border-radius:50%;background:var(--grad);color:#fff;font-weight:800;font-size:.88rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.u-name{font-size:.82rem;font-weight:700;color:#111;line-height:1.2}
-.u-email{font-size:.7rem;color:#9ca3af}
+.u-name{font-size:.82rem;font-weight:700;color:#111;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-email{font-size:.7rem;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dash-main{flex:1;overflow-y:auto}
 .dash-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .dash-topbar h1{font-size:1.15rem;font-weight:800;color:var(--blue)}
@@ -762,10 +763,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <!-- OVERVIEW TAB -->
         <div id="t-overview" style="display:none">
           <div class="stats-row">
-            <div class="stat-card"><div class="stat-icon" style="background:#eff6ff">👁️</div><div class="stat-val" id="sv-views">—</div><div class="stat-lbl">Menu Views</div></div>
-            <div class="stat-card"><div class="stat-icon" style="background:#f0fdf4">📱</div><div class="stat-val" id="sv-scans">—</div><div class="stat-lbl">QR Scans</div></div>
             <div class="stat-card"><div class="stat-icon" style="background:#fff7ed">🍽️</div><div class="stat-val" id="sv-items">0</div><div class="stat-lbl">Menu Items</div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#eff6ff">📂</div><div class="stat-val" id="sv-cats">0</div><div class="stat-lbl">Categories</div></div>
             <div class="stat-card"><div class="stat-icon" style="background:#fdf4ff">📡</div><div class="stat-val" id="sv-status" style="font-size:1rem;padding-top:6px">Draft</div><div class="stat-lbl">Status</div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#f0fdf4">🕒</div><div class="stat-val" id="sv-updated" style="font-size:.85rem;padding-top:4px">—</div><div class="stat-lbl">Last Updated</div></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
             <div class="card card-p">
@@ -926,6 +927,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
               <div class="ig"><label>Business Name</label><input type="text" id="st-bname"/></div>
               <div class="ig"><label>Location</label><input type="text" id="st-bloc"/></div>
               <div class="ig"><label>Tagline</label><input type="text" id="st-btag"/></div>
+              <div class="ig"><label>📞 Phone</label><input type="tel" id="st-bphone" placeholder="+91 98765 43210"/></div>
+              <div class="ig"><label>💬 WhatsApp</label><input type="tel" id="st-bwa" placeholder="+91 98765 43210"/></div>
+              <div class="ig"><label>📸 Instagram</label><input type="url" id="st-big" placeholder="https://instagram.com/yourpage"/></div>
+              <div class="ig"><label>📘 Facebook</label><input type="url" id="st-bfb" placeholder="https://facebook.com/yourpage"/></div>
               <button class="btn btn-primary btn-sm" onclick="saveBiz()">Save Changes</button>
             </div>
             <div class="card card-p" style="grid-column:1/-1">
@@ -1447,7 +1452,9 @@ function renderObSteps(){
   var stepNames=['Business Info','Menu Setup','Choose Template','Preview & Publish'];
   document.getElementById('ob-lbl').textContent='Step '+S.obStep+': '+stepNames[S.obStep-1];
   document.getElementById('ob-back').style.visibility=S.obStep===1?'hidden':'visible';
-  document.getElementById('ob-next').textContent=S.obStep===4?'Publish & Get QR 🚀':'Continue →';
+  var obNextBtn=document.getElementById('ob-next');
+  obNextBtn.disabled=false;
+  obNextBtn.textContent=S.obStep===4?'Publish & Get QR 🚀':'Continue →';
 }
 function renderObCard(){
   for(var i=1;i<=4;i++){
@@ -1463,8 +1470,9 @@ function populateMiCat(){
   var inp=document.getElementById('mi-cat'); if(!inp) return;
   var dl=document.getElementById('mi-cat-list'); if(!dl) return;
   var cats=S.data&&S.data.menu.cats||[];
-  dl.innerHTML=cats.map(c=>'<option value="'+c.name+'">').join('');
-  // Set default value if input is empty
+  var defaults=['Starters','Main Course','Breads','Rice & Biryani','Soups','Salads','Desserts','Beverages','Juices','Snacks'];
+  var options=cats.length>0 ? cats.map(c=>c.name) : defaults;
+  dl.innerHTML=options.map(n=>'<option value="'+n+'">').join('');
   if(!inp.value){
     inp.value=cats.length>0?cats[cats.length-1].name:'Main Course';
   }
@@ -1861,12 +1869,16 @@ function refreshDash(){
   var biz=S.data.biz||{}, cats=S.data.menu.cats||[];
   var total=cats.reduce((s,c)=>s+c.items.length,0);
   // Sidebar user
-  document.getElementById('sb-user').innerHTML='<div class="u-avatar">'+user.name.charAt(0).toUpperCase()+'</div><div><div class="u-name">'+user.name+'</div><div class="u-email">'+user.email+'</div></div>';
-  // Stats
-  document.getElementById('sv-views').textContent=S.data.pub?(148+Math.floor(Math.random()*20)):'—';
-  document.getElementById('sv-scans').textContent=S.data.pub?(37+Math.floor(Math.random()*8)):'—';
+  document.getElementById('sb-user').innerHTML='<div class="u-avatar">'+user.name.charAt(0).toUpperCase()+'</div><div style="min-width:0;flex:1"><div class="u-name">'+user.name+'</div><div class="u-email">'+user.email+'</div></div>';
+  // Stats — real data only
   document.getElementById('sv-items').textContent=total;
+  document.getElementById('sv-cats').textContent=cats.length;
   document.getElementById('sv-status').textContent=S.data.pub?'Live ✅':'Draft';
+  var updEl=document.getElementById('sv-updated');
+  if(S.biz&&S.biz.updatedAt){
+    var d=new Date(S.biz.updatedAt);
+    updEl.textContent=d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  } else { updEl.textContent='—'; }
   document.getElementById('ov-biz').textContent=(biz.name||'Not set')+(biz.loc?' · '+biz.loc:'');
   // Overview items preview
   var items=[]; cats.forEach(c=>c.items.forEach(it=>items.push(it)));
@@ -1888,6 +1900,8 @@ function refreshDash(){
   var f=function(id,v){var e=document.getElementById(id);if(e)e.value=v||'';};
   f('st-name',user.name); f('st-email',user.email); f('st-phone',user.phone||'');
   f('st-bname',biz.name); f('st-bloc',biz.loc); f('st-btag',biz.tag);
+  f('st-bphone',S.biz&&S.biz.phone||''); f('st-bwa',S.biz&&S.biz.whatsapp||'');
+  f('st-big',S.biz&&S.biz.instagram||''); f('st-bfb',S.biz&&S.biz.facebook||'');
   // Default to editor tab
   tab('editor', document.querySelectorAll('.nav-item')[1]);
   renderTmplSplit('d');
@@ -1961,7 +1975,20 @@ function renderTodayList(){
       if(item.avail!==false) allItems.push({item:item,catName:cat.name});
     });
   });
-  if(q) allItems=allItems.filter(function(r){return r.item.name.toLowerCase().includes(q)||r.catName.toLowerCase().includes(q);});
+  if(q){
+    function searchLev(a,b){var m=a.length,n=b.length,dp=[];for(var i=0;i<=m;i++){dp[i]=[];for(var j=0;j<=n;j++)dp[i][j]=i===0?j:j===0?i:0;}for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
+    allItems=allItems.filter(function(r){
+      var name=r.item.name.toLowerCase(), cat=r.catName.toLowerCase();
+      if(name.includes(q)||cat.includes(q)) return true;
+      // Fuzzy: each query word must match at least one name word within edit distance
+      var qWords=q.split(/\s+/).filter(Boolean);
+      return qWords.every(function(qw){
+        if(name.includes(qw)) return true;
+        var maxD=Math.max(1,Math.floor(qw.length*0.4));
+        return name.split(/\s+/).some(function(nw){return searchLev(qw,nw)<=maxD;});
+      });
+    });
+  }
 
   var disabledCount=allItems.filter(function(r){return r.item.disabledDate===todayStr;}).length;
   var badge=document.getElementById('today-off-count');
@@ -2079,12 +2106,24 @@ async function parseTodayVoice(text){
     });
   });
 
+  // Levenshtein distance for fuzzy matching
+  function lev(a,b){
+    var m=a.length,n=b.length,dp=[];
+    for(var i=0;i<=m;i++){dp[i]=[];for(var j=0;j<=n;j++)dp[i][j]=i===0?j:j===0?i:0;}
+    for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)
+      dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+    return dp[m][n];
+  }
+  function wordFuzzy(spoken,word){
+    if(spoken.includes(word)) return true;
+    var maxDist=Math.max(1,Math.floor(word.length*0.35)); // 35% tolerance
+    return spoken.split(/\s+/).some(function(sw){return lev(sw,word)<=maxDist;});
+  }
   // Fuzzy match item names against spoken text
   var matched=allItems.filter(function(item){
     var name=item.name.toLowerCase();
-    // Check if item name words appear in spoken text
     var words=name.split(/\s+/);
-    return words.every(function(w){return lower.includes(w);}) || lower.includes(name);
+    return words.every(function(w){return wordFuzzy(lower,w);});
   });
 
   if(!matched.length){
@@ -2442,10 +2481,17 @@ async function saveBiz(){
   var name=document.getElementById('st-bname').value.trim()||S.biz.name;
   var loc=document.getElementById('st-bloc').value.trim();
   var tag=document.getElementById('st-btag').value.trim();
+  var phone=document.getElementById('st-bphone').value.trim();
+  var whatsapp=document.getElementById('st-bwa').value.trim();
+  var instagram=document.getElementById('st-big').value.trim();
+  var facebook=document.getElementById('st-bfb').value.trim();
   try {
-    var r=await api('PUT','/business/'+S.biz.id,{name,location:loc,tagline:tag});
+    var r=await api('PUT','/business/'+S.biz.id,{name,location:loc,tagline:tag,phone,whatsapp,instagram,facebook});
     S.biz=r.business;
-    S.data.biz.name=r.business.name; S.data.biz.loc=r.business.location||''; S.data.biz.tag=r.business.tagline||''; S.data.slug=r.business.slug;
+    S.data.biz.name=r.business.name; S.data.biz.loc=r.business.location||'';
+    S.data.biz.tag=r.business.tagline||''; S.data.slug=r.business.slug;
+    S.data.biz.phone=r.business.phone||''; S.data.biz.wa=r.business.whatsapp||'';
+    S.data.biz.social={ig:r.business.instagram||'',fb:r.business.facebook||''};
     refreshDash(); toast('Business details saved ✓');
   } catch(e){toast(e.message||'Failed to save','error');}
 }
@@ -2523,11 +2569,15 @@ async function previewMenu(){
     try {
       // Fetch from public API — today-disabled items filtered server-side
       var r=await fetch('/api/public/menu/'+S.data.slug);
-      if(r.ok){ var json=await r.json(); S._qrMenuData=json; }
+      if(r.ok){
+        var json=await r.json();
+        // comingSoon = menu unpublished — don't use for dashboard preview, fall through to local data
+        if(!json.comingSoon) S._qrMenuData=json;
+      }
     } catch(e){}
   }
   if(!S._qrMenuData){
-    // Fallback: use S.data but filter today-disabled items locally
+    // Fallback: use S.data directly (works for unpublished menus in dashboard preview)
     var filteredCats=(S.data.menu.cats||[]).map(function(cat){
       return Object.assign({},cat,{items:cat.items.filter(function(p){return p.disabledDate!==todayStr;})});
     }).filter(function(cat){return cat.items.length>0;});
@@ -2572,6 +2622,8 @@ function renderPubMenu(){
         tag:raw.business.tagline||'',
         loc:raw.business.location||'',
         logo:raw.business.logoUrl||'',
+        phone:raw.business.phone||'',
+        wa:raw.business.whatsapp||'',
         social:{ig:raw.business.instagram||'',fb:raw.business.facebook||''}
       },
       menu:{cats:(raw.menu.categories||[]).map(function(cat){
