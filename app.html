@@ -345,19 +345,121 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .lp-testi-card p{font-size:.88rem;color:#374151;line-height:1.7;margin-bottom:16px;font-style:italic}
 .lp-testi-author{font-size:.78rem;color:#9ca3af;font-weight:600}
 
+/* ══════════════════════════════════════
+   MOBILE BOTTOM NAV
+══════════════════════════════════════ */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;z-index:200;padding:4px 0 env(safe-area-inset-bottom,0)}
+.mob-nav-inner{display:flex;justify-content:space-around;align-items:center}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.6rem;font-weight:600;font-family:inherit;min-width:56px}
+.mob-nav-btn svg{width:20px;height:20px;stroke:#9ca3af;transition:stroke .15s}
+.mob-nav-btn.active{color:var(--teal)}
+.mob-nav-btn.active svg{stroke:var(--teal)}
+.mob-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:#374151}
+.mob-menu-btn svg{width:22px;height:22px}
+
+/* ══════════════════════════════════════
+   TABLET  (769px – 1024px)
+══════════════════════════════════════ */
+@media(max-width:1024px){
+  .sidebar{width:64px;overflow:hidden}
+  .sb-logo span,.nav-item span,.nav-label,.sb-user{display:none}
+  .sb-logo{justify-content:center;padding:20px 0}
+  .nav-item{justify-content:center;padding:12px 0;border-radius:0}
+  .sb-nav{padding:8px 4px}
+  .dash-body{padding:20px}
+  .stats-row{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}
+
+/* ══════════════════════════════════════
+   MOBILE  (≤ 768px)
+══════════════════════════════════════ */
 @media(max-width:768px){
-  .auth-wrap{grid-template-columns:1fr}.auth-left{display:none}
-  .auth-right{padding:32px 20px}
-  .row2{grid-template-columns:1fr}
+  /* Auth */
+  .auth-wrap{grid-template-columns:1fr}
+  .auth-left{display:none}
+  .auth-right{padding:28px 20px}
+
+  /* Dashboard shell */
   .sidebar{display:none}
-  .dash-body{padding:16px}
+  .dash-shell{flex-direction:column}
+  .dash-main{padding-bottom:68px}
+  .dash-body{padding:14px}
+  .dash-topbar{padding:12px 16px}
+  .dash-topbar h1{font-size:1rem}
+
+  /* Mobile nav */
+  .mob-nav{display:block}
+  .mob-menu-btn{display:flex}
+
+  /* Stats */
+  .stats-row{grid-template-columns:1fr 1fr;gap:10px}
+  .stat-card{padding:16px}
+
+  /* Overview quick actions */
+  .row2{grid-template-columns:1fr}
+
+  /* Menu editor */
   .editor-grid{grid-template-columns:1fr}
-  .lp-hero h1{font-size:2rem}
-  .lp-section{padding:48px 20px}
-  .lp-stats-bar{gap:0;padding:20px 16px;flex-wrap:wrap}
-  .lp-stat{padding:12px 20px}
-  .lp-stat-div{display:none}
-  .lp-trust-bar{gap:4px 12px}
+
+  /* Overview — two-column inline-style grid → single column */
+  #t-overview > div:nth-child(2){grid-template-columns:1fr!important}
+
+  /* Template picker — stack vertically */
+  .tmpl-split-wrap{flex-direction:column!important;height:auto!important;max-height:none!important;border-radius:16px!important}
+  #ob-3.ob-card .tmpl-split-wrap{height:auto!important}
+  #t-templates .tmpl-split-wrap{height:auto!important}
+  /* Left panel fills full width when stacked */
+  .tmpl-left-panel{width:100%!important}
+  .tmpl-list{width:100%!important;max-width:100%!important;background:#1e2433;min-height:0;max-height:200px;overflow-y:auto}
+  .tmpl-pvw-main{min-height:380px}
+  .tmpl-pvw-body{padding:16px}
+  .tmpl-pvw-top{flex-wrap:wrap;gap:8px;padding:10px 14px}
+  .tmpl-pvw-bot{flex-wrap:wrap;gap:8px;padding:10px 14px;font-size:.8rem}
+
+  /* Prevent any horizontal overflow in dashboard */
+  .dash-main,.dash-body{overflow-x:hidden;box-sizing:border-box}
+  .dash-body{width:100%}
+
+  /* Onboarding — prevent horizontal overflow */
+  .ob-shell{overflow-x:hidden;width:100%;box-sizing:border-box}
+  .ob-body{overflow-x:hidden;padding:16px 12px;box-sizing:border-box}
+  .ob-card{max-width:100%!important;box-sizing:border-box;padding:20px 14px;border-radius:18px}
+  .ob-header{padding:10px 12px;gap:8px}
+  .ob-footer{padding:12px 14px}
+  .ob-steps{gap:4px;max-width:none;flex:1}
+  .ob-step{flex:1}
+  .ob-circle{width:26px;height:26px;font-size:.68rem}
+  .ob-skip-btn{font-size:.82rem!important;padding:8px 14px!important;white-space:nowrap;color:#374151!important;font-weight:700!important;background:#f3f4f6!important;border-radius:10px!important;border:1px solid #e5e7eb!important}
+  #ob-lbl{display:none}
+
+  /* Modals — bottom sheet style */
+  .modal-bg{align-items:flex-end;padding:0}
+  .modal-box{border-radius:22px 22px 0 0;max-width:100%;width:100%;padding:24px 20px;max-height:90vh;overflow-y:auto}
+
+  /* Forms */
+  .ig input,.ig select,.ig textarea{font-size:16px}
+
+  /* Settings — inline-style grid → single column */
+  .settings-grid{grid-template-columns:1fr!important}
+  .row2.settings-grid{grid-template-columns:1fr!important}
+  #t-settings > div:first-child{grid-template-columns:1fr!important}
+}
+
+/* ══════════════════════════════════════
+   SMALL PHONES  (≤ 480px)
+══════════════════════════════════════ */
+@media(max-width:480px){
+  .auth-right{padding:20px 16px}
+  .dash-topbar{padding:10px 12px}
+  .dash-body{padding:10px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+  .stat-card{padding:12px 10px}
+  .ob-card{padding:18px 12px}
+  .ob-header{padding:10px 12px}
+  .ob-footer{padding:10px 12px}
+  .btn-lg{padding:12px 20px;font-size:.88rem}
+  .modal-box{padding:20px 16px}
+  .mob-nav-btn{min-width:44px;padding:6px 8px}
 }
 </style>
 </head>
@@ -508,7 +610,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <span id="ob-lbl" style="font-size:.75rem;color:#9ca3af;margin-left:6px"></span>
       </div>
       <div class="ob-steps" id="ob-steps"></div>
-      <button class="btn btn-ghost btn-sm" onclick="show('s-dashboard')" style="font-size:.76rem">Skip setup</button>
+      <button class="btn btn-ghost btn-sm ob-skip-btn" onclick="show('s-dashboard')">Skip</button>
     </div>
 
     <div class="ob-body">
@@ -898,6 +1000,32 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
       </div>
     </div>
   </div>
+
+  <!-- ── Mobile bottom navigation ── -->
+  <nav class="mob-nav">
+    <div class="mob-nav-inner">
+      <button class="mob-nav-btn active" id="mob-btn-overview" onclick="tab('overview',null);mobTab('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Overview</span>
+      </button>
+      <button class="mob-nav-btn" id="mob-btn-editor" onclick="tab('editor',null);mobTab('editor')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Menu</span>
+      </button>
+      <button class="mob-nav-btn" id="mob-btn-templates" onclick="tab('templates',null);mobTab('templates')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <span>Style</span>
+      </button>
+      <button class="mob-nav-btn" id="mob-btn-qr" onclick="tab('qr',null);mobTab('qr')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3v3M21 21v.01M16 16v.01M16 21h3M11 3v3M3 11h3M11 11v3M11 8h.01M8 11h.01"/></svg>
+        <span>QR</span>
+      </button>
+      <button class="mob-nav-btn" id="mob-btn-settings" onclick="tab('settings',null);mobTab('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+  </nav>
 </div>
 
 <!-- PUBLIC MENU VIEW -->
@@ -975,49 +1103,52 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
   <div class="modal-box">
     <h3 id="modal-cat-title">Add Category</h3>
     <div class="ig">
-      <label>Category Name</label>
-      <input type="text" id="mc-name" list="mc-name-list" placeholder="e.g. Starters, Biryani, Desserts" onkeydown="if(event.key==='Enter')saveCat()" autocomplete="off"/>
-      <datalist id="mc-name-list">
-        <option value="Starters"/>
-        <option value="Main Course"/>
-        <option value="Breads"/>
-        <option value="Rice &amp; Biryani"/>
-        <option value="Soups"/>
-        <option value="Salads"/>
-        <option value="Desserts"/>
-        <option value="Beverages"/>
-        <option value="Juices"/>
-        <option value="Snacks"/>
-        <option value="Combos"/>
-        <option value="Specials"/>
-        <option value="Seafood"/>
-        <option value="Chicken"/>
-        <option value="Mutton"/>
-        <option value="Vegetarian"/>
-        <option value="Vegan"/>
-        <option value="Sandwiches"/>
-        <option value="Wraps &amp; Rolls"/>
-        <option value="Pasta"/>
-        <option value="Pizza"/>
-        <option value="Burgers"/>
-        <option value="Chinese"/>
-        <option value="Tandoor"/>
-        <option value="Grills"/>
-        <option value="Thali"/>
-        <option value="Kids Menu"/>
-        <option value="Today's Special"/>
-      </datalist>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
-        <span style="font-size:11px;color:#9ca3af;align-self:center;margin-right:2px">Quick:</span>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Starters'">Starters</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Main Course'">Main Course</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Rice &amp; Biryani'">Rice &amp; Biryani</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Breads'">Breads</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Desserts'">Desserts</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Beverages'">Beverages</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Juices'">Juices</button>
-        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Snacks'">Snacks</button>
-      </div>
+      <label>Pick from suggestions</label>
+      <select id="mc-name-sel" style="padding:9px 36px 9px 12px;border-radius:10px;border:1.5px solid #e2e8f0;font-family:Inter,sans-serif;font-size:.875rem;outline:none;width:100%;background:#fff url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E) no-repeat right 10px center;-webkit-appearance:none;appearance:none;cursor:pointer;color:#374151" onchange="var v=this.value;if(v){document.getElementById('mc-name').value=v;document.getElementById('mc-name').focus()}" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='#e2e8f0'">
+        <option value="">── Choose a category ──</option>
+        <optgroup label="Popular">
+          <option>Starters</option>
+          <option>Main Course</option>
+          <option>Breads</option>
+          <option>Rice &amp; Biryani</option>
+          <option>Desserts</option>
+          <option>Beverages</option>
+          <option>Juices</option>
+          <option>Snacks</option>
+        </optgroup>
+        <optgroup label="Non-Veg">
+          <option>Chicken</option>
+          <option>Mutton</option>
+          <option>Seafood</option>
+          <option>Tandoor</option>
+          <option>Grills</option>
+        </optgroup>
+        <optgroup label="Veg / Diet">
+          <option>Vegetarian</option>
+          <option>Vegan</option>
+          <option>Soups</option>
+          <option>Salads</option>
+          <option>Thali</option>
+        </optgroup>
+        <optgroup label="Fast Food">
+          <option>Sandwiches</option>
+          <option>Wraps &amp; Rolls</option>
+          <option>Burgers</option>
+          <option>Pizza</option>
+          <option>Pasta</option>
+          <option>Chinese</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option>Combos</option>
+          <option>Specials</option>
+          <option>Kids Menu</option>
+          <option>Today's Special</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="ig" style="margin-top:10px">
+      <label>Category Name <span style="font-weight:400;color:#9ca3af">(or type a custom name)</span></label>
+      <input type="text" id="mc-name" placeholder="e.g. Starters, Biryani, Desserts" onkeydown="if(event.key==='Enter')saveCat()" autocomplete="off"/>
     </div>
     <div class="ig">
       <label>Category Type</label>
@@ -1923,6 +2054,15 @@ function tab(name, btn){
   if(name==='editor') renderEdCats();
   if(name==='templates') renderTmplSplit('d');
   if(name==='today') initTodayTab();
+  mobTab(name);
+}
+function mobTab(name){
+  var mobMap={overview:'overview',editor:'editor',templates:'templates',qr:'qr',settings:'settings',today:'overview'};
+  var active=mobMap[name]||name;
+  document.querySelectorAll('.mob-nav-btn').forEach(function(b){
+    var id=b.id.replace('mob-btn-','');
+    b.classList.toggle('active',id===active);
+  });
 }
 
 // ─────────────────────────────────────────
@@ -2395,6 +2535,7 @@ async function delProd(cat,idx){
 function openCatModal(){
   S._editCatName=null;
   document.getElementById('mc-name').value='';
+  document.getElementById('mc-name-sel').value='';
   document.getElementById('mc-type').value='regular';
   document.getElementById('modal-cat-title').textContent='Add Category';
   document.getElementById('mc-save-btn').textContent='Add Category';
