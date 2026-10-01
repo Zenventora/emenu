@@ -6,8 +6,11 @@ export function useAuth() {
   const { user, isAuthenticated, isLoading, setUser, setLoading, logout } = useAuthStore()
 
   useEffect(() => {
-    // On app load, verify session with server
+    // On app load, verify session with server.
+    // Bug fix: setLoading(true) ensures a loading spinner is shown even on re-mounts
+    // (after the first load, isLoading is false in the store).
     const verifySession = async () => {
+      setLoading(true)
       try {
         const res = await api.get('/auth/me')
         setUser(res.data.user)
@@ -17,7 +20,7 @@ export function useAuth() {
     }
     verifySession()
 
-    // Listen for auth:logout events (triggered by interceptor)
+    // Listen for auth:logout events (triggered by axios interceptor on refresh failure)
     const handleLogout = () => logout()
     window.addEventListener('auth:logout', handleLogout)
     return () => window.removeEventListener('auth:logout', handleLogout)

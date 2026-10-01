@@ -11,13 +11,18 @@ const DAY_ABBR = ['sun','mon','tue','wed','thu','fri','sat']
 router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => {
   try {
     // Prefer client-supplied local date (passed from customer browser via ?localDate=YYYY-MM-DD)
-    // so disabledDate always matches the restaurant timezone, not server UTC
+    // so disabledDate always matches the restaurant timezone, not server UTC.
     const now = new Date()
     const serverDate = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0')
     const todayStr: string = (typeof req.query.localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.localDate))
       ? req.query.localDate
       : serverDate
-    const todayAbbr = DAY_ABBR[now.getDay()] // e.g. 'mon'
+
+    // Bug fix: derive todayAbbr from todayStr (client date), NOT from server's new Date().getDay().
+    // If client is IST (UTC+5:30) and server is UTC, the day-of-week could differ — e.g. client
+    // sees Monday night while server still sees Sunday. Parsing todayStr keeps them in sync.
+    const [y, m, d] = todayStr.split('-').map(Number)
+    const todayAbbr = DAY_ABBR[new Date(y, m - 1, d).getDay()] // local midnight — day is always correct
 
     const business = await prisma.business.findUnique({
       where: { slug: req.params.slug },

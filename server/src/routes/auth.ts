@@ -193,6 +193,14 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
     // Always respond OK — don't leak whether email exists
     if (!user) { res.json({ message: 'If this email exists, an OTP has been sent.' }); return }
 
+    // Bug fix: invalidate all previous unused OTPs for this user before creating a new one.
+    // Without this, an attacker who intercepts an old OTP email can still use it even after
+    // the user has requested a new code.
+    await prisma.oTP.updateMany({
+      where: { userId: user.id, type: 'FORGOT_PASSWORD', used: false },
+      data: { used: true },
+    })
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     await prisma.oTP.create({
       data: {

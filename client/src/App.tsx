@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useAuthStore } from '@/store/authStore'
 import LandingPage from '@/pages/LandingPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
@@ -8,15 +9,19 @@ import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import DashboardPage from '@/pages/DashboardPage'
 import TemplatePickerPage from '@/pages/TemplatePickerPage'
 
+// Bug fix: Route guards use useAuthStore directly (read-only) instead of useAuth().
+// useAuth() triggers verifySession() as a side-effect — calling it in multiple
+// components caused /api/auth/me to fire 2-3 times on every page load.
+// Only App (root) calls useAuth() to initialise the session once.
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuthStore()
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuthStore()
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
   return <>{children}</>
