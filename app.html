@@ -221,7 +221,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .prod-info{flex:1}
 .prod-name{font-size:.88rem;font-weight:700;color:#111;margin-bottom:2px}
 .prod-desc{font-size:.76rem;color:#9ca3af;line-height:1.4}
-.prod-meta{display:flex;align-items:center;gap:7px;margin-top:4px}
+.prod-meta{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
 .prod-price{font-size:.92rem;font-weight:800;color:var(--teal)}
 .prod-tag{font-size:.66rem;padding:2px 7px;border-radius:999px;font-weight:600}
 .tag-bs{background:#fef3c7;color:#92400e}.tag-sp{background:#ede9fe;color:#5b21b6}
@@ -2383,11 +2383,15 @@ function renderEdProds(catName){
     if(item.desc) html+='<div class="prod-desc">'+item.desc+'</div>';
     var dayBadge='';
     if(item.availDays&&item.availDays.length>0){
-      var dayLabels={'sun':'Sun','mon':'Mon','tue':'Tue','wed':'Wed','thu':'Thu','fri':'Fri','sat':'Sat'};
+      var dayLabels={'sun':'Su','mon':'Mo','tue':'Tu','wed':'We','thu':'Th','fri':'Fr','sat':'Sa'};
+      var dayLabelsFull={'sun':'Sun','mon':'Mon','tue':'Tue','wed':'Wed','thu':'Thu','fri':'Fri','sat':'Sat'};
       var todayAbbr=['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
       var isToday=item.availDays.includes(todayAbbr);
-      var daysStr=item.availDays.map(function(d){return dayLabels[d]||d;}).join(', ');
-      dayBadge='<span class="day-badge" title="Available: '+daysStr+'" style="'+(isToday?'':'opacity:.5')+'">'+(isToday?'📅':'🚫')+' '+daysStr+'</span>';
+      var fullStr=item.availDays.map(function(d){return dayLabelsFull[d]||d;}).join(', ');
+      var shortStr=item.availDays.length>=4
+        ? item.availDays.length+' days'
+        : item.availDays.map(function(d){return dayLabels[d]||d;}).join(' ');
+      dayBadge='<span class="day-badge" title="Available: '+fullStr+'" style="'+(isToday?'':'opacity:.55')+'">'+(isToday?'📅':'🚫')+' '+shortStr+'</span>';
     }
     html+='<div class="prod-meta"><span class="prod-price">₹'+item.price+'</span>'+badge+dayBadge+'</div></div>';
     html+='<div class="prod-actions">';
