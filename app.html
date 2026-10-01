@@ -1138,10 +1138,10 @@ async function api(method, path, body, _retry) {
       var rf = await fetch('/api/auth/refresh', { method: 'POST' });
       if (rf.ok) return api(method, path, body, true);
     } catch(e) {}
-    // Refresh failed — redirect to login
+    // Refresh failed — only show toast if user was actually logged in this session
+    if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
     show('s-landing');
-    toast('Session expired — please log in again', 'error');
     throw new Error('Session expired');
   }
   var json; try { json = await res.json(); } catch(e) { json = {}; }
@@ -1166,7 +1166,8 @@ var S = {
   obStep: 1, selTmpl: 0,
   edCat: null, editProdIdx: null,
   rec: null, listening: false,
-  _dragCatIdx: null, _dragProdIdx: null, _editCatName: null
+  _dragCatIdx: null, _dragProdIdx: null, _editCatName: null,
+  initialized: false  // true after first auth check completes — guards "Session expired" toast
 };
 
 // Full state reset — call before loading any new user's data
@@ -1278,6 +1279,7 @@ async function init(){
     syncFromAPI(biz,menu);
     show(biz&&biz.name?'s-dashboard':'s-onboard');
   } catch(e){ show('s-landing'); }
+  finally { S.initialized = true; }
 }
 
 // ─────────────────────────────────────────
