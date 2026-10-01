@@ -619,8 +619,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         </div>
         <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
           <span style="font-size:.75rem;color:#64748b;white-space:nowrap">Category:</span>
-          <input type="text" id="mi-cat" list="mi-cat-list" placeholder="e.g. Starters, Biryani, Drinks" style="flex:1;padding:7px 12px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:Inter,sans-serif;font-size:.85rem;outline:none" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='#e2e8f0'"/>
-          <datalist id="mi-cat-list"></datalist>
+          <select id="mi-cat" style="flex:1;padding:7px 12px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:Inter,sans-serif;font-size:.85rem;outline:none;background:#fff;cursor:pointer" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='#e2e8f0'"></select>
         </div>
         <div id="ob-item-list" class="item-list"></div>
         <p id="ob-item-count" style="font-size:.76rem;color:#9ca3af;text-align:center;padding:6px;display:none"></p>
@@ -1451,16 +1450,24 @@ function renderObCard(){
   if(S.obStep===3) setTimeout(function(){renderTmplSplit('o');},50);
   if(S.obStep===4) renderObPreview();
 }
+var MI_CAT_DEFAULTS=['Starters','Main Course','Breads','Rice & Biryani','Soups','Salads','Desserts','Beverages','Juices','Snacks','Combos','Specials'];
 function populateMiCat(){
-  var inp=document.getElementById('mi-cat'); if(!inp) return;
-  var dl=document.getElementById('mi-cat-list'); if(!dl) return;
+  var sel=document.getElementById('mi-cat'); if(!sel) return;
   var cats=S.data&&S.data.menu.cats||[];
-  var defaults=['Starters','Main Course','Breads','Rice & Biryani','Soups','Salads','Desserts','Beverages','Juices','Snacks'];
-  var options=cats.length>0 ? cats.map(c=>c.name) : defaults;
-  dl.innerHTML=options.map(n=>'<option value="'+n+'">').join('');
-  if(!inp.value){
-    inp.value=cats.length>0?cats[cats.length-1].name:'Main Course';
-  }
+  var options=cats.length>0 ? cats.map(c=>c.name) : MI_CAT_DEFAULTS;
+  // Preserve any categories added this session that aren't in the list yet
+  var existing=Array.from(sel.options).map(o=>o.value);
+  options.forEach(function(n){
+    if(!existing.includes(n)){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }
+  });
+  if(!sel.value) sel.value=options[0]||'Main Course';
+}
+function miCatEnsure(name){
+  // Called after addManualItem — adds new category to the select if not already there
+  var sel=document.getElementById('mi-cat'); if(!sel) return;
+  var exists=Array.from(sel.options).some(o=>o.value===name);
+  if(!exists){ var o=document.createElement('option'); o.value=name; o.textContent=name; sel.appendChild(o); }
+  sel.value=name;
 }
 async function obNav(dir){
   if(dir===1){
