@@ -1,39 +1,17 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-// Render free tier blocks outbound SMTP on port 465/587 (Zoho, Gmail, etc.).
-// Resend uses HTTPS under the hood — works on all cloud providers.
-// Set RESEND_API_KEY in Render environment variables (resend.com → free tier).
-// FROM_EMAIL should be a verified sender in your Resend account.
-const useResend = !!process.env.RESEND_API_KEY
+// Render blocks all outbound SMTP ports (25, 465, 587).
+// Resend HTTP API uses HTTPS — works on all cloud providers including Render free tier.
+// Set RESEND_API_KEY and FROM_EMAIL in Render environment variables.
+const resendClient = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
 
-const transporter = nodemailer.createTransport(
-  useResend
-    ? {
-        host: 'smtp.resend.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: 'resend',
-          pass: process.env.RESEND_API_KEY,
-        },
-      }
-    : {
-        // Fallback: custom SMTP (local dev with SMTP_USER set)
-        host: process.env.SMTP_HOST || 'smtp.zoho.in',
-        port: parseInt(process.env.SMTP_PORT || '465'),
-        secure: true,
-        auth: {
-          user: process.env.SMTP_USER || '',
-          pass: process.env.SMTP_PASS || '',
-        },
-      }
-)
-
-const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@example.com'
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@example.com'
 
 export async function sendOTPEmail(to: string, name: string, otp: string): Promise<void> {
-  // Dev mode: no credentials configured → print OTP to server console
-  if (!useResend && (!process.env.SMTP_USER || process.env.SMTP_USER === 'your-email@zohomail.in')) {
+  // Dev mode: no API key configured → print OTP to server console
+  if (!resendClient) {
     console.log(`\n╔══════════════════════════════╗`)
     console.log(`║   OTP for ${to.padEnd(20)} ║`)
     console.log(`║   Code: ${otp.padEnd(23)} ║`)
@@ -41,8 +19,8 @@ export async function sendOTPEmail(to: string, name: string, otp: string): Promi
     return
   }
 
-  await transporter.sendMail({
-    from: `"E-Menu" <${FROM_EMAIL}>`,
+  const { error } = await resendClient.emails.send({
+    from: `E-Menu <${FROM_EMAIL}>`,
     to,
     subject: 'Your E-Menu OTP Code',
     html: `
@@ -59,4 +37,8 @@ export async function sendOTPEmail(to: string, name: string, otp: string): Promi
       </div>
     `,
   })
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`)
+  }
 }
