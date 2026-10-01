@@ -45,15 +45,17 @@ app.use(express.json({ limit: '20mb' }))   // 20mb for base64 images
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-// ─── Static root ─────────────────────────────────────────────────────────────
-// Local dev  (ts-node): __dirname = server/src  → ../../ = project root
-// Production (Docker):  __dirname = dist/       → ../   = /app
+// ─── Static: serve app.html ──────────────────────────────────────────────────
+// Local dev  (ts-node): __dirname = server/src  → ../../ = Emenu/
+// Production (Docker):  __dirname = dist/       → ../   = /app  (app.html copied here)
 const staticRoot = process.env.NODE_ENV === 'production'
   ? path.join(__dirname, '../')
   : path.join(__dirname, '../../')
 
-// Serve static assets (css, js, images) but NOT index auto-serve
-app.use(express.static(staticRoot, { index: false, extensions: ['html'] }))
+app.use(express.static(staticRoot, {
+  index: 'app.html',
+  extensions: ['html'],
+}))
 
 // Uploads (local dev only — in production use object storage)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
@@ -70,19 +72,8 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', env: process.env.NODE_ENV, timestamp: new Date().toISOString() })
 })
 
-// ─── Landing page (marketing) — unauthenticated home ─────────────────────────
-// Auth check happens client-side: if logged in → JS redirects to /app
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(staticRoot, 'landing.html'))
-})
-
-// ─── Product app ─────────────────────────────────────────────────────────────
-// All product routes → app.html (client-side routing handles screens)
-app.get('/app', (_req, res) => {
-  res.sendFile(path.join(staticRoot, 'app.html'))
-})
-
 // ─── Customer menu page (QR scan) ────────────────────────────────────────────
+// /menu/:slug serves app.html — client-side renders the public menu
 app.get('/menu/:slug', (_req, res) => {
   res.sendFile(path.join(staticRoot, 'app.html'))
 })
