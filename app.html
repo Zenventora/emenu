@@ -504,7 +504,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <div class="g-divider">or</div>
         <div id="g-btn-login" style="display:flex;justify-content:center;min-height:44px"></div>
         <p style="text-align:center;margin-top:16px;font-size:.82rem;color:#9ca3af">New here? <a class="alink" onclick="show('s-signup')">Create a free account</a></p>
-        <p style="text-align:center;margin-top:8px;font-size:.78rem;color:#9ca3af"><a class="alink" onclick="show('s-landing')" style="color:#9ca3af">← Back to home</a></p>
+        <p style="text-align:center;margin-top:8px;font-size:.78rem;color:#9ca3af"><a class="alink" onclick="window.location.replace('/')" style="color:#9ca3af">← Back to home</a></p>
       </div>
     </div>
   </div>
@@ -552,7 +552,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <div class="g-divider">or</div>
         <div id="g-btn-signup" style="display:flex;justify-content:center;min-height:44px"></div>
         <p style="text-align:center;margin-top:12px;font-size:.76rem;color:#9ca3af;line-height:1.6">By signing up you agree to our Terms of Service and Privacy Policy.</p>
-        <p style="text-align:center;margin-top:8px;font-size:.78rem;color:#9ca3af"><a class="alink" onclick="show('s-landing')" style="color:#9ca3af">← Back to home</a></p>
+        <p style="text-align:center;margin-top:8px;font-size:.78rem;color:#9ca3af"><a class="alink" onclick="window.location.replace('/')" style="color:#9ca3af">← Back to home</a></p>
       </div>
     </div>
   </div>
@@ -1208,7 +1208,7 @@ async function api(method, path, body, _retry) {
     // Refresh failed — only show toast if user was actually logged in this session
     if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
-    show('s-landing');
+    window.location.replace('/');
     throw new Error('Session expired');
   }
   var json; try { json = await res.json(); } catch(e) { json = {}; }
@@ -1334,9 +1334,12 @@ async function init(){
   var mSlug=(pathParts[1]==='menu'&&pathParts[2])?pathParts[2]:new URLSearchParams(window.location.search).get('m');
   if(mSlug){
     try { var _ld=new Date(),_td=_ld.getFullYear()+'-'+String(_ld.getMonth()+1).padStart(2,'0')+'-'+String(_ld.getDate()).padStart(2,'0'); var pubData=await api('GET','/public/menu/'+mSlug+'?localDate='+_td); S._qrMenuData=pubData; show('s-menu'); return; }
-    catch(e){ show('s-landing'); return; }
+    catch(e){ window.location.replace('/'); return; }
   }
   S._qrMenuData=null;
+  // Determine which screen to show if not logged in
+  var _sp=new URLSearchParams(window.location.search);
+  var _screen=_sp.get('s'); // 's=signup' or 's=login' from landing page CTAs
   // Check auth
   try {
     var meRes=await api('GET','/auth/me'); S.user=meRes.user;
@@ -1345,14 +1348,15 @@ async function init(){
     var menu=biz&&biz.menus&&biz.menus[0]?biz.menus[0]:null;
     syncFromAPI(biz,menu);
     // Show welcome toast after Google redirect sign-in
-    var _p=new URLSearchParams(window.location.search);
-    if(_p.get('google')==='ok') { setTimeout(function(){toast('Welcome, '+S.user.name.split(' ')[0]+'! 👋');},300); window.history.replaceState({},'','/'); }
+    if(_sp.get('google')==='ok') { setTimeout(function(){toast('Welcome, '+S.user.name.split(' ')[0]+'! 👋');},300); }
+    window.history.replaceState({},'','/app');
     show(biz&&biz.name?'s-dashboard':'s-onboard');
   } catch(e){
-    // Google sign-in error redirect
-    var _pe=new URLSearchParams(window.location.search);
-    if(_pe.get('google')==='error') { setTimeout(function(){toast('Google sign-in failed. Please try again.','error');},300); window.history.replaceState({},'','/'); }
-    show('s-landing');
+    // Google sign-in error
+    if(_sp.get('google')==='error') { setTimeout(function(){toast('Google sign-in failed. Please try again.','error');},300); }
+    window.history.replaceState({},'','/app');
+    // Show signup or login based on ?s= param from landing page
+    show(_screen==='signup'?'s-signup':'s-login');
   }
   finally { S.initialized = true; }
 }
@@ -2848,7 +2852,7 @@ async function doLogout(){
   if(!confirm('Log out of E-Menu?')) return;
   try{await api('POST','/auth/logout');}catch(e){}
   resetState();
-  toast('Logged out','info'); show('s-landing');
+  toast('Logged out','info'); window.location.replace('/');
 }
 
 // ─────────────────────────────────────────
