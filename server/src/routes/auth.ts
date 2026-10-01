@@ -253,6 +253,58 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response):
   }
 })
 
+// ─── POST /api/auth/google/redirect ──────────────────────────────────────────
+// Handles Google GIS redirect mode — Google POSTs the credential here as a form body,
+// we verify it, create a session, set cookies, and redirect back to the app.
+// This avoids all popup/window.opener issues in Chrome.
+router.post('/google/redirect', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const credential = req.body.credential
+    if (!credential) { res.redirect('/?google=error'); return }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    if (!clientId) { res.redirect('/?google=error'); return }
+
+    const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`)
+    if (!infoRes.ok) { res.redirect('/?google=error'); return }
+
+    const payload = await infoRes.json() as {
+      aud: string; email: string; name?: string; sub: string
+    }
+    if (payload.aud !== clientId) { res.redirect('/?google=error'); return }
+    if (!payload.email) { res.redirect('/?google=error'); return }
+
+    const email = payload.email.toLowerCase()
+    const name  = payload.name || email.split('@')[0]
+    const sub   = payload.sub
+
+    let user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      const passwordHash = await bcrypt.hash('__google__' + sub + uuidv4(), 12)
+      user = await prisma.user.create({
+        data: { name, email, passwordHash, isVerified: true },
+      })
+    }
+
+    const accessToken  = signAccessToken({ userId: user.id, email: user.email })
+    const refreshToken = signRefreshToken({ userId: user.id, email: user.email })
+
+    await prisma.session.create({
+      data: {
+        userId: user.id, refreshToken,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        ipAddress: req.ip, userAgent: req.headers['user-agent'],
+      },
+    })
+
+    setAuthCookies(res, accessToken, refreshToken)
+    res.redirect('/?google=ok')
+  } catch (err) {
+    console.error('Google redirect auth error:', err)
+    res.redirect('/?google=error')
+  }
+})
+
 // ─── POST /api/auth/google ────────────────────────────────────────────────────
 // Verifies the Google ID token via Google's tokeninfo API (no extra package needed).
 // Never trust client-decoded JWT — always verify server-side.
