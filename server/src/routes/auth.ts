@@ -253,4 +253,65 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response):
   }
 })
 
+// ─── POST /api/auth/google ────────────────────────────────────────────────────
+// Verifies the Google ID token via Google's tokeninfo API (no extra package needed).
+// Never trust client-decoded JWT — always verify server-side.
+router.post('/google', authLimiter, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { credential } = req.body
+    if (!credential) { res.status(400).json({ message: 'Google credential is required' }); return }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    if (!clientId) { res.status(500).json({ message: 'Google Sign-In not configured on server' }); return }
+
+    // Verify token via Google's tokeninfo endpoint (works on Node 18+ with native fetch)
+    const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`)
+    if (!infoRes.ok) { res.status(401).json({ message: 'Invalid Google credential' }); return }
+
+    const payload = await infoRes.json() as {
+      aud: string; email: string; name?: string; sub: string; email_verified?: string
+    }
+
+    // Ensure token was issued for our app (prevents token substitution attacks)
+    if (payload.aud !== clientId) {
+      res.status(401).json({ message: 'Google token audience mismatch' }); return
+    }
+    if (!payload.email) { res.status(400).json({ message: 'No email from Google' }); return }
+
+    const email = payload.email.toLowerCase()
+    const name  = payload.name || email.split('@')[0]
+    const sub   = payload.sub
+
+    // Find or create user — Google has verified email ownership so we trust it
+    let user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      // New user: store a secure random placeholder password (never used for login)
+      const passwordHash = await bcrypt.hash('__google__' + sub + uuidv4(), 12)
+      user = await prisma.user.create({
+        data: { name, email, passwordHash, isVerified: true },
+      })
+    }
+
+    const accessToken  = signAccessToken({ userId: user.id, email: user.email })
+    const refreshToken = signRefreshToken({ userId: user.id, email: user.email })
+
+    await prisma.session.create({
+      data: {
+        userId: user.id, refreshToken,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        ipAddress: req.ip, userAgent: req.headers['user-agent'],
+      },
+    })
+
+    setAuthCookies(res, accessToken, refreshToken)
+    res.json({
+      message: 'Google sign-in successful',
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+    })
+  } catch (err) {
+    console.error('Google auth error:', err)
+    res.status(500).json({ message: 'Google sign-in failed. Please try again.' })
+  }
+})
+
 export default router

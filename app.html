@@ -1044,7 +1044,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 // GOOGLE SIGN-IN CONFIG
 // ─────────────────────────────────────────
 // Paste your Google Client ID here (see setup steps below)
-var GOOGLE_CLIENT_ID = '';
+var GOOGLE_CLIENT_ID = '147155455700-8tb2ova0g6i9cfrjlsvgjcqheqr2vbse.apps.googleusercontent.com';
 
 function initGoogleSignIn(){
   if(!GOOGLE_CLIENT_ID||!window.google) return;
@@ -1058,64 +1058,38 @@ function initGoogleSignIn(){
 }
 
 function triggerGoogleSignIn(){
-  if(!GOOGLE_CLIENT_ID){
-    toast('Google Sign-In not configured yet','info');
-    return;
-  }
-  if(!window.google){toast('Google SDK loading, try again','info');return;}
-  try{
-    google.accounts.id.prompt(function(notification){
-      if(notification.isNotDisplayed()||notification.isSkippedMoment()){
-        // Fallback: open popup
-        google.accounts.oauth2&&google.accounts.oauth2.initCodeClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'openid email profile',
-          callback: function(){}
-        });
-      }
-    });
-  }catch(e){
-    // Fallback: render button in a popup using renderButton
-    var tmp=document.createElement('div');
-    tmp.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:#fff;padding:20px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.18)';
-    tmp.innerHTML='<p style="font-size:.9rem;font-weight:700;margin-bottom:12px;color:#374151">Sign in with Google</p><div id="g-popup-btn"></div><button onclick="this.parentElement.remove()" style="margin-top:12px;width:100%;padding:8px;border:none;border-radius:8px;background:#f3f4f6;cursor:pointer;font-size:.85rem">Cancel</button>';
-    document.body.appendChild(tmp);
-    google.accounts.id.renderButton(document.getElementById('g-popup-btn'),{type:'standard',theme:'outline',size:'large',text:'continue_with',width:260});
-  }
+  if(!GOOGLE_CLIENT_ID){ toast('Google Sign-In not configured','info'); return; }
+  if(!window.google){ toast('Google loading, try again in a moment','info'); return; }
+  // Show a centered overlay with the official Google Sign-In button (most reliable approach)
+  var existing=document.getElementById('g-overlay'); if(existing) existing.remove();
+  var overlay=document.createElement('div');
+  overlay.id='g-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML='<div style="background:#fff;border-radius:16px;padding:32px 28px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.2);min-width:280px"><p style="font-weight:700;margin-bottom:20px;color:#111;font-size:1rem">Sign in with Google</p><div id="g-btn-container"></div><button onclick="document.getElementById(\'g-overlay\').remove()" style="margin-top:16px;padding:8px 24px;border:none;border-radius:8px;background:#f3f4f6;cursor:pointer;font-size:.85rem;color:#374151">Cancel</button></div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',function(e){ if(e.target===overlay) overlay.remove(); });
+  google.accounts.id.renderButton(document.getElementById('g-btn-container'),{
+    type:'standard', theme:'outline', size:'large', text:'continue_with', width:240
+  });
 }
 
 function handleGoogleCredential(response){
-  try{
-    // Decode JWT payload (client-side, no verification needed for our use)
-    var parts=response.credential.split('.');
-    var payload=JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-    doGoogleAuth({
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture,
-      sub: payload.sub
-    });
-  }catch(e){ toast('Google sign-in failed, try email signup','error'); }
+  // Remove overlay if open
+  var overlay=document.getElementById('g-overlay'); if(overlay) overlay.remove();
+  // Send the raw credential to backend — server verifies signature, never trust client decode
+  doGoogleAuth(response.credential);
 }
 
-async function doGoogleAuth(profile){
-  var email=(profile.email||'').toLowerCase();
-  if(!email){ toast('Could not get email from Google','error'); return; }
-  var gPass='__google__'+profile.sub;
+async function doGoogleAuth(credential){
   try {
-    resetState();
-    try {
-      var r=await api('POST','/auth/login',{email,password:gPass}); S.user=r.user;
-    } catch(loginErr) {
-      var name=profile.name||email.split('@')[0];
-      var r2=await api('POST','/auth/signup',{name,email,phone:'',password:gPass}); S.user=r2.user;
-    }
+    var r=await api('POST','/auth/google',{credential});
+    S.user=r.user;
     var bizRes=await api('GET','/business/me');
     var biz=bizRes.business, menu=biz&&biz.menus&&biz.menus[0]?biz.menus[0]:null;
     syncFromAPI(biz,menu);
     toast('Welcome, '+S.user.name.split(' ')[0]+'! 👋');
     show(biz&&biz.name?'s-dashboard':'s-onboard');
-  } catch(e){ toast('Google sign-in failed: '+e.message,'error'); }
+  } catch(e){ toast('Google sign-in failed: '+(e.message||'Try again'),'error'); }
 }
 
 // ─────────────────────────────────────────
@@ -1130,7 +1104,7 @@ async function api(method, path, body, _retry) {
   var res = await fetch('/api' + path, opts);
   // Auth endpoints return 401 for wrong credentials — never for expired tokens.
   // Skip the refresh logic for these paths so the real error message reaches the caller.
-  var skipRefreshPaths = ['/auth/login','/auth/signup','/auth/forgot-password','/auth/reset-password'];
+  var skipRefreshPaths = ['/auth/login','/auth/signup','/auth/forgot-password','/auth/reset-password','/auth/google'];
   var isAuthPath = skipRefreshPaths.some(function(p){ return path.startsWith(p); });
   // Auto-refresh token on 401, then retry once (protected routes only)
   if (res.status === 401 && !_retry && !isAuthPath) {
