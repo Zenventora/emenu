@@ -17,6 +17,11 @@ const app = express()
 const PORT = process.env.PORT || 4000
 const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`
 
+// Fix: Render (and most cloud providers) sit behind a reverse proxy.
+// Without this, express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+// and cannot correctly identify client IPs.
+app.set('trust proxy', 1)
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet({
   // Allow inline scripts in app.html (standalone single-file app)

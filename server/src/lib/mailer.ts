@@ -1,18 +1,39 @@
 import nodemailer from 'nodemailer'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.zoho.in',
-  port: parseInt(process.env.SMTP_PORT || '465'),
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
-  },
-})
+// Render free tier blocks outbound SMTP on port 465/587 (Zoho, Gmail, etc.).
+// Resend uses HTTPS under the hood — works on all cloud providers.
+// Set RESEND_API_KEY in Render environment variables (resend.com → free tier).
+// FROM_EMAIL should be a verified sender in your Resend account.
+const useResend = !!process.env.RESEND_API_KEY
+
+const transporter = nodemailer.createTransport(
+  useResend
+    ? {
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: 'resend',
+          pass: process.env.RESEND_API_KEY,
+        },
+      }
+    : {
+        // Fallback: custom SMTP (local dev with SMTP_USER set)
+        host: process.env.SMTP_HOST || 'smtp.zoho.in',
+        port: parseInt(process.env.SMTP_PORT || '465'),
+        secure: true,
+        auth: {
+          user: process.env.SMTP_USER || '',
+          pass: process.env.SMTP_PASS || '',
+        },
+      }
+)
+
+const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@example.com'
 
 export async function sendOTPEmail(to: string, name: string, otp: string): Promise<void> {
-  // In development without SMTP configured, just log to console
-  if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your-email@zohomail.in') {
+  // Dev mode: no credentials configured → print OTP to server console
+  if (!useResend && (!process.env.SMTP_USER || process.env.SMTP_USER === 'your-email@zohomail.in')) {
     console.log(`\n╔══════════════════════════════╗`)
     console.log(`║   OTP for ${to.padEnd(20)} ║`)
     console.log(`║   Code: ${otp.padEnd(23)} ║`)
@@ -21,7 +42,7 @@ export async function sendOTPEmail(to: string, name: string, otp: string): Promi
   }
 
   await transporter.sendMail({
-    from: `"E-Menu" <${process.env.SMTP_USER}>`,
+    from: `"E-Menu" <${FROM_EMAIL}>`,
     to,
     subject: 'Your E-Menu OTP Code',
     html: `
