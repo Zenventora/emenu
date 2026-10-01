@@ -1014,7 +1014,51 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 <div class="modal-bg" id="modal-cat">
   <div class="modal-box">
     <h3 id="modal-cat-title">Add Category</h3>
-    <div class="ig"><label>Category Name</label><input type="text" id="mc-name" placeholder="e.g. Starters, Biryani, Desserts" onkeydown="if(event.key==='Enter')saveCat()"/></div>
+    <div class="ig">
+      <label>Category Name</label>
+      <input type="text" id="mc-name" list="mc-name-list" placeholder="e.g. Starters, Biryani, Desserts" onkeydown="if(event.key==='Enter')saveCat()" autocomplete="off"/>
+      <datalist id="mc-name-list">
+        <option value="Starters"/>
+        <option value="Main Course"/>
+        <option value="Breads"/>
+        <option value="Rice &amp; Biryani"/>
+        <option value="Soups"/>
+        <option value="Salads"/>
+        <option value="Desserts"/>
+        <option value="Beverages"/>
+        <option value="Juices"/>
+        <option value="Snacks"/>
+        <option value="Combos"/>
+        <option value="Specials"/>
+        <option value="Seafood"/>
+        <option value="Chicken"/>
+        <option value="Mutton"/>
+        <option value="Vegetarian"/>
+        <option value="Vegan"/>
+        <option value="Sandwiches"/>
+        <option value="Wraps &amp; Rolls"/>
+        <option value="Pasta"/>
+        <option value="Pizza"/>
+        <option value="Burgers"/>
+        <option value="Chinese"/>
+        <option value="Tandoor"/>
+        <option value="Grills"/>
+        <option value="Thali"/>
+        <option value="Kids Menu"/>
+        <option value="Today's Special"/>
+      </datalist>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
+        <span style="font-size:11px;color:#9ca3af;align-self:center;margin-right:2px">Quick:</span>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Starters'">Starters</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Main Course'">Main Course</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Rice &amp; Biryani'">Rice &amp; Biryani</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Breads'">Breads</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Desserts'">Desserts</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Beverages'">Beverages</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Juices'">Juices</button>
+        <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 9px;font-size:11px;border-radius:20px" onclick="document.getElementById('mc-name').value='Snacks'">Snacks</button>
+      </div>
+    </div>
     <div class="ig">
       <label>Category Type</label>
       <select id="mc-type">
