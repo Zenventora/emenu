@@ -1128,8 +1128,12 @@ async function api(method, path, body, _retry) {
   var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
   var res = await fetch('/api' + path, opts);
-  // Auto-refresh token on 401, then retry once
-  if (res.status === 401 && !_retry) {
+  // Auth endpoints return 401 for wrong credentials — never for expired tokens.
+  // Skip the refresh logic for these paths so the real error message reaches the caller.
+  var skipRefreshPaths = ['/auth/login','/auth/signup','/auth/forgot-password','/auth/reset-password'];
+  var isAuthPath = skipRefreshPaths.some(function(p){ return path.startsWith(p); });
+  // Auto-refresh token on 401, then retry once (protected routes only)
+  if (res.status === 401 && !_retry && !isAuthPath) {
     try {
       var rf = await fetch('/api/auth/refresh', { method: 'POST' });
       if (rf.ok) return api(method, path, body, true);
@@ -1141,7 +1145,9 @@ async function api(method, path, body, _retry) {
     throw new Error('Session expired');
   }
   var json; try { json = await res.json(); } catch(e) { json = {}; }
-  if (!res.ok) throw new Error(json.message || 'Request failed ('+res.status+')');
+  var err = new Error(json.message || 'Request failed ('+res.status+')');
+  err.status = res.status;
+  if (!res.ok) throw err;
   return json;
 }
 async function loadMenuData() {
@@ -1372,7 +1378,15 @@ async function doSignup(){
     S.user=r.user; syncFromAPI(null,null);
     toast('Account created! Let\'s set up your menu 🎉');
     show('s-onboard');
-  } catch(e){toast(e.message||'Signup failed','error');}
+  } catch(e){
+    if(e.status===409){
+      // Account already exists — nudge the user to login instead
+      toast('An account with this email already exists. Please sign in.','error');
+      setTimeout(function(){ show('s-login'); }, 1800);
+    } else {
+      toast(e.message||'Signup failed','error');
+    }
+  }
   finally{if(btn){btn.disabled=false;btn.textContent='Create Account →';}}
 }
 

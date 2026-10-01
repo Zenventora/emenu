@@ -15,18 +15,32 @@ const api = axios.create({
   },
 })
 
-// Response interceptor — handle token expiry silently
+// Auth endpoints that intentionally return 401 (wrong credentials, not expired token).
+// The interceptor must NOT intercept these — doing so causes "Session expired"
+// to flash instead of showing the actual error (e.g. "Invalid email or password").
+const SKIP_REFRESH_URLS = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+]
+
+// Response interceptor — silently refresh expired access tokens.
+// Only fires for protected API calls (not auth endpoints above).
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as RetryableRequest
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const url = originalRequest.url || ''
+    const isAuthEndpoint = SKIP_REFRESH_URLS.some(ep => url.includes(ep))
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
       try {
         await api.post('/auth/refresh')
         return api(originalRequest)
       } catch {
-        // Refresh failed → clear auth state
+        // Refresh failed → session truly expired, clear auth state
         window.dispatchEvent(new Event('auth:logout'))
       }
     }
