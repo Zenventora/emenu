@@ -34,7 +34,7 @@ app.use(cors({
   origin: (origin, cb) => {
     // Allow same-origin requests (no Origin header) + configured origins
     if (!origin) return cb(null, true)
-    const allowed = [APP_URL, `http://localhost:${PORT}`, 'http://localhost:4000', 'https://zenventora.in', 'https://www.zenventora.in']
+    const allowed = [APP_URL, `http://localhost:${PORT}`, 'http://localhost:4000', 'https://zenventora.in', 'https://www.zenventora.in', 'https://emenu.zenventora.in', 'https://zenventora.github.io']
     cb(null, allowed.includes(origin))
   },
   credentials: true,
