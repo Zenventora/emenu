@@ -38,7 +38,7 @@ app.use(cors({
     cb(null, allowed.includes(origin))
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }))
 
 app.use(express.json({ limit: '20mb' }))   // 20mb for base64 images

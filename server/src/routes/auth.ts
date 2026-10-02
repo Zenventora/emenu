@@ -15,11 +15,11 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too
 function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
   res.cookie('access_token', accessToken, {
     httpOnly: true, secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict', maxAge: 15 * 60 * 1000,
+    sameSite: 'none', maxAge: 15 * 60 * 1000,
   })
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true, secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict', maxAge: 30 * 24 * 60 * 60 * 1000,
+    sameSite: 'none', maxAge: 30 * 24 * 60 * 60 * 1000,
   })
 }
 
@@ -162,7 +162,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     const newAccessToken = signAccessToken({ userId: payload.userId, email: payload.email })
     res.cookie('access_token', newAccessToken, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict', maxAge: 15 * 60 * 1000,
+      sameSite: 'none', maxAge: 15 * 60 * 1000,
     })
     res.json({ message: 'Token refreshed' })
   } catch {
