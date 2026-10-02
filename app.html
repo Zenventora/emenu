@@ -275,6 +275,34 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .tp-iprice{font-size:.38rem;font-weight:700}
 .tp-footer-strip{margin-top:auto;padding:4px 8px;font-size:.3rem;text-align:center;color:rgba(255,255,255,.3);border-top:1px solid rgba(255,255,255,.1)}
 
+/* ONBOARDING CATEGORY SELECT */
+.ob-cat-select{
+  appearance:none;
+  -webkit-appearance:none;
+  width:100%;
+  padding:8px 36px 8px 12px;
+  border-radius:9px;
+  border:1.5px solid #e2e8f0;
+  font-family:Inter,sans-serif;
+  font-size:.85rem;
+  outline:none;
+  color:#111;
+  cursor:pointer;
+  background-color:#fff;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:14px 14px;
+}
+.ob-cat-select:focus{
+  border-color:var(--teal);
+  box-shadow:0 0 0 3px rgba(14,165,164,.12);
+}
+.ob-cat-select option[value="__new__"]{
+  font-weight:700;
+  color:var(--teal-d);
+}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
@@ -682,7 +710,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         </div>
         <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
           <label for="mi-cat" style="font-size:.82rem;font-weight:600;color:#374151;white-space:nowrap;flex-shrink:0">Category</label>
-          <select id="mi-cat" style="flex:1;padding:8px 36px 8px 12px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:Inter,sans-serif;font-size:.85rem;outline:none;background:#fff url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9/%3E%3C/svg%3E\") no-repeat right 10px center;-webkit-appearance:none;appearance:none;cursor:pointer" onchange="handleObCategoryChange(this)" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='#e2e8eb'"></select>
+          <select id="mi-cat" class="ob-cat-select" onchange="handleObCategoryChange(this)"></select>
         </div>
         <div id="ob-item-list" class="item-list"></div>
         <p id="ob-item-count" style="font-size:.76rem;color:#9ca3af;text-align:center;padding:6px;display:none"></p>
@@ -1604,12 +1632,16 @@ function populateMiCat(selectName){
 function handleObCategoryChange(sel){
   if(sel.value!=='__new__') return;
 
-  // Keep the current selection while the modal is open.
+  // Native select menus can stay open while a modal is opened synchronously.
+  // Restore the previous/default category first, then open the category modal
+  // after the browser finishes closing the native dropdown.
   var cats=S.data&&S.data.menu.cats||[];
   var options=cats.length>0 ? cats.map(c=>c.name) : MI_CAT_DEFAULTS;
   sel.value=options[0]||'Main Course';
 
-  openCatModal();
+  setTimeout(function(){
+    openCatModal();
+  },60);
 }
 function miCatEnsure(name){
   // Called after addManualItem — adds new category to the select if not already there
