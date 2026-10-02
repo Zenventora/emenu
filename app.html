@@ -682,7 +682,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         </div>
         <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
           <label for="mi-cat" style="font-size:.82rem;font-weight:600;color:#374151;white-space:nowrap;flex-shrink:0">Category</label>
-          <select id="mi-cat" style="flex:1;padding:8px 36px 8px 12px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:Inter,sans-serif;font-size:.85rem;outline:none;background:#fff url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\") no-repeat right 10px center;-webkit-appearance:none;appearance:none;cursor:pointer" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='#e2e8f0'"></select>
+          <select id="mi-cat" style="flex:1;padding:8px 36px 8px 12px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:Inter,sans-serif;font-size:.85rem;outline:none;background:#fff url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9/%3E%3C/svg%3E\") no-repeat right 10px center;-webkit-appearance:none;appearance:none;cursor:pointer" onchange="handleObCategoryChange(this)" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='#e2e8eb'"></select>
         </div>
         <div id="ob-item-list" class="item-list"></div>
         <p id="ob-item-count" style="font-size:.76rem;color:#9ca3af;text-align:center;padding:6px;display:none"></p>
@@ -1574,16 +1574,42 @@ function renderObCard(){
   if(S.obStep===4) renderObPreview();
 }
 var MI_CAT_DEFAULTS=['Starters','Main Course','Breads','Rice & Biryani','Soups','Salads','Desserts','Beverages','Juices','Snacks','Combos','Specials'];
-function populateMiCat(){
+function populateMiCat(selectName){
   var sel=document.getElementById('mi-cat'); if(!sel) return;
   var cats=S.data&&S.data.menu.cats||[];
   var options=cats.length>0 ? cats.map(c=>c.name) : MI_CAT_DEFAULTS;
-  // Preserve any categories added this session that aren't in the list yet
-  var existing=Array.from(sel.options).map(o=>o.value);
+
+  // Rebuild the onboarding dropdown so it always reflects the latest menu data.
+  sel.innerHTML='';
   options.forEach(function(n){
-    if(!existing.includes(n)){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }
+    var o=document.createElement('option');
+    o.value=n;
+    o.textContent=n;
+    sel.appendChild(o);
   });
-  if(!sel.value) sel.value=options[0]||'Main Course';
+
+  // Allow a brand-new custom category directly from the initial onboarding flow.
+  var add=o=document.createElement('option');
+  add.value='__new__';
+  add.textContent='+ Add Custom Category...';
+  sel.appendChild(add);
+
+  if(selectName && options.includes(selectName)){
+    sel.value=selectName;
+  } else if(!sel.value || sel.value==='__new__'){
+    sel.value=options[0]||'Main Course';
+  }
+}
+
+function handleObCategoryChange(sel){
+  if(sel.value!=='__new__') return;
+
+  // Keep the current selection while the modal is open.
+  var cats=S.data&&S.data.menu.cats||[];
+  var options=cats.length>0 ? cats.map(c=>c.name) : MI_CAT_DEFAULTS;
+  sel.value=options[0]||'Main Course';
+
+  openCatModal();
 }
 function miCatEnsure(name){
   // Called after addManualItem — adds new category to the select if not already there
@@ -2574,7 +2600,17 @@ async function saveCat(){
       if(S.data&&S.data.menu.cats.find(c=>c.name===name)){toast('Category already exists','error');return;}
       await api('POST','/menu/'+S.menuId+'/categories',{name});
       var m=await loadMenuData(); syncFromAPI(S.biz,m);
-      closeModal('modal-cat'); selEdCat(name); toast('Category added ✓');
+      closeModal('modal-cat');
+
+      // Initial onboarding uses the same Add Category flow as the dashboard.
+      // Refresh the Step 2 dropdown and immediately select the new category.
+      if(S.obStep===2){
+        populateMiCat(name);
+      } else {
+        selEdCat(name);
+      }
+
+      toast('Category added ✓');
     }
   } catch(e){toast(e.message||'Failed to save category','error');}
 }
