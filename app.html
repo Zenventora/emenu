@@ -585,6 +585,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
           <div class="otp-row" id="otp-inputs"></div>
           <button class="btn btn-primary btn-full btn-lg" onclick="verifyOTP()">Verify Code</button>
           <p style="text-align:center;margin-top:14px;font-size:.82rem;color:#9ca3af">Didn't receive it? <a class="alink" onclick="sendOTP()">Resend OTP</a></p>
+          <p style="text-align:center;margin-top:10px;font-size:.82rem"><a class="alink" onclick="document.getElementById('fp-s2').style.display='none';document.getElementById('fp-s1').style.display='block'">← Wrong email? Go back</a></p>
         </div>
         <div id="fp-s3" style="display:none">
           <h1>New password</h1>
@@ -1377,7 +1378,8 @@ async function init(){
   } catch(e){
     var _pe=new URLSearchParams(window.location.search);
     if(_pe.get('google')==='error') { setTimeout(function(){toast('Google sign-in failed. Please try again.','error');},300); window.history.replaceState({},'','/'); }
-    show('s-login');
+    if(_pe.get('signup')==='true'){ window.history.replaceState({},'','/'); show('s-signup'); }
+    else { show('s-login'); }
   }
   finally { S.initialized = true; }
 }
