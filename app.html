@@ -3180,12 +3180,54 @@ function renderPubMenu(){
     document.getElementById('s-menu-preview').style.display='none';
     document.getElementById('s-menu-fullpage').style.display='block';
     document.getElementById('pub-menu-full').innerHTML=buildFullPageMenu(d,t);
+     initPublicCategoryNav();
   } else {
     document.getElementById('s-menu-preview').style.display='';
     document.getElementById('s-menu-fullpage').style.display='none';
     document.getElementById('pub-menu-frame').innerHTML=buildMenuHTML(d.biz||{},d.menu.cats||[],t);
   }
 }
+function setPublicCategoryActive(index){
+  var nav=document.getElementById('pub-cat-nav');
+  if(!nav) return;
+  var links=nav.querySelectorAll('.pub-cat-tab');
+  links.forEach(function(link,i){
+    var active=i===index;
+    var accent=nav.getAttribute('data-accent')||'#0ea5a4';
+    var muted=nav.getAttribute('data-muted')||'#64748b';
+    link.style.color=active?accent:muted;
+    link.style.borderBottomColor=active?accent:'transparent';
+    link.setAttribute('aria-current',active?'true':'false');
+  });
+}
+function initPublicCategoryNav(){
+  var nav=document.getElementById('pub-cat-nav');
+  if(!nav) return;
+  var sections=Array.prototype.slice.call(document.querySelectorAll('#pub-menu-full [data-pub-cat-section]'));
+  var links=nav.querySelectorAll('.pub-cat-tab');
+  if(!sections.length||!links.length) return;
+  var updateActive=function(){
+    var navBottom=nav.getBoundingClientRect().bottom, active=0;
+    sections.forEach(function(section,i){if(section.getBoundingClientRect().top<=navBottom+18) active=i;});
+    setPublicCategoryActive(active);
+  };
+  if(nav._pubScrollHandler) window.removeEventListener('scroll',nav._pubScrollHandler);
+  nav._pubScrollHandler=function(){window.requestAnimationFrame(updateActive);};
+  window.addEventListener('scroll',nav._pubScrollHandler,{passive:true});
+  links.forEach(function(link,i){
+    link.onclick=function(){
+      setPublicCategoryActive(i);
+      var target=document.getElementById(link.getAttribute('data-target'));
+      if(target){
+        var offset=nav.getBoundingClientRect().height+8;
+        var top=window.scrollY+target.getBoundingClientRect().top-offset;
+        window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+      }
+    };
+  });
+  updateActive();
+}
+
 function buildFullPageMenu(d,t){
   var biz=d.biz||{}, cats=d.menu&&d.menu.cats||[];
   t=t||TEMPLATES[0];
@@ -3265,9 +3307,9 @@ function buildFullPageMenu(d,t){
   // Template-driven category navigation.
   var visCats=cats.filter(function(cat){return (cat.items||[]).some(function(i){return i.avail!==false;});});
   if(visCats.length>1){
-    h+='<nav style="position:sticky;top:0;z-index:50;background:'+(isDark?'rgba(15,23,42,.94)':'rgba(255,255,255,.96)')+';backdrop-filter:blur(12px);border-bottom:1px solid '+cardBorder+';display:flex;overflow-x:auto;scrollbar-width:none">';
+    h+='<nav id="pub-cat-nav" data-accent="'+esc(accent)+'" data-muted="'+esc(muted)+'" style="position:sticky;top:0;z-index:50;background:'+(isDark?'rgba(15,23,42,.94)':'rgba(255,255,255,.96)')+';backdrop-filter:blur(12px);border-bottom:1px solid '+cardBorder+';display:flex;overflow-x:auto;scrollbar-width:none">';
     visCats.forEach(function(cat,ci){
-      h+='<a href="#fcat'+ci+'" style="flex-shrink:0;padding:14px 18px;font-size:.82rem;font-weight:800;color:'+(ci===0?accent:muted)+';text-decoration:none;white-space:nowrap;border-bottom:2px solid '+(ci===0?accent:'transparent')+'">'+esc(cat.name)+'</a>';
+      h+='<a class="pub-cat-tab" data-target="fcat'+ci+'" href="#fcat'+ci+'" aria-current="'+(ci===0?'true':'false')+'" style="flex-shrink:0;padding:14px 18px;font-size:.82rem;font-weight:800;color:'+(ci===0?accent:muted)+';text-decoration:none;white-space:nowrap;border-bottom:2px solid '+(ci===0?accent:'transparent')+'">'+esc(cat.name)+'</a>';
     });
     h+='</nav>';
   }
@@ -3278,7 +3320,7 @@ function buildFullPageMenu(d,t){
     var avItems=(cat.items||[]).filter(function(i){return i.avail!==false;});
     if(!avItems.length) return;
     any=true;
-    h+='<section id="fcat'+ci+'" style="padding-top:10px;margin-bottom:28px">';
+    h+='<section id="fcat'+ci+'" data-pub-cat-section="'+ci+'" style="padding-top:10px;margin-bottom:28px">';
     h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0 10px;border-bottom:2px solid '+(isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)')+'">';
     h+='<span style="font-size:.76rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:'+accent+'">'+esc(cat.name)+'</span>';
     h+='<span style="height:1px;flex:1;background:'+(isDark?'rgba(255,255,255,.08)':'#e5e7eb')+'"></span>';
