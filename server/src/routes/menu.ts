@@ -92,13 +92,13 @@ router.post('/:menuId/upload-image', async (req: AuthRequest, res: Response): Pr
     const imageBase64 = 'data:image/webp;base64,' + output.toString('base64')
     const updated = await prisma.menu.update({
       where: { id: menu.id },
-      data: { menuMode: 'UPLOAD', uploadedMenuImage: imageBase64 },
+      data: { uploadedMenuImage: imageBase64 },
     })
 
     res.json({
       menu: updated,
       imageUrl: imageBase64,
-      mode: 'UPLOAD',
+      mode: String(updated.menuMode || 'EDITOR').toUpperCase(),
     })
   } catch (err) {
     console.error('POST /menu/:menuId/upload-image:', err)
