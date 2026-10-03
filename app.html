@@ -2372,17 +2372,6 @@ async function publishUploadedMenu(){
   }catch(e){toast(e.message||'Failed to publish menu','error');}
 }
 
-async function switchToEditor(){
-  if(!S.menuId)return;
-  try{
-    await api('PATCH','/menu/'+S.menuId+'/use-editor',{});
-    var m=await loadMenuData(); syncFromAPI(S.biz,m);
-    setMenuEditorMode('EDITOR');
-    toast('Menu Editor enabled ✓');
-    tab('editor',document.getElementById('nav-editor'));
-  }catch(e){toast(e.message||'Could not enable Menu Editor','error');}
-}
-
 function menuURL(){ return window.location.origin+'/menu/'+(S.data&&S.data.slug||'demo'); }
 function copyMenuURL(){ var u=menuURL(); if(navigator.clipboard){navigator.clipboard.writeText(u).then(()=>toast('Link copied!'));}else{var t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Link copied!');} }
 
