@@ -2400,7 +2400,7 @@ function tab(name, btn){
   mobTab(name);
 }
 function mobTab(name){
-  var mobMap={overview:'overview',editor:'editor',templates:'templates',qr:'qr',settings:'settings',today:'overview'};
+  var mobMap={overview:'overview',editor:'editor',templates:'templates',qr:'qr',today:'today',settings:'settings'};
   var active=mobMap[name]||name;
   document.querySelectorAll('.mob-nav-btn').forEach(function(b){
     var id=b.id.replace('mob-btn-','');
