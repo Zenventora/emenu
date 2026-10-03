@@ -75,6 +75,11 @@ app.get('/api/health', (_req, res) => {
 // ─── Customer menu page (QR scan) ────────────────────────────────────────────
 // /menu/:slug serves app.html — client-side renders the public menu
 app.get('/menu/:slug', (_req, res) => {
+  // app.html contains the public-menu renderer. Do not let a browser/CDN keep
+  // yesterday's renderer after a template is changed.
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
   res.sendFile(path.join(staticRoot, 'app.html'))
 })
 
