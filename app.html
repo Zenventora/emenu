@@ -2378,15 +2378,11 @@ function tab(name, btn){
   var titles={overview:'Overview',editor:'Menu Editor',templates:'Templates',qr:'QR Code',today:"Today's Menu",settings:'Settings'};
   document.getElementById('dash-title').textContent=titles[name]||name;
   if(name==='editor'){
-    if(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD'){
-      switchToEditor();
-      return;
-    }
     renderEdCats();
+    updateMenuEditorModeUI();
   }
   if(name==='templates') renderTmplSplit('d');
   if(name==='today') initTodayTab();
-  if(name==='upload') setModeUI();
   mobTab(name);
 }
 function mobTab(name){
