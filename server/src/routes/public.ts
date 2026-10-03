@@ -71,6 +71,32 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
       return
     }
 
+    if (menu.menuMode === 'UPLOAD') {
+      res.json({
+        business: {
+          name: business.name,
+          slug: business.slug,
+          tagline: business.tagline,
+          logoUrl: business.logoUrl,
+          phone: business.phone,
+          whatsapp: business.whatsapp,
+          location: business.location,
+          address: business.address,
+          instagram: business.instagram,
+          facebook: business.facebook,
+          openingHours: business.openingHours,
+        },
+        menu: {
+          id: menu.id,
+          templateId: menu.templateId,
+          menuMode: 'UPLOAD',
+          uploadedMenuImage: menu.uploadedMenuImage,
+          categories: [],
+        },
+      })
+      return
+    }
+
     res.json({
       business: {
         name: business.name,
@@ -88,6 +114,8 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
       menu: {
         id: menu.id,
         templateId: menu.templateId,
+        menuMode: menu.menuMode,
+        uploadedMenuImage: menu.uploadedMenuImage,
         categories: menu.categories.map(cat => ({
           id: cat.id,
           name: cat.name,
