@@ -39,7 +39,7 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
 // Create business + initial menu (called after onboarding step 1)
 router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, tagline, phone, location, address, logoBase64 } = req.body
+    const { name, tagline, phone, whatsapp, location, address, logoBase64, instagram, facebook } = req.body
     if (!name) { res.status(400).json({ message: 'Business name is required' }); return }
 
     // Generate unique slug from name
@@ -58,6 +58,9 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
         slug,
         tagline: tagline || null,
         phone: phone || null,
+        whatsapp: whatsapp || null,
+        instagram: instagram || null,
+        facebook: facebook || null,
         location: location || null,
         address: address || null,
         logoUrl: logoBase64 || null,
