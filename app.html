@@ -2251,24 +2251,100 @@ function refreshDash(){
   f('st-bname',biz.name); f('st-bloc',biz.loc); f('st-btag',biz.tag);
   f('st-bphone',S.biz&&S.biz.phone||''); f('st-bwa',S.biz&&S.biz.whatsapp||'');
   f('st-big',S.biz&&S.biz.instagram||''); f('st-bfb',S.biz&&S.biz.facebook||'');
-  // Default to editor tab
-  tab('editor', document.querySelectorAll('.nav-item')[1]);
+  setModeUI();
+  // Keep the existing default dashboard tab behavior.
+  tab('overview', document.querySelectorAll('.nav-item')[0]);
   renderTmplSplit('d');
+}
+
+function setModeUI(){
+  var uploadMode=!!(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD');
+  var tBtn=document.getElementById('nav-templates');
+  var dBtn=document.getElementById('nav-today');
+  var uBtn=document.getElementById('nav-upload');
+  [tBtn,dBtn].forEach(function(btn){
+    if(!btn) return;
+    btn.disabled=uploadMode;
+    btn.style.opacity=uploadMode?'0.42':'1';
+    btn.style.cursor=uploadMode?'not-allowed':'pointer';
+    btn.title=uploadMode?'Switch to Menu Editor to enable this feature':'';
+  });
+  if(uBtn){
+    uBtn.style.background=uploadMode?'rgba(14,165,164,.08)':'';
+    uBtn.style.color=uploadMode?'#0f766e':'';
+  }
+  var addBtn=document.querySelector('.dash-topbar .btn-primary');
+  if(addBtn){
+    addBtn.disabled=false;
+    addBtn.textContent=uploadMode?'🖼️ Upload Menu':' + Add Item';
+    addBtn.onclick=uploadMode?function(){tab('upload',uBtn);}:function(){tab('editor',document.querySelectorAll('.nav-item')[1]);openProdModal();};
+  }
+  var tp=document.getElementById('t-templates');
+  var td=document.getElementById('t-today');
+  [tp,td].forEach(function(el){if(el&&uploadMode) el.style.opacity='0.62';});
+  var upImg=document.getElementById('dash-upload-preview');
+  var upPh=document.getElementById('dash-upload-placeholder');
+  if(upImg && S.data && S.data.uploadedMenuImage){
+    upImg.src=S.data.uploadedMenuImage; upImg.style.display='block';
+    if(upPh) upPh.style.display='none';
+  }
+}
+
+async function handleDashboardMenuImage(input){
+  var file=input&&input.files&&input.files[0];
+  if(!file) return;
+  if(file.size>15*1024*1024){toast('Image is too large. Maximum 15MB.','error');input.value='';return;}
+  if(!/^image\\/(png|jpeg|webp)$/i.test(file.type)){toast('Please upload a PNG, JPG, or WebP image','error');input.value='';return;}
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    var data=e.target.result;
+    var img=document.getElementById('dash-upload-preview'), ph=document.getElementById('dash-upload-placeholder'), st=document.getElementById('dash-upload-status');
+    if(img){img.src=data;img.style.display='block';}
+    if(ph) ph.style.display='none';
+    if(st) st.textContent='Uploading and optimizing image…';
+    try{
+      var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:data});
+      S.data.menuMode='UPLOAD'; S.data.uploadedMenuImage=r.imageUrl||data;
+      if(st) st.textContent='Menu image uploaded ✓';
+      setModeUI();
+      toast('Menu image updated ✓','success');
+    }catch(err){
+      if(st) st.textContent='';
+      toast(err.message||'Upload failed','error');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function publishUploadedMenu(){
+  if(!S.menuId){toast('No menu found','error');return;}
+  if(!(S.data&&S.data.uploadedMenuImage)){toast('Please upload a menu image first','error');return;}
+  try{
+    await api('POST','/qr/'+S.menuId+'/generate');
+    var m=await loadMenuData(); syncFromAPI(S.biz,m);
+    toast('Menu image published — QR is ready ✓','success');
+    setModeUI();
+  }catch(e){toast(e.message||'Failed to publish menu','error');}
 }
 
 function menuURL(){ return window.location.origin+'/menu/'+(S.data&&S.data.slug||'demo'); }
 function copyMenuURL(){ var u=menuURL(); if(navigator.clipboard){navigator.clipboard.writeText(u).then(()=>toast('Link copied!'));}else{var t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Link copied!');} }
 
 function tab(name, btn){
-  var tabs=['overview','editor','templates','qr','today','settings'];
+  if((name==='templates'||name==='today')&&S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD'){
+    toast('Switch to Menu Editor to use '+(name==='templates'?'Templates':"Today's Menu"),'info');
+    return;
+  }
+  var tabs=['overview','editor','templates','qr','today','upload','settings'];
   tabs.forEach(t=>{ var e=document.getElementById('t-'+t); if(e) e.style.display=t===name?'block':'none'; });
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  var titles={overview:'Overview',editor:'Menu Editor',templates:'Templates',qr:'QR Code',today:"Today's Menu",settings:'Settings'};
+  var titles={overview:'Overview',editor:'Menu Editor',templates:'Templates',qr:'QR Code',today:"Today's Menu",upload:'Upload Menu',settings:'Settings'};
   document.getElementById('dash-title').textContent=titles[name]||name;
   if(name==='editor') renderEdCats();
   if(name==='templates') renderTmplSplit('d');
   if(name==='today') initTodayTab();
+  if(name==='upload') setModeUI();
   mobTab(name);
 }
 function mobTab(name){
