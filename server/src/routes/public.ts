@@ -10,6 +10,12 @@ const DAY_ABBR = ['sun','mon','tue','wed','thu','fri','sat']
 // Customer-facing: returns full menu data for a business by slug
 router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => {
   try {
+    // Public menu is dynamic (template, menu items, availability). Never cache
+    // an older rendered menu in the browser/proxy after a template change.
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // Prefer client-supplied local date (passed from customer browser via ?localDate=YYYY-MM-DD)
     // so disabledDate always matches the restaurant timezone, not server UTC.
     const now = new Date()
