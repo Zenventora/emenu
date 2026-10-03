@@ -1318,7 +1318,7 @@ var S = {
   menuId: null,   // Active menu ID
   data:   null,   // Legacy-compatible shape (built by syncFromAPI)
   fpEmail: '', fpOTP: '',
-  obStep: 1, selTmpl: 0,
+  obStep: 1, selTmpl: 0, obMode: null, menuUploadImage: '',
   edCat: null, editProdIdx: null,
   rec: null, listening: false,
   _dragCatIdx: null, _dragProdIdx: null, _editCatName: null,
@@ -1329,7 +1329,7 @@ var S = {
 function resetState() {
   S.user = null; S.biz = null; S.menuId = null; S.data = null;
   S.fpEmail = ''; S.fpOTP = '';
-  S.obStep = 1; S.selTmpl = 0;
+  S.obStep = 1; S.selTmpl = 0; S.obMode = null; S.menuUploadImage = '';
   S.edCat = null; S.editProdIdx = null;
   S.rec = null; S.listening = false;
   S._dragCatIdx = null; S._dragProdIdx = null; S._editCatName = null;
@@ -1374,11 +1374,74 @@ function syncFromAPI(biz, menu) {
       };
     }) },
     tmpl: menu ? parseInt(menu.templateId||'0') : 0,
+    menuMode: menu ? String(menu.menuMode||'EDITOR').toUpperCase() : 'EDITOR',
+    uploadedMenuImage: menu ? (menu.uploadedMenuImage || '') : '',
     pub:  menu ? menu.isPublished : false,
     slug: biz.slug || '',
     qr:   menu && menu.qrCode ? menu.qrCode : null
   };
   S.selTmpl = S.data.tmpl || 0;
+}
+
+// ─────────────────────────────────────────
+// MENU CREATION MODE / UPLOAD
+// ─────────────────────────────────────────
+function selectOnboardMode(mode){
+  mode=String(mode||'').toUpperCase();
+  if(mode!=='EDITOR'&&mode!=='UPLOAD') return;
+  S.obMode=mode;
+  var ep=document.getElementById('ob-editor-panel');
+  var up=document.getElementById('ob-upload-panel');
+  var eb=document.getElementById('ob-mode-editor');
+  var ub=document.getElementById('ob-mode-upload');
+  if(ep) ep.style.display=mode==='EDITOR'?'block':'none';
+  if(up) up.style.display=mode==='UPLOAD'?'block':'none';
+  if(eb){eb.style.borderColor=mode==='EDITOR'?'#0ea5a4':'#e2e8f0';eb.style.background=mode==='EDITOR'?'#f0fdfa':'#fff';}
+  if(ub){ub.style.borderColor=mode==='UPLOAD'?'#0ea5a4':'#e2e8f0';ub.style.background=mode==='UPLOAD'?'#f0fdfa':'#fff';}
+  if(mode==='UPLOAD' && S.data && S.data.uploadedMenuImage){
+    S.menuUploadImage=S.data.uploadedMenuImage;
+    var img=document.getElementById('ob-menu-preview'), ph=document.getElementById('ob-upload-placeholder');
+    if(img){img.src=S.menuUploadImage;img.style.display='block';}
+    if(ph) ph.style.display='none';
+  }
+}
+function handleMenuImageUpload(input){
+  var file=input&&input.files&&input.files[0];
+  if(!file) return;
+  if(file.size>15*1024*1024){toast('Image is too large. Maximum 15MB.','error');input.value='';return;}
+  if(!/^image\/(png|jpeg|webp)$/i.test(file.type)){toast('Please upload a PNG, JPG, or WebP image','error');input.value='';return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    S.menuUploadImage=e.target.result;
+    var img=document.getElementById('ob-menu-preview'), ph=document.getElementById('ob-upload-placeholder');
+    if(img){img.src=S.menuUploadImage;img.style.display='block';}
+    if(ph) ph.style.display='none';
+    var st=document.getElementById('ob-upload-status');
+    if(st) st.textContent=file.name+' selected ✓';
+  };
+  reader.readAsDataURL(file);
+}
+async function saveMenuUpload(){
+  if(!S.menuId){throw new Error('Please complete business details first');}
+  if(!S.menuUploadImage){throw new Error('Please upload your menu image');}
+  var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:S.menuUploadImage});
+  if(S.data){
+    S.data.menuMode='UPLOAD';
+    S.data.uploadedMenuImage=r.imageUrl||S.menuUploadImage;
+  }
+  S.obMode='UPLOAD';
+  return r;
+}
+async function switchToEditor(){
+  if(!S.menuId) return;
+  try{
+    await api('PATCH','/menu/'+S.menuId+'/use-editor',{});
+    var m=await loadMenuData();
+    syncFromAPI(S.biz,m);
+    toast('Menu Editor enabled ✓');
+    setModeUI();
+    tab('editor',document.querySelectorAll('.nav-item')[1]);
+  }catch(e){toast(e.message||'Could not enable Menu Editor','error');}
 }
 
 // No-op — mutations go to the API directly
