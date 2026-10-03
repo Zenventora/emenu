@@ -706,7 +706,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
           </button>
         </div>
 
-        <div id="ob-editor-panel">
+        <div id="ob-editor-panel" style="display:none">
         <h3 style="font-size:1rem;font-weight:800;color:var(--blue);margin:0 0 5px">Build your menu</h3>
         <p style="font-size:.78rem;color:#9ca3af;margin:0 0 14px">Use voice input or add items manually. You can always edit later from the dashboard.</p>
         <div class="voice-zone" id="vzone">
@@ -1665,6 +1665,8 @@ async function resetPwd(){
 // ─────────────────────────────────────────
 function initOb(){
   S.obStep=1; S.selTmpl=S.data?S.data.tmpl:0;
+  S.obMode=null;
+  S.menuUploadImage='';
   renderObSteps(); renderObCard();
 }
 function renderObTmpl(){ renderTmplSplit('o'); }
@@ -1691,7 +1693,15 @@ function renderObCard(){
     el.style.display=i===S.obStep?'flex':'none';
     el.style.flexDirection='column';
   }
-  if(S.obStep===2) populateMiCat();
+  if(S.obStep===2){
+    populateMiCat();
+    if(S.obMode) selectOnboardMode(S.obMode);
+    else {
+      var ep=document.getElementById('ob-editor-panel'), up=document.getElementById('ob-upload-panel');
+      if(ep) ep.style.display='none';
+      if(up) up.style.display='none';
+    }
+  }
   if(S.obStep===3) setTimeout(function(){renderTmplSplit('o');},50);
   if(S.obStep===4) renderObPreview();
 }
@@ -1757,7 +1767,9 @@ async function obNav(dir){
           phone:document.getElementById('bp').value,
           whatsapp:document.getElementById('bw').value,
           description:document.getElementById('bdesc').value,
-          logoBase64:document.getElementById('b-logo-data').value||null
+          logoBase64:document.getElementById('b-logo-data').value||null,
+          instagram:document.getElementById('b-ig').value.trim()||null,
+          facebook:document.getElementById('b-fb').value.trim()||null
         };
         if(S.biz&&S.biz.id){
           var r=await api('PUT','/business/'+S.biz.id,payload);
@@ -1772,6 +1784,24 @@ async function obNav(dir){
       finally{var b2=document.getElementById('ob-next');if(b2&&!b2.disabled)b2.textContent='Continue →';}
     }
     if(S.obStep===2){
+      if(!S.obMode){toast('Choose Menu Editor or Upload Menu to continue','error');return;}
+      if(S.obMode==='UPLOAD'){
+        if(!S.menuUploadImage){toast('Please upload your menu image','error');return;}
+        var uploadBtn=document.getElementById('ob-next');
+        if(uploadBtn){uploadBtn.disabled=true;uploadBtn.textContent='Uploading…';}
+        try{
+          await saveMenuUpload();
+          if(S.menuId) await api('POST','/qr/'+S.menuId+'/generate');
+          var ubizRes=await api('GET','/business/me');
+          var ubiz=ubizRes.business, umenu=ubiz&&ubiz.menus&&ubiz.menus[0]?ubiz.menus[0]:null;
+          syncFromAPI(ubiz,umenu);
+          toast('Menu image published! 🎉 Your QR code is ready.');
+          show('s-dashboard');
+          setTimeout(function(){tab('qr',document.querySelectorAll('.nav-item')[3]);},300);
+        }catch(e){toast(e.message||'Upload failed','error');}
+        finally{if(uploadBtn){uploadBtn.disabled=false;uploadBtn.textContent='Continue →';}}
+        return;
+      }
       if(!S.data||!S.data.menu.cats.length||!S.data.menu.cats.some(c=>c.items.length)){toast('Add at least one menu item to continue','error');return;}
     }
     if(S.obStep===3){
