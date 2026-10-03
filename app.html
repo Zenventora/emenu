@@ -852,10 +852,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Today's Menu
         </button>
-        <button class="nav-item" onclick="tab('upload',this)" id="nav-upload">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 16V8"/><path d="m9 11 3-3 3 3"/><path d="M7 20h10"/></svg>
-          Upload Menu
-        </button>
         <div class="nav-label" style="margin-top:6px">Account</div>
         <button class="nav-item" onclick="tab('settings',this)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -908,6 +904,43 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 
         <!-- EDITOR TAB -->
         <div id="t-editor">
+          <div class="card card-p" style="margin-bottom:18px;padding:16px 18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:.95rem;font-weight:800;color:var(--blue)">Menu Creation</div>
+                <div style="font-size:.76rem;color:#94a3b8;margin-top:3px">Choose how you want to manage your menu.</div>
+              </div>
+              <div style="display:flex;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:4px;gap:4px">
+                <button id="mode-editor-btn" class="btn btn-sm" onclick="setMenuEditorMode('EDITOR')" style="min-width:135px">✏️ Menu Editor</button>
+                <button id="mode-upload-btn" class="btn btn-sm" onclick="setMenuEditorMode('UPLOAD')" style="min-width:135px">🖼️ File Upload</button>
+              </div>
+            </div>
+          </div>
+          <div id="editor-upload-panel" style="display:none">
+            <div class="card card-p" style="max-width:760px;margin:0 auto">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+                <div>
+                  <h2 style="font-size:1.15rem;font-weight:800;color:var(--blue);margin:0 0 5px">Upload Menu File</h2>
+                  <p style="font-size:.82rem;color:#6b7280;margin:0;line-height:1.5">Upload your ready-made menu image. After publishing, the same QR link will show this image.</p>
+                </div>
+                <span style="font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px;background:#f0fdfa;color:#0f766e">File Upload</span>
+              </div>
+              <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:30px 20px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('dash-menu-file').click()">
+                <div id="dash-upload-placeholder">
+                  <div style="font-size:2.4rem;margin-bottom:8px">🖼️</div>
+                  <div style="font-size:.92rem;font-weight:800;color:#374151">Choose menu image</div>
+                  <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">PNG, JPG or WebP · up to 15MB</div>
+                </div>
+                <img id="dash-upload-preview" src="" alt="Uploaded menu" style="display:none;max-width:100%;max-height:650px;border-radius:12px;object-fit:contain"/>
+              </div>
+              <input type="file" id="dash-menu-file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleDashboardMenuImage(this)"/>
+              <div id="dash-upload-status" style="font-size:.78rem;color:#64748b;text-align:center;margin-top:10px"></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+                <button class="btn btn-primary" onclick="publishUploadedMenu()">⚡ Publish & Update QR</button>
+              </div>
+            </div>
+          </div>
+          <div id="editor-structured-panel">
           <div class="editor-grid">
             <div class="cat-panel">
               <h3>Categories</h3>
@@ -921,6 +954,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
               </div>
               <div id="ed-products"></div>
             </div>
+          </div>
           </div>
         </div>
 
@@ -1028,33 +1062,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
             <div id="today-voice-status" style="display:none;font-size:.78rem;font-weight:600;color:var(--teal);text-align:center;margin-bottom:10px;padding:6px;background:#f0fdfc;border-radius:8px"></div>
             <!-- Item list -->
             <div id="today-list"></div>
-          </div>
-        </div>
-
-        <!-- UPLOAD MENU TAB -->
-        <div id="t-upload" style="display:none">
-          <div class="card card-p" style="max-width:760px;margin:0 auto">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px">
-              <div>
-                <h2 style="font-size:1.15rem;font-weight:800;color:var(--blue);margin:0 0 5px">Upload Menu Image</h2>
-                <p style="font-size:.82rem;color:#6b7280;margin:0;line-height:1.5">Upload your ready-made menu image. Customers will see this exact image when they open your QR link.</p>
-              </div>
-              <span id="upload-mode-badge" style="font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px;background:#f0fdfa;color:#0f766e">Upload Mode</span>
-            </div>
-            <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:30px 20px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('dash-menu-file').click()">
-              <div id="dash-upload-placeholder">
-                <div style="font-size:2.4rem;margin-bottom:8px">🖼️</div>
-                <div style="font-size:.92rem;font-weight:800;color:#374151">Choose menu image</div>
-                <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">PNG, JPG or WebP · up to 15MB</div>
-              </div>
-              <img id="dash-upload-preview" src="" alt="Uploaded menu" style="display:none;max-width:100%;max-height:650px;border-radius:12px;object-fit:contain"/>
-            </div>
-            <input type="file" id="dash-menu-file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleDashboardMenuImage(this)"/>
-            <div id="dash-upload-status" style="font-size:.78rem;color:#64748b;text-align:center;margin-top:10px"></div>
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap">
-              <button class="btn btn-outline" onclick="switchToEditor()">✏️ Switch to Menu Editor</button>
-              <button class="btn btn-primary" onclick="publishUploadedMenu()">⚡ Publish & Update QR</button>
-            </div>
           </div>
         </div>
 
@@ -2273,58 +2280,26 @@ function setModeUI(){
   var uploadMode=!!(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD');
   var tBtn=document.getElementById('nav-templates');
   var dBtn=document.getElementById('nav-today');
-  var uBtn=document.getElementById('nav-upload');
   [tBtn,dBtn].forEach(function(btn){
     if(!btn) return;
     btn.disabled=uploadMode;
     btn.style.opacity=uploadMode?'0.42':'1';
     btn.style.cursor=uploadMode?'not-allowed':'pointer';
-    btn.title=uploadMode?'Switch to Menu Editor to enable this feature':'';
+    btn.style.pointerEvents=uploadMode?'none':'auto';
+    btn.setAttribute('aria-disabled',uploadMode?'true':'false');
+    btn.title=uploadMode?'Menu Editor mode is required for this feature':'';
   });
-  if(uBtn){
-    uBtn.style.background=uploadMode?'rgba(14,165,164,.08)':'';
-    uBtn.style.color=uploadMode?'#0f766e':'';
-  }
   var addBtn=document.querySelector('.dash-topbar .btn-primary');
   if(addBtn){
     addBtn.disabled=false;
     addBtn.textContent=uploadMode?'🖼️ Upload Menu':'+ Add Item';
-    addBtn.onclick=uploadMode?function(){tab('upload',uBtn);}:function(){tab('editor',document.querySelectorAll('.nav-item')[1]);openProdModal();};
+    addBtn.onclick=uploadMode?function(){
+      tab('editor',document.querySelectorAll('.nav-item')[1]);
+      setMenuEditorMode('UPLOAD');
+      setTimeout(function(){var f=document.getElementById('dash-menu-file');if(f)f.click();},50);
+    }:function(){tab('editor',document.querySelectorAll('.nav-item')[1]);openProdModal();};
   }
-  var tp=document.getElementById('t-templates');
-  var td=document.getElementById('t-today');
-  [tp,td].forEach(function(el){if(el) el.style.opacity=uploadMode?'0.62':'1';});
-  var upImg=document.getElementById('dash-upload-preview');
-  var upPh=document.getElementById('dash-upload-placeholder');
-  if(upImg && S.data && S.data.uploadedMenuImage){
-    upImg.src=S.data.uploadedMenuImage; upImg.style.display='block';
-    if(upPh) upPh.style.display='none';
-  }
-}
-
-async function handleDashboardMenuImage(input){
-  var file=input&&input.files&&input.files[0];
-  if(!file) return;
-  if(file.size>15*1024*1024){toast('Image is too large. Maximum 15MB.','error');input.value='';return;}
-  if(!/^image\/(png|jpeg|webp)$/i.test(file.type)){toast('Please upload a PNG, JPG, or WebP image','error');input.value='';return;}
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    var data=e.target.result;
-    var img=document.getElementById('dash-upload-preview'), ph=document.getElementById('dash-upload-placeholder'), st=document.getElementById('dash-upload-status');
-    if(img){img.src=data;img.style.display='block';}
-    if(ph) ph.style.display='none';
-    if(st) st.textContent='Uploading and optimizing image…';
-    try{
-      var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:data});
-      S.data.uploadedMenuImage=r.imageUrl||data;
-      if(st) st.textContent='Menu image uploaded ✓';
-      setModeUI();
-      toast('Menu image updated ✓','success');
-    }catch(err){
-      if(st) st.textContent='';
-      toast(err.message||'Upload failed','error');
-    }
-  };
+  updateMenuEditorModeUI();
   reader.readAsDataURL(file);
 }
 
@@ -2349,7 +2324,7 @@ function tab(name, btn){
     toast('Switch to Menu Editor to use '+(name==='templates'?'Templates':"Today's Menu"),'info');
     return;
   }
-  var tabs=['overview','editor','templates','qr','today','upload','settings'];
+  var tabs=['overview','editor','templates','qr','today','settings'];
   tabs.forEach(t=>{ var e=document.getElementById('t-'+t); if(e) e.style.display=t===name?'block':'none'; });
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(btn) btn.classList.add('active');
