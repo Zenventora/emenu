@@ -1,6 +1,7 @@
 import { Router, Response } from 'express'
 import { requireAuth, AuthRequest } from '../middleware/auth'
 import prisma from '../lib/prisma'
+import sharp from 'sharp'
 
 const router = Router()
 router.use(requireAuth)
@@ -36,7 +37,111 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
   }
 })
 
-// ─── PATCH /api/menu/:menuId/template ────────────────────────────────────────
+// ─── PATCH /api/menu/:menuId/mode ────────────────────────────────────────────
+// Select how this menu is maintained: EDITOR or UPLOAD.
+// Existing menus remain EDITOR by default, so this is backward-compatible.
+router.patch('/:menuId/mode', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const menu = await getMenuForUser(req.params.menuId, req.userId!)
+    if (!menu) { res.status(404).json({ message: 'Menu not found' }); return }
+
+    const requested = String(req.body.mode || '').trim().toUpperCase()
+    if (requested !== 'EDITOR' && requested !== 'UPLOAD') {
+      res.status(400).json({ message: 'Mode must be EDITOR or UPLOAD' }); return
+    }
+
+    const updated = await prisma.menu.update({
+      where: { id: menu.id },
+      data: { menuMode: requested },
+    })
+    res.json({ menu: updated })
+  } catch (err) {
+    console.error('PATCH /menu/:menuId/mode:', err)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ─── POST /api/menu/:menuId/upload-image ──────────────────────────────────────
+// Store a normalized/compressed copy of the uploaded menu image.
+// The image lives with the menu record, so it survives container restarts/deploys.
+router.post('/:menuId/upload-image', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const menu = await getMenuForUser(req.params.menuId, req.userId!)
+    if (!menu) { res.status(404).json({ message: 'Menu not found' }); return }
+
+    const raw = String(req.body.imageBase64 || '').trim()
+    if (!raw) { res.status(400).json({ message: 'Menu image is required' }); return }
+    if (!/^data:image\\/(png|jpe?g|webp);base64,/i.test(raw)) {
+      res.status(400).json({ message: 'Please upload a PNG, JPG, or WebP image' }); return
+    }
+
+    const base64 = raw.replace(/^data:image\\/[^;]+;base64,/i, '')
+    const input = Buffer.from(base64, 'base64')
+    if (!input.length) { res.status(400).json({ message: 'Invalid image data' }); return }
+    if (input.length > 15 * 1024 * 1024) {
+      res.status(413).json({ message: 'Image is too large. Maximum upload size is 15MB.' }); return
+    }
+
+    // Normalize to WebP and cap dimensions to keep DB/API payloads reasonable.
+    const output = await sharp(input)
+      .rotate()
+      .resize({ width: 1800, height: 2400, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 84 })
+      .toBuffer()
+
+    const imageBase64 = 'data:image/webp;base64,' + output.toString('base64')
+    const updated = await prisma.menu.update({
+      where: { id: menu.id },
+      data: { menuMode: 'UPLOAD', uploadedMenuImage: imageBase64 },
+    })
+
+    res.json({
+      menu: updated,
+      imageUrl: imageBase64,
+      mode: 'UPLOAD',
+    })
+  } catch (err) {
+    console.error('POST /menu/:menuId/upload-image:', err)
+    res.status(500).json({ message: 'Failed to upload menu image' })
+  }
+})
+
+// ─── DELETE /api/menu/:menuId/upload-image ────────────────────────────────────
+router.delete('/:menuId/upload-image', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const menu = await getMenuForUser(req.params.menuId, req.userId!)
+    if (!menu) { res.status(404).json({ message: 'Menu not found' }); return }
+
+    const updated = await prisma.menu.update({
+      where: { id: menu.id },
+      data: { uploadedMenuImage: null },
+    })
+    res.json({ menu: updated })
+  } catch (err) {
+    console.error('DELETE /menu/:menuId/upload-image:', err)
+    res.status(500).json({ message: 'Failed to remove menu image' })
+  }
+})
+
+// ─── Switch back to editor mode without deleting uploaded image ───────────────
+// Keeping the upload lets the customer return to it later if needed.
+router.patch('/:menuId/use-editor', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const menu = await getMenuForUser(req.params.menuId, req.userId!)
+    if (!menu) { res.status(404).json({ message: 'Menu not found' }); return }
+
+    const updated = await prisma.menu.update({
+      where: { id: menu.id },
+      data: { menuMode: 'EDITOR' },
+    })
+    res.json({ menu: updated })
+  } catch (err) {
+    console.error('PATCH /menu/:menuId/use-editor:', err)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// // ─── PATCH /api/menu/:menuId/template ────────────────────────────────────────
 router.patch('/:menuId/template', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const menu = await getMenuForUser(req.params.menuId, req.userId!)
