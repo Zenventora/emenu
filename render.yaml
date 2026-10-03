@@ -27,6 +27,9 @@ services:
       - key: JWT_REFRESH_SECRET
         sync: false          # 64-char random string (different from above)
 
+      - key: GOOGLE_CLIENT_ID
+        sync: false          # Google OAuth Web Client ID
+
       - key: SMTP_HOST
         value: smtp.zoho.in
 
