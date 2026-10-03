@@ -2220,8 +2220,9 @@ function refreshDash(){
   // Sidebar user
   document.getElementById('sb-user').innerHTML='<div class="u-avatar">'+user.name.charAt(0).toUpperCase()+'</div><div style="min-width:0;flex:1"><div class="u-name">'+user.name+'</div><div class="u-email">'+user.email+'</div></div>';
   // Stats — real data only
-  document.getElementById('sv-items').textContent=total;
-  document.getElementById('sv-cats').textContent=cats.length;
+  var uploadMode=!!(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD');
+  document.getElementById('sv-items').textContent=uploadMode?'—':total;
+  document.getElementById('sv-cats').textContent=uploadMode?'—':cats.length;
   document.getElementById('sv-status').textContent=S.data.pub?'Live ✅':'Draft';
   var updEl=document.getElementById('sv-updated');
   if(S.biz&&S.biz.updatedAt){
@@ -2232,8 +2233,16 @@ function refreshDash(){
   // Overview items preview
   var items=[]; cats.forEach(c=>c.items.forEach(it=>items.push(it)));
   var oh='';
-  items.slice(0,5).forEach(it=>{ oh+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0"><span style="font-size:.84rem;font-weight:600">'+it.name+'</span><span style="font-size:.84rem;font-weight:800;color:var(--teal)">₹'+it.price+'</span></div>'; });
-  if(!oh) oh='<p style="color:#9ca3af;font-size:.82rem;text-align:center;padding:14px">No items yet. <a style="color:var(--teal);cursor:pointer;font-weight:600" onclick="tab(\'editor\',document.querySelectorAll(\'.nav-item\')[1])">Add items →</a></p>';
+  if(uploadMode){
+    oh+='<div style="text-align:center;padding:8px 0">';
+    if(S.data.uploadedMenuImage) oh+='<img src="'+S.data.uploadedMenuImage+'" alt="Uploaded menu" style="display:block;width:100%;max-height:260px;object-fit:contain;border-radius:12px;border:1px solid #e5e7eb;background:#f8fafc">';
+    oh+='<p style="font-size:.78rem;color:#64748b;margin:10px 0 0">Uploaded menu image · customers see this image directly</p>';
+    oh+='<button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="tab(\'upload\',document.getElementById(\'nav-upload\'))">Manage Upload →</button>';
+    oh+='</div>';
+  } else {
+    items.slice(0,5).forEach(it=>{ oh+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0"><span style="font-size:.84rem;font-weight:600">'+it.name+'</span><span style="font-size:.84rem;font-weight:800;color:var(--teal)">₹'+it.price+'</span></div>'; });
+    if(!oh) oh='<p style="color:#9ca3af;font-size:.82rem;text-align:center;padding:14px">No items yet. <a style="color:var(--teal);cursor:pointer;font-weight:600" onclick="tab(\'editor\',document.querySelectorAll(\'.nav-item\')[1])">Add items →</a></p>';
+  }
   document.getElementById('ov-items').innerHTML=oh;
   // QR
   var url=menuURL(); document.getElementById('qr-url-txt').textContent=url;
@@ -2341,7 +2350,13 @@ function tab(name, btn){
   if(btn) btn.classList.add('active');
   var titles={overview:'Overview',editor:'Menu Editor',templates:'Templates',qr:'QR Code',today:"Today's Menu",upload:'Upload Menu',settings:'Settings'};
   document.getElementById('dash-title').textContent=titles[name]||name;
-  if(name==='editor') renderEdCats();
+  if(name==='editor'){
+    if(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD'){
+      switchToEditor();
+      return;
+    }
+    renderEdCats();
+  }
   if(name==='templates') renderTmplSplit('d');
   if(name==='today') initTodayTab();
   if(name==='upload') setModeUI();
