@@ -71,11 +71,11 @@ router.post('/:menuId/upload-image', async (req: AuthRequest, res: Response): Pr
 
     const raw = String(req.body.imageBase64 || '').trim()
     if (!raw) { res.status(400).json({ message: 'Menu image is required' }); return }
-    if (!/^data:image\\/(png|jpe?g|webp);base64,/i.test(raw)) {
+    if (!/^data:image\/(png|jpe?g|webp);base64,/i.test(raw)) {
       res.status(400).json({ message: 'Please upload a PNG, JPG, or WebP image' }); return
     }
 
-    const base64 = raw.replace(/^data:image\\/[^;]+;base64,/i, '')
+    const base64 = raw.replace(/^data:image\/[^;]+;base64,/i, '')
     const input = Buffer.from(base64, 'base64')
     if (!input.length) { res.status(400).json({ message: 'Invalid image data' }); return }
     if (input.length > 15 * 1024 * 1024) {
