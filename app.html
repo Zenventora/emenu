@@ -2261,8 +2261,10 @@ function refreshDash(){
   f('st-bphone',S.biz&&S.biz.phone||''); f('st-bwa',S.biz&&S.biz.whatsapp||'');
   f('st-big',S.biz&&S.biz.instagram||''); f('st-bfb',S.biz&&S.biz.facebook||'');
   setModeUI();
-  // Keep the existing default dashboard tab behavior.
-  tab('overview', document.querySelectorAll('.nav-item')[0]);
+  // Preserve the existing editor-first dashboard behavior for normal menus.
+  // Upload-mode customers start on Overview so we never switch their mode accidentally.
+  if(uploadMode) tab('overview', document.querySelectorAll('.nav-item')[0]);
+  else tab('editor', document.querySelectorAll('.nav-item')[1]);
   renderTmplSplit('d');
 }
 
