@@ -840,7 +840,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Menu Editor
         </button>
-        <button class="nav-item" onclick="tab('templates',this)">
+        <button class="nav-item" id="nav-templates" onclick="tab('templates',this)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
           Templates
         </button>
@@ -2276,7 +2276,7 @@ function setModeUI(){
   var addBtn=document.querySelector('.dash-topbar .btn-primary');
   if(addBtn){
     addBtn.disabled=false;
-    addBtn.textContent=uploadMode?'🖼️ Upload Menu':' + Add Item';
+    addBtn.textContent=uploadMode?'🖼️ Upload Menu':'+ Add Item';
     addBtn.onclick=uploadMode?function(){tab('upload',uBtn);}:function(){tab('editor',document.querySelectorAll('.nav-item')[1]);openProdModal();};
   }
   var tp=document.getElementById('t-templates');
@@ -3079,6 +3079,24 @@ function renderPubMenu(){
     }
     return;
   }
+  if(raw && raw.menu && String(raw.menu.menuMode||'EDITOR').toUpperCase()==='UPLOAD' && raw.menu.uploadedMenuImage){
+    var uploadHtml='<div style="min-height:100vh;background:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column;align-items:center">';
+    uploadHtml+='<div style="width:100%;max-width:960px;padding:18px 16px 8px;text-align:center">';
+    uploadHtml+='<div style="font-size:1.05rem;font-weight:800;color:#111827">'+String(raw.business&&raw.business.name||'Menu')+'</div>';
+    if(raw.business&&raw.business.tagline) uploadHtml+='<div style="font-size:.78rem;color:#64748b;margin-top:4px">'+String(raw.business.tagline)+'</div>';
+    uploadHtml+='</div>';
+    uploadHtml+='<div style="width:100%;max-width:960px;padding:8px 16px 24px;display:flex;justify-content:center">';
+    uploadHtml+='<img src="'+raw.menu.uploadedMenuImage+'" alt="'+String(raw.business&&raw.business.name||'Menu')+'" style="display:block;max-width:100%;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08)">';
+    uploadHtml+='</div>';
+    uploadHtml+='<div style="padding:18px 16px 28px;color:#94a3b8;font-size:.78rem">Powered by <strong style="color:#166534">ZenVentora</strong></div>';
+    uploadHtml+='</div>';
+    document.getElementById('s-menu-preview').style.display=isQR?'none':'';
+    document.getElementById('s-menu-fullpage').style.display=isQR?'block':'none';
+    if(isQR) document.getElementById('pub-menu-full').innerHTML=uploadHtml;
+    else document.getElementById('pub-menu-frame').innerHTML=uploadHtml;
+    return;
+  }
+
   var d;
   if(raw){
     // Map API response shape to legacy d shape
