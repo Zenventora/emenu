@@ -2300,9 +2300,29 @@ function setModeUI(){
   updateMenuEditorModeUI();
 }
 
-function setMenuEditorMode(mode){
+async function setMenuEditorMode(mode){
   mode=String(mode||'EDITOR').toUpperCase()==='UPLOAD'?'UPLOAD':'EDITOR';
   S.data=S.data||{};
+  var current=String(S.data.menuMode||'EDITOR').toUpperCase();
+
+  // Switching from a published Upload Menu back to Menu Editor must persist
+  // immediately so Templates and Today's Menu become genuinely available.
+  if(mode==='EDITOR' && current==='UPLOAD'){
+    try{
+      await api('PATCH','/menu/'+S.menuId+'/use-editor',{});
+      var m=await loadMenuData();
+      syncFromAPI(S.biz,m);
+      S.data.menuMode='EDITOR';
+      updateMenuEditorModeUI();
+      setModeUI();
+      toast('Menu Editor enabled ✓','success');
+    }catch(e){
+      toast(e.message||'Could not enable Menu Editor','error');
+    }
+    return;
+  }
+
+  // Selecting File Upload is a local editing state until Publish is pressed.
   S.data.menuMode=mode;
   updateMenuEditorModeUI();
   setModeUI();
