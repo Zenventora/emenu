@@ -41,7 +41,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }))
 
-app.use(express.json({ limit: '20mb' }))   // 20mb for base64 images
+app.use(express.json({ limit: '25mb' }))   // allow up to 15MB source images after base64 encoding
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
