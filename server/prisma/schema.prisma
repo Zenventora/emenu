@@ -96,6 +96,8 @@ model Menu {
   name         String     @default("My Menu")
   slug         String     @unique
   templateId   String?
+  menuMode     String     @default("EDITOR")
+  uploadedMenuImage String?
   isPublished  Boolean    @default(false)
   publishedAt  DateTime?
   customColors Json?
