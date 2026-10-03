@@ -1031,6 +1031,33 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
           </div>
         </div>
 
+        <!-- UPLOAD MENU TAB -->
+        <div id="t-upload" style="display:none">
+          <div class="card card-p" style="max-width:760px;margin:0 auto">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+              <div>
+                <h2 style="font-size:1.15rem;font-weight:800;color:var(--blue);margin:0 0 5px">Upload Menu Image</h2>
+                <p style="font-size:.82rem;color:#6b7280;margin:0;line-height:1.5">Upload your ready-made menu image. Customers will see this exact image when they open your QR link.</p>
+              </div>
+              <span id="upload-mode-badge" style="font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px;background:#f0fdfa;color:#0f766e">Upload Mode</span>
+            </div>
+            <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:30px 20px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('dash-menu-file').click()">
+              <div id="dash-upload-placeholder">
+                <div style="font-size:2.4rem;margin-bottom:8px">🖼️</div>
+                <div style="font-size:.92rem;font-weight:800;color:#374151">Choose menu image</div>
+                <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">PNG, JPG or WebP · up to 15MB</div>
+              </div>
+              <img id="dash-upload-preview" src="" alt="Uploaded menu" style="display:none;max-width:100%;max-height:650px;border-radius:12px;object-fit:contain"/>
+            </div>
+            <input type="file" id="dash-menu-file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleDashboardMenuImage(this)"/>
+            <div id="dash-upload-status" style="font-size:.78rem;color:#64748b;text-align:center;margin-top:10px"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap">
+              <button class="btn btn-outline" onclick="switchToEditor()">✏️ Switch to Menu Editor</button>
+              <button class="btn btn-primary" onclick="publishUploadedMenu()">⚡ Publish & Update QR</button>
+            </div>
+          </div>
+        </div>
+
         <!-- SETTINGS TAB -->
         <div id="t-settings" style="display:none">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
