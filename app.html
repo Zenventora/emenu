@@ -1457,9 +1457,10 @@ async function saveMenuUpload(){
   if(!S.menuUploadImage){throw new Error('Please upload your menu image');}
   var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:S.menuUploadImage});
   if(S.data){
-    S.data.menuMode='UPLOAD';
     S.data.uploadedMenuImage=r.imageUrl||S.menuUploadImage;
   }
+  await api('PATCH','/menu/'+S.menuId+'/mode',{mode:'UPLOAD'});
+  if(S.data) S.data.menuMode='UPLOAD';
   S.obMode='UPLOAD';
   return r;
 }
@@ -2315,7 +2316,7 @@ async function handleDashboardMenuImage(input){
     if(st) st.textContent='Uploading and optimizing image…';
     try{
       var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:data});
-      S.data.menuMode='UPLOAD'; S.data.uploadedMenuImage=r.imageUrl||data;
+      S.data.uploadedMenuImage=r.imageUrl||data;
       if(st) st.textContent='Menu image uploaded ✓';
       setModeUI();
       toast('Menu image updated ✓','success');
@@ -2331,6 +2332,8 @@ async function publishUploadedMenu(){
   if(!S.menuId){toast('No menu found','error');return;}
   if(!(S.data&&S.data.uploadedMenuImage)){toast('Please upload a menu image first','error');return;}
   try{
+    await api('PATCH','/menu/'+S.menuId+'/mode',{mode:'UPLOAD'});
+    S.data.menuMode='UPLOAD';
     await api('POST','/qr/'+S.menuId+'/generate');
     var m=await loadMenuData(); syncFromAPI(S.biz,m);
     toast('Menu image published — QR is ready ✓','success');
