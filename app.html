@@ -3050,7 +3050,7 @@ async function previewMenu(){
   if(S.data.slug){
     try {
       // Fetch from public API — today-disabled items filtered server-side
-      var r=await fetch('/api/public/menu/'+S.data.slug);
+      var r=await fetch('/api/public/menu/'+S.data.slug,{cache:'no-store'});
       if(r.ok){
         var json=await r.json();
         // comingSoon = menu unpublished — don't use for dashboard preview, fall through to local data
