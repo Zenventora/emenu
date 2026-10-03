@@ -690,8 +690,25 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 
       <!-- Step 2: Menu -->
       <div id="ob-2" class="ob-card" style="display:none;max-width:680px">
-        <h2>Add your menu items 🍛</h2>
-        <p class="ob-desc">Speak your menu naturally using the mic, or type items manually. Organize into categories. You can always edit later from the dashboard.</p>
+        <h2>How would you like to create your menu? 🍽️</h2>
+        <p class="ob-desc">Choose the easiest option for your business. You can switch to Menu Editor later from your dashboard.</p>
+
+        <div id="ob-mode-picker" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px">
+          <button type="button" id="ob-mode-editor" onclick="selectOnboardMode('EDITOR')" style="text-align:left;padding:18px;border-radius:16px;border:2px solid #0ea5a4;background:#f0fdfa;cursor:pointer;font-family:Inter,sans-serif">
+            <div style="font-size:1.5rem;margin-bottom:8px">✏️</div>
+            <div style="font-size:.95rem;font-weight:800;color:#0f3b68">Menu Editor</div>
+            <div style="font-size:.75rem;color:#64748b;line-height:1.5;margin-top:4px">Create categories and items manually, choose a template and manage today's availability.</div>
+          </button>
+          <button type="button" id="ob-mode-upload" onclick="selectOnboardMode('UPLOAD')" style="text-align:left;padding:18px;border-radius:16px;border:2px solid #e2e8f0;background:#fff;cursor:pointer;font-family:Inter,sans-serif">
+            <div style="font-size:1.5rem;margin-bottom:8px">🖼️</div>
+            <div style="font-size:.95rem;font-weight:800;color:#0f3b68">Upload Menu</div>
+            <div style="font-size:.75rem;color:#64748b;line-height:1.5;margin-top:4px">Already have a menu image? Upload it directly and get your public link and QR code.</div>
+          </button>
+        </div>
+
+        <div id="ob-editor-panel">
+        <h3 style="font-size:1rem;font-weight:800;color:var(--blue);margin:0 0 5px">Build your menu</h3>
+        <p style="font-size:.78rem;color:#9ca3af;margin:0 0 14px">Use voice input or add items manually. You can always edit later from the dashboard.</p>
         <div class="voice-zone" id="vzone">
           <button class="voice-btn idle" id="vbtn" onclick="toggleVoice()">🎙️</button>
           <p id="vstatus" style="font-size:.85rem;color:#64748b;font-weight:600;margin-bottom:6px">Tap the mic and speak your menu</p>
@@ -714,6 +731,20 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         </div>
         <div id="ob-item-list" class="item-list"></div>
         <p id="ob-item-count" style="font-size:.76rem;color:#9ca3af;text-align:center;padding:6px;display:none"></p>
+        </div>
+
+        <div id="ob-upload-panel" style="display:none">
+          <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:34px 20px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('ob-menu-file').click()">
+            <div id="ob-upload-placeholder">
+              <div style="font-size:2.5rem;margin-bottom:8px">🖼️</div>
+              <div style="font-size:.95rem;font-weight:800;color:#374151">Upload your menu image</div>
+              <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">PNG, JPG or WebP · up to 15MB</div>
+            </div>
+            <img id="ob-menu-preview" src="" alt="Menu preview" style="display:none;max-width:100%;max-height:520px;border-radius:12px;object-fit:contain"/>
+          </div>
+          <input type="file" id="ob-menu-file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleMenuImageUpload(this)"/>
+          <div id="ob-upload-status" style="font-size:.78rem;color:#64748b;text-align:center;margin-top:10px"></div>
+        </div>
       </div>
 
       <!-- Step 3: Template -->
