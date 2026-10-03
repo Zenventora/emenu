@@ -2293,7 +2293,7 @@ function setModeUI(){
   }
   var tp=document.getElementById('t-templates');
   var td=document.getElementById('t-today');
-  [tp,td].forEach(function(el){if(el&&uploadMode) el.style.opacity='0.62';});
+  [tp,td].forEach(function(el){if(el) el.style.opacity=uploadMode?'0.62':'1';});
   var upImg=document.getElementById('dash-upload-preview');
   var upPh=document.getElementById('dash-upload-placeholder');
   if(upImg && S.data && S.data.uploadedMenuImage){
