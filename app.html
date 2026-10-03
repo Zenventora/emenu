@@ -2749,10 +2749,42 @@ async function toggleAvail(cat,idx,btn){
 function populateMpCat(selectCat){
   var sel=document.getElementById('mp-cat'); if(!sel) return;
   var cats=S.data&&S.data.menu.cats||[];
-  sel.innerHTML=cats.map(c=>'<option value="'+c.name+'">'+c.name+'</option>').join('');
-  sel.innerHTML+='<option value="__new__">+ New category...</option>';
-  if(selectCat&&cats.find(c=>c.name===selectCat)) sel.value=selectCat;
-  sel.onchange=function(){ if(sel.value==='__new__'){ closeModal('modal-prod'); openCatModal(); } };
+  // If the menu has no saved categories yet, show the same useful category
+  // suggestions used by the Add Category flow. These are suggestions only;
+  // saveProd() will create the selected category in the database when needed.
+  var options=cats.length>0 ? cats.map(function(c){return c.name;}) : MI_CAT_DEFAULTS;
+  sel.innerHTML='<option value="">── Choose a category ──</option>';
+  options.forEach(function(name){
+    var o=document.createElement('option');
+    o.value=name;
+    o.textContent=name;
+    sel.appendChild(o);
+  });
+
+  // Custom category must always be the final option.
+  var add=document.createElement('option');
+  add.value='__new__';
+  add.textContent='+ Add Custom Category...';
+  sel.appendChild(add);
+
+  if(selectCat&&options.includes(selectCat)){
+    sel.value=selectCat;
+  } else {
+    sel.value='';
+  }
+
+  sel.onchange=function(){
+    if(sel.value!=='__new__') return;
+
+    // Let the native select close before opening our custom-category modal.
+    // Opening another modal synchronously can leave the native picker open
+    // and make it look like the category popup did not open.
+    sel.value=selectCat&&options.includes(selectCat)?selectCat:'';
+    setTimeout(function(){
+      closeModal('modal-prod');
+      openCatModal();
+    },60);
+  };
 }
 function toggleMoreOptions(){
   var m=document.getElementById('mp-more');
