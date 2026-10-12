@@ -1188,7 +1188,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
     <div id="mp-more" style="display:none">
       <div class="row2">
         <div class="ig"><label>Type</label><select id="mp-veg"><option value="">Not specified</option><option value="veg">Vegetarian 🟢</option><option value="nonveg">Non-Veg 🔴</option></select></div>
-        <div class="ig"><label>Highlight Badge</label><select id="mp-tag"><option value="">None</option><option value="Signature">⭐ Signature</option><option value="New">✨ New</option><option value="Offer">🔥 Offer</option><option value="Special">💎 Special</option><option value="Chef's Choice">👨‍🍳 Chef's Choice</option><option value="__custom__">Custom label…</option><option value="bestseller">⭐ Bestseller (legacy)</option><option value="special">🔥 Special (legacy)</option><option value="new">✨ New (legacy)</option></select></div>
+        <div class="ig"><label>Highlight Badge</label><select id="mp-tag" onchange="toggleCustomProductBadge()"><option value="">None</option><option value="Signature">⭐ Signature</option><option value="New">✨ New</option><option value="Offer">🔥 Offer</option><option value="Special">💎 Special</option><option value="Chef's Choice">👨‍🍳 Chef's Choice</option><option value="__custom__">Custom label…</option><option value="bestseller">⭐ Bestseller (legacy)</option><option value="special">🔥 Special (legacy)</option><option value="new">✨ New (legacy)</option></select></div>
         <div class="ig" id="mp-custom-tag-wrap" style="display:none"><label>Custom label (max 24 characters)</label><input type="text" id="mp-custom-tag" maxlength="24" placeholder="e.g. Seasonal Pick"/></div>
         <div class="ig"><label style="display:flex;align-items:center;gap:8px"><input id="mp-in-todays-special" type="checkbox" style="width:auto"/> Include in special section</label></div>
       </div>
@@ -2895,7 +2895,7 @@ function editProd(cat,idx){
   document.getElementById('mp-in-todays-special').checked=!!item.inTodaysSpecial;
   setDayChips(item.availDays||[]);
   setItemImgPreview(item.img||null);
-  var hasMore=!!(item.veg||item.tag||(item.availDays&&item.availDays.length));
+  var hasMore=!!(item.veg||item.tag||item.highlightLabel||item.inTodaysSpecial||(item.availDays&&item.availDays.length));
   document.getElementById('mp-more').style.display=hasMore?'block':'none';
   document.getElementById('mp-more-btn').textContent=hasMore?'⚙️ Hide options':'⚙️ More options';
   populateMpCat(cat);
@@ -2920,6 +2920,10 @@ async function saveTodaysSpecialSettings(patch){
 }
 function escapeHtmlAttribute(v){
   return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function toggleCustomProductBadge(){
+  var select=document.getElementById('mp-tag'),wrap=document.getElementById('mp-custom-tag-wrap');
+  if(wrap&&select)wrap.style.display=select.value==='__custom__'?'block':'none';
 }
 function openSpecialProductModal(){
   closeModal('ts-settings-modal');
