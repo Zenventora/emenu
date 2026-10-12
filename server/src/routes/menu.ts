@@ -6,6 +6,16 @@ import sharp from 'sharp'
 const router = Router()
 router.use(requireAuth)
 
+function normalizeHighlightLabel(value: unknown): string | null {
+  if (value === undefined || value === null) return null
+  if (typeof value !== 'string') throw new Error('Highlight label must be text')
+  const label = value.trim()
+  if (!label) return null
+  if (label.length > 24) throw new Error('Highlight labels must be 24 characters or fewer')
+  return label
+}
+
+
 // ─── Helper: verify menu belongs to user ─────────────────────────────────────
 async function getMenuForUser(menuId: string, userId: string) {
   return prisma.menu.findFirst({
@@ -34,6 +44,51 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
   } catch (err) {
     console.error('GET /menu/me:', err)
     res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ─── PATCH /api/menu/:menuId/todays-special ───────────────────────────────────
+// Save the optional special-section configuration. Product IDs refer to existing
+// products, so the section never creates duplicate product records.
+router.patch('/:menuId/todays-special', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const menu = await getMenuForUser(req.params.menuId, req.userId!)
+    if (!menu) { res.status(404).json({ message: 'Menu not found' }); return }
+
+    const { enabled, title, productIds } = req.body
+    if (enabled !== undefined && typeof enabled !== 'boolean') {
+      res.status(400).json({ message: 'enabled must be a boolean' }); return
+    }
+    if (title !== undefined && (typeof title !== 'string' || title.trim().length > 60)) {
+      res.status(400).json({ message: 'Title must be text with a maximum of 60 characters' }); return
+    }
+    if (productIds !== undefined && (!Array.isArray(productIds) || productIds.some((id: unknown) => typeof id !== 'string'))) {
+      res.status(400).json({ message: 'productIds must be an array of product IDs' }); return
+    }
+
+    const uniqueIds: string[] | undefined = productIds === undefined ? undefined : Array.from(new Set(productIds as string[]))
+    if (uniqueIds && uniqueIds.length) {
+      const owned = await prisma.product.findMany({
+        where: { id: { in: uniqueIds }, category: { menuId: menu.id } },
+        select: { id: true },
+      })
+      if (owned.length !== uniqueIds.length) {
+        res.status(400).json({ message: 'One or more selected products do not belong to this menu' }); return
+      }
+    }
+
+    const updated = await prisma.menu.update({
+      where: { id: menu.id },
+      data: {
+        ...(enabled !== undefined && { todaysSpecialEnabled: enabled }),
+        ...(title !== undefined && { todaysSpecialTitle: title.trim() || "Today's Special" }),
+        ...(uniqueIds !== undefined && { todaysSpecialProductIds: uniqueIds }),
+      },
+    })
+    res.json({ menu: updated })
+  } catch (err) {
+    console.error('PATCH /menu/:menuId/todays-special:', err)
+    res.status(500).json({ message: 'Failed to save special-section settings' })
   }
 })
 
@@ -262,7 +317,10 @@ router.post('/categories/:catId/products', async (req: AuthRequest, res: Respons
     })
     if (!cat) { res.status(404).json({ message: 'Category not found' }); return }
 
-    const { name, price, description, isVeg, isBestseller, isSpecial, imageUrl, tags, availableDays } = req.body
+    const { name, price, description, isVeg, isBestseller, isSpecial, highlightLabel, imageUrl, tags, availableDays } = req.body
+    if (highlightLabel !== undefined && highlightLabel !== null && (typeof highlightLabel !== 'string' || highlightLabel.trim().length > 24)) {
+      res.status(400).json({ message: 'Highlight labels must be text with a maximum of 24 characters' }); return
+    }
     if (!name || price === undefined) {
       res.status(400).json({ message: 'Name and price are required' }); return
     }
@@ -277,6 +335,7 @@ router.post('/categories/:catId/products', async (req: AuthRequest, res: Respons
         isVeg: isVeg ?? null,
         isBestseller: isBestseller || false,
         isSpecial: isSpecial || false,
+        highlightLabel: normalizeHighlightLabel(highlightLabel),
         imageUrl: imageUrl || null,
         tags: tags || [],
         availableDays: availableDays || [],
@@ -298,7 +357,10 @@ router.put('/products/:productId', async (req: AuthRequest, res: Response): Prom
     })
     if (!product) { res.status(404).json({ message: 'Product not found' }); return }
 
-    const { name, price, description, isVeg, isBestseller, isSpecial, isAvailable, imageUrl, tags, order, availableDays } = req.body
+    const { name, price, description, isVeg, isBestseller, isSpecial, isAvailable, highlightLabel, imageUrl, tags, order, availableDays } = req.body
+    if (highlightLabel !== undefined && highlightLabel !== null && (typeof highlightLabel !== 'string' || highlightLabel.trim().length > 24)) {
+      res.status(400).json({ message: 'Highlight labels must be text with a maximum of 24 characters' }); return
+    }
     const updated = await prisma.product.update({
       where: { id: product.id },
       data: {
@@ -308,6 +370,7 @@ router.put('/products/:productId', async (req: AuthRequest, res: Response): Prom
         ...(isVeg !== undefined && { isVeg }),
         ...(isBestseller !== undefined && { isBestseller }),
         ...(isSpecial !== undefined && { isSpecial }),
+        ...(highlightLabel !== undefined && { highlightLabel: normalizeHighlightLabel(highlightLabel) }),
         ...(isAvailable !== undefined && { isAvailable }),
         ...(imageUrl !== undefined && { imageUrl }),
         ...(tags !== undefined && { tags }),

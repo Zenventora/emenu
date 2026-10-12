@@ -98,6 +98,9 @@ model Menu {
   templateId   String?
   menuMode     String     @default("EDITOR")
   uploadedMenuImage String?
+  todaysSpecialEnabled Boolean @default(false)
+  todaysSpecialTitle String @default("Today's Special")
+  todaysSpecialProductIds String[] @default([])
   isPublished  Boolean    @default(false)
   publishedAt  DateTime?
   customColors Json?
@@ -141,6 +144,7 @@ model Product {
   isVeg          Boolean?
   isBestseller   Boolean         @default(false)
   isSpecial      Boolean         @default(false)
+  highlightLabel String?
   tags           String[]
   order        Int             @default(0)
   createdAt    DateTime        @default(now())
