@@ -318,6 +318,9 @@ router.post('/categories/:catId/products', async (req: AuthRequest, res: Respons
     if (!cat) { res.status(404).json({ message: 'Category not found' }); return }
 
     const { name, price, description, isVeg, isBestseller, isSpecial, highlightLabel, imageUrl, tags, availableDays } = req.body
+    if (highlightLabel !== undefined && highlightLabel !== null && (typeof highlightLabel !== 'string' || highlightLabel.trim().length > 24)) {
+      res.status(400).json({ message: 'Highlight labels must be text with a maximum of 24 characters' }); return
+    }
     if (!name || price === undefined) {
       res.status(400).json({ message: 'Name and price are required' }); return
     }
@@ -355,6 +358,9 @@ router.put('/products/:productId', async (req: AuthRequest, res: Response): Prom
     if (!product) { res.status(404).json({ message: 'Product not found' }); return }
 
     const { name, price, description, isVeg, isBestseller, isSpecial, isAvailable, highlightLabel, imageUrl, tags, order, availableDays } = req.body
+    if (highlightLabel !== undefined && highlightLabel !== null && (typeof highlightLabel !== 'string' || highlightLabel.trim().length > 24)) {
+      res.status(400).json({ message: 'Highlight labels must be text with a maximum of 24 characters' }); return
+    }
     const updated = await prisma.product.update({
       where: { id: product.id },
       data: {
