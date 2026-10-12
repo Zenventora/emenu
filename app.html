@@ -2925,8 +2925,18 @@ function toggleCustomProductBadge(){
   var select=document.getElementById('mp-tag'),wrap=document.getElementById('mp-custom-tag-wrap');
   if(wrap&&select)wrap.style.display=select.value==='__custom__'?'block':'none';
 }
-function openSpecialProductModal(){
-  closeModal('ts-settings-modal');
+async function openSpecialProductModal(){
+  // Preserve any title, visibility, and product selections changed in the settings modal.
+  if(document.getElementById('ts-settings-modal').classList.contains('open')){
+    try{
+      var enabled=document.getElementById('ts-enabled').checked;
+      var title=document.getElementById('ts-title').value.trim()||"Today's Special";
+      var ids=Array.prototype.slice.call(document.querySelectorAll('.ts-product-check:checked')).map(function(c){return c.value;});
+      await api('PATCH','/menu/'+S.menuId+'/todays-special',{enabled:enabled,title:title,productIds:ids});
+      var m=await loadMenuData();syncFromAPI(S.biz,m);
+      closeModal('ts-settings-modal');
+    }catch(e){toast(e.message||'Save the section settings before adding a product','error');return;}
+  }
   openProdModal();
   document.getElementById('mp-in-todays-special').checked=true;
   document.getElementById('mp-more').style.display='block';
