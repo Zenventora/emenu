@@ -1013,9 +1013,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
               <h3 style="font-size:1.15rem;font-weight:800;color:var(--blue);margin-bottom:6px">Your Permanent QR Code</h3>
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:22px">This QR code never changes — even when you update your menu.</p>
               <div class="qr-frame"><img id="qr-img" src="" alt="QR Code" width="180" height="180"/></div>
+              <div style="text-align:center;margin:-10px 0 18px;font-size:12px;font-weight:700;letter-spacing:.25px;color:#64748b">Powered by <span style="color:#0f3b68">ZenVentora</span></div>
               <div class="qr-url-box" id="qr-url-txt"></div>
               <div class="qr-btns">
-                <a id="qr-dl" class="btn btn-primary" download="emenu-qr.png" onclick="if(!S.data||!S.data.qr){event.preventDefault();publishAndGenQR();}">⬇️ Download PNG</a>
+                <a id="qr-dl" class="btn btn-primary" href="#" download="emenu-qr-zenventora.png" onclick="event.preventDefault();downloadBrandedQR()">⬇️ Download PNG</a>
                 <button class="btn btn-outline" onclick="copyMenuURL()">🔗 Copy Link</button>
                 <button class="btn btn-outline" onclick="publishAndGenQR()">⚡ Generate QR</button>
                 <button class="btn btn-outline" onclick="previewMenu()">👁️ Preview</button>
@@ -3141,6 +3142,36 @@ async function saveBiz(){
     refreshDash(); toast('Business details saved ✓');
   } catch(e){toast(e.message||'Failed to save','error');}
 }
+async function downloadBrandedQR(){
+  var imgEl=document.getElementById('qr-img');
+  var source=(S.data&&S.data.qr&&S.data.qr.qrPng)||imgEl.src;
+  if(!source){await publishAndGenQR();source=(S.data&&S.data.qr&&S.data.qr.qrPng)||imgEl.src;}
+  if(!source){toast('Generate the QR code first','error');return;}
+  try{
+    var qrImage=new Image();
+    qrImage.crossOrigin='anonymous';
+    await new Promise(function(resolve,reject){qrImage.onload=resolve;qrImage.onerror=reject;qrImage.src=source;});
+    var canvas=document.createElement('canvas');
+    var scale=4, padding=48, qrSize=qrImage.naturalWidth||180, footerHeight=76;
+    canvas.width=qrSize+padding*2;
+    canvas.height=qrSize+padding*2+footerHeight;
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(qrImage,padding,padding,qrSize,qrSize);
+    ctx.fillStyle='#64748b';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='600 20px Arial, sans-serif';
+    ctx.fillText('Powered by',canvas.width/2,canvas.height-padding-38);
+    ctx.fillStyle='#0f3b68';ctx.font='700 26px Arial, sans-serif';
+    ctx.fillText('ZenVentora',canvas.width/2,canvas.height-padding-10);
+    var link=document.createElement('a');
+    link.download='emenu-qr-zenventora.png';
+    link.href=canvas.toDataURL('image/png');
+    document.body.appendChild(link);link.click();link.remove();
+  }catch(err){
+    toast('Please click Generate QR first, then download the branded PNG','error');
+  }
+}
+
 async function publishAndGenQR(){
   if(!S.menuId){toast('Please complete onboarding first','error');return;}
   var btn=event&&event.target; if(btn){btn.disabled=true;btn.textContent='Generating…';}
