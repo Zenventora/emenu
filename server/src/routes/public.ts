@@ -89,6 +89,9 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
         menu: {
           id: menu.id,
           templateId: menu.templateId,
+          todaysSpecialEnabled: menu.todaysSpecialEnabled,
+          todaysSpecialTitle: menu.todaysSpecialTitle,
+          todaysSpecialProductIds: menu.todaysSpecialProductIds,
           menuMode: 'UPLOAD',
           uploadedMenuImage: menu.uploadedMenuImage,
           categories: [],
@@ -114,6 +117,9 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
       menu: {
         id: menu.id,
         templateId: menu.templateId,
+        todaysSpecialEnabled: menu.todaysSpecialEnabled,
+        todaysSpecialTitle: menu.todaysSpecialTitle,
+        todaysSpecialProductIds: menu.todaysSpecialProductIds,
         menuMode: menu.menuMode,
         uploadedMenuImage: menu.uploadedMenuImage,
         categories: menu.categories.map(cat => ({
@@ -132,6 +138,7 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
               isVeg: p.isVeg,
               isBestseller: p.isBestseller,
               isSpecial: p.isSpecial,
+              highlightLabel: p.highlightLabel,
               tags: p.tags,
               availableDays: p.availableDays,
             })),
