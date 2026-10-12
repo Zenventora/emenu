@@ -3316,7 +3316,7 @@ function renderPubMenu(){
         return {name:cat.name,items:(cat.products||[]).map(function(p){
           return {name:p.name,price:parseFloat(p.price),desc:p.description||'',
             veg:p.isVeg===true?'veg':p.isVeg===false?'nonveg':'',
-            tag:p.isBestseller?'bestseller':p.isSpecial?'special':'',highlightLabel:p.highlightLabel||'',id:p.id,avail:true};
+            tag:p.isBestseller?'bestseller':p.isSpecial?'special':'',highlightLabel:p.highlightLabel||'',id:p.id,img:p.imageUrl||'',avail:true};
         })};
       })},
       tmpl:tmplIdx,
