@@ -951,6 +951,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
                 <h3 id="ed-cat-title" style="font-size:.95rem;font-weight:800;color:var(--blue)">Select a category</h3>
+                <button class="btn btn-outline btn-sm" style="margin-left:auto;margin-right:8px" onclick="openTodaysSpecialModal()">✨ Special Section</button>
                 <button class="btn btn-primary btn-sm" onclick="openProdModal()">+ Add Item</button>
               </div>
               <div id="ed-products"></div>
@@ -1146,6 +1147,16 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 </div>
 
 <!-- MODALS -->
+<div class="modal-bg" id="ts-settings-modal">
+  <div class="modal-box" style="max-height:85vh;overflow:auto">
+    <h3>Special Section Settings</h3>
+    <div id="ts-settings-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('ts-settings-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="ts-save-button" onclick="saveTodaysSpecialModal()">Save settings</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="modal-prod">
   <div class="modal-box">
     <h3 id="mp-title">Add Menu Item</h3>
@@ -1177,7 +1188,9 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
     <div id="mp-more" style="display:none">
       <div class="row2">
         <div class="ig"><label>Type</label><select id="mp-veg"><option value="">Not specified</option><option value="veg">Vegetarian 🟢</option><option value="nonveg">Non-Veg 🔴</option></select></div>
-        <div class="ig"><label>Badge</label><select id="mp-tag"><option value="">None</option><option value="bestseller">⭐ Bestseller</option><option value="special">🔥 Special</option><option value="new">✨ New</option></select></div>
+        <div class="ig"><label>Highlight Badge</label><select id="mp-tag"><option value="">None</option><option value="Signature">⭐ Signature</option><option value="New">✨ New</option><option value="Offer">🔥 Offer</option><option value="Special">💎 Special</option><option value="Chef's Choice">👨‍🍳 Chef's Choice</option><option value="__custom__">Custom label…</option><option value="bestseller">⭐ Bestseller (legacy)</option><option value="special">🔥 Special (legacy)</option><option value="new">✨ New (legacy)</option></select></div>
+        <div class="ig" id="mp-custom-tag-wrap" style="display:none"><label>Custom label (max 24 characters)</label><input type="text" id="mp-custom-tag" maxlength="24" placeholder="e.g. Seasonal Pick"/></div>
+        <div class="ig"><label style="display:flex;align-items:center;gap:8px"><input id="mp-in-todays-special" type="checkbox" style="width:auto"/> Include in special section</label></div>
       </div>
       <div class="ig">
         <label style="display:flex;align-items:center;gap:6px">
@@ -1408,6 +1421,8 @@ function syncFromAPI(biz, menu) {
             desc:  p.description || '',
             veg:   p.isVeg===true?'veg': p.isVeg===false?'nonveg':'',
             tag:   p.isBestseller?'bestseller': p.isSpecial?'special': (p.tags&&p.tags[0])||'',
+            highlightLabel: p.highlightLabel || '',
+            inTodaysSpecial: !!(menu && menu.todaysSpecialProductIds && menu.todaysSpecialProductIds.includes(p.id)),
             avail: p.isAvailable !== false,
             availDays: p.availableDays || [],
             disabledDate: p.disabledDate || null,
@@ -1419,6 +1434,9 @@ function syncFromAPI(biz, menu) {
     tmpl: menu ? parseInt(menu.templateId||'0') : 0,
     menuMode: menu ? String(menu.menuMode||'EDITOR').toUpperCase() : 'EDITOR',
     uploadedMenuImage: menu ? (menu.uploadedMenuImage || '') : '',
+    todaysSpecialEnabled: !!(menu && menu.todaysSpecialEnabled),
+    todaysSpecialTitle: menu && menu.todaysSpecialTitle || "Today's Special",
+    todaysSpecialProductIds: menu && menu.todaysSpecialProductIds || [],
     pub:  menu ? menu.isPublished : false,
     slug: biz.slug || '',
     qr:   menu && menu.qrCode ? menu.qrCode : null
@@ -2848,6 +2866,9 @@ function openProdModal(){
   document.getElementById('mp-price').value='';
   document.getElementById('mp-veg').value='';
   document.getElementById('mp-tag').value='';
+  document.getElementById('mp-custom-tag').value='';
+  document.getElementById('mp-custom-tag-wrap').style.display='none';
+  document.getElementById('mp-in-todays-special').checked=false;
   setDayChips([]);
   setItemImgPreview(null);
   document.getElementById('mp-img-input').value='';
@@ -2865,7 +2886,13 @@ function editProd(cat,idx){
   document.getElementById('mp-price').value=item.price;
   document.getElementById('mp-desc').value=item.desc||'';
   document.getElementById('mp-veg').value=item.veg||'';
-  document.getElementById('mp-tag').value=item.tag||'';
+  var labelValue=item.highlightLabel||item.tag||'';
+  var labelSelect=document.getElementById('mp-tag');
+  var knownLabel=Array.prototype.some.call(labelSelect.options,function(o){return o.value===labelValue;});
+  labelSelect.value=knownLabel?labelValue:(labelValue?'__custom__':'');
+  document.getElementById('mp-custom-tag').value=knownLabel?'':labelValue;
+  document.getElementById('mp-custom-tag-wrap').style.display=(!knownLabel&&labelValue)||labelSelect.value==='__custom__'?'block':'none';
+  document.getElementById('mp-in-todays-special').checked=!!item.inTodaysSpecial;
   setDayChips(item.availDays||[]);
   setItemImgPreview(item.img||null);
   var hasMore=!!(item.veg||item.tag||(item.availDays&&item.availDays.length));
@@ -2874,6 +2901,63 @@ function editProd(cat,idx){
   populateMpCat(cat);
   document.getElementById('modal-prod').classList.add('open');
 }
+
+async function saveTodaysSpecialSettings(patch){
+  if(!S.menuId) throw new Error('No menu found');
+  var ids=(S.data&&S.data.todaysSpecialProductIds||[]).slice();
+  if(patch&&patch.addProductId&&!ids.includes(patch.addProductId)) ids.push(patch.addProductId);
+  if(patch&&patch.removeProductId) ids=ids.filter(function(id){return id!==patch.removeProductId;});
+  var enabled=patch&&patch.enabled!==undefined?patch.enabled:(patch&&patch.addProductId?true:!!(S.data&&S.data.todaysSpecialEnabled));
+  var title=patch&&patch.title!==undefined?patch.title:(S.data&&S.data.todaysSpecialTitle)||"Today's Special";
+  var result=await api('PATCH','/menu/'+S.menuId+'/todays-special',{enabled:enabled,title:title,productIds:ids});
+  if(S.data){
+    S.data.todaysSpecialEnabled=!!result.menu.todaysSpecialEnabled;
+    S.data.todaysSpecialTitle=result.menu.todaysSpecialTitle||"Today's Special";
+    S.data.todaysSpecialProductIds=result.menu.todaysSpecialProductIds||[];
+    (S.data.menu.cats||[]).forEach(function(cat){cat.items.forEach(function(item){item.inTodaysSpecial=S.data.todaysSpecialProductIds.includes(item.id);});});
+  }
+  return result.menu;
+}
+function escapeHtmlAttribute(v){
+  return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function openSpecialProductModal(){
+  closeModal('ts-settings-modal');
+  openProdModal();
+  document.getElementById('mp-in-todays-special').checked=true;
+  document.getElementById('mp-more').style.display='block';
+  document.getElementById('mp-more-btn').textContent='⚙️ Hide options';
+}
+function openTodaysSpecialModal(){
+  if(!S.data||!S.menuId){toast('Create your menu first','info');return;}
+  var d=S.data, ids=d.todaysSpecialProductIds||[];
+  var html='<div class="ig"><label style="display:flex;align-items:center;gap:8px"><input id="ts-enabled" type="checkbox" style="width:auto" '+(d.todaysSpecialEnabled?'checked':'')+'/> Display this section on the customer menu</label></div>';
+  html+='<div class="ig"><label>Section title (optional, max 60 characters)</label><input id="ts-title" maxlength="60" value="'+escapeHtmlAttribute(d.todaysSpecialTitle||"Today's Special")+'" placeholder="e.g. Chef&#39;s Special"/></div>';
+  html+='<p style="font-size:.78rem;color:#64748b;margin:0 0 12px">Select products from any category. Products remain in their original categories.</p>';
+  (d.menu.cats||[]).forEach(function(cat){
+    (cat.items||[]).forEach(function(item){
+      if(!item.id)return;
+      html+='<label style="display:flex;gap:8px;align-items:center;padding:9px 4px;border-bottom:1px solid #f1f5f9;font-size:.85rem"><input type="checkbox" class="ts-product-check" value="'+escapeHtmlAttribute(item.id)+'" '+(ids.includes(item.id)?'checked':'')+'/><span style="flex:1">'+escapeHtmlAttribute(item.name)+'</span><span style="font-size:.75rem;color:#64748b">'+escapeHtmlAttribute(cat.name)+'</span></label>';
+    });
+  });
+  html+='<div style="padding:12px 0 4px"><button type="button" class="btn btn-outline btn-sm" onclick="openSpecialProductModal()">＋ Add a new product to this section</button><p style="font-size:.72rem;color:#94a3b8;margin-top:6px">Every product must belong to a category. The new item will be saved under the category you choose and included here.</p></div>';
+  document.getElementById('ts-settings-body').innerHTML=html;
+  document.getElementById('ts-settings-modal').classList.add('open');
+}
+async function saveTodaysSpecialModal(){
+  var button=document.getElementById('ts-save-button');
+  if(button){button.disabled=true;button.textContent='Saving…';}
+  try{
+    var enabled=document.getElementById('ts-enabled').checked;
+    var title=document.getElementById('ts-title').value.trim()||"Today's Special";
+    var ids=Array.prototype.slice.call(document.querySelectorAll('.ts-product-check:checked')).map(function(c){return c.value;});
+    await api('PATCH','/menu/'+S.menuId+'/todays-special',{enabled:enabled,title:title,productIds:ids});
+    var m=await loadMenuData();syncFromAPI(S.biz,m);
+    closeModal('ts-settings-modal');toast('Special section settings saved ✓');
+  }catch(e){toast(e.message||'Could not save settings','error');}
+  finally{if(button){button.disabled=false;button.textContent='Save settings';}}
+}
+
 async function saveProd(){
   var name=document.getElementById('mp-name').value.trim(), price=parseFloat(document.getElementById('mp-price').value);
   var catSel=document.getElementById('mp-cat').value;
@@ -2881,9 +2965,15 @@ async function saveProd(){
   if(!catSel||catSel==='__new__'){toast('Select a category','error');return;}
   var vegVal=document.getElementById('mp-veg').value;
   var tagVal=document.getElementById('mp-tag').value;
+  var customTag=document.getElementById('mp-custom-tag').value.trim();
+  var highlightLabel=tagVal==='__custom__'?customTag:(tagVal==='bestseller'||tagVal==='special'||tagVal==='new'?'':tagVal);
+  if(tagVal==='__custom__'&&!customTag){toast('Enter a custom highlight label','error');return;}
+  if(highlightLabel.length>24){toast('Highlight labels must be 24 characters or fewer','error');return;}
+  var includeInSpecial=document.getElementById('mp-in-todays-special').checked;
   var payload={name,price,description:document.getElementById('mp-desc').value,
     isVeg:vegVal==='veg'?true:vegVal==='nonveg'?false:null,
     isBestseller:tagVal==='bestseller',isSpecial:tagVal==='special',
+    highlightLabel:highlightLabel||null,
     availableDays:getDayChipsSelected(),
     imageUrl:getItemImgValue()||null};
   try {
@@ -2896,7 +2986,16 @@ async function saveProd(){
       var catObj=S.data.menu.cats.find(x=>x.name===catSel);
       var catId=catObj&&catObj.id;
       if(!catId){var cRes=await api('POST','/menu/'+S.menuId+'/categories',{name:catSel});catId=cRes.category.id;}
-      await api('POST','/menu/categories/'+catId+'/products',payload);
+      var created=await api('POST','/menu/categories/'+catId+'/products',payload);
+      if(includeInSpecial&&created.product&&created.product.id) await saveTodaysSpecialSettings({addProductId:created.product.id});
+    }
+    if(S.editProdIdx!==null){
+      var currentCat=S.data.menu.cats.find(x=>x.name===(S.edCat||catSel));
+      var currentItem=currentCat&&currentCat.items[S.editProdIdx];
+      if(currentItem&&currentItem.id){
+        if(includeInSpecial) await saveTodaysSpecialSettings({addProductId:currentItem.id});
+        else await saveTodaysSpecialSettings({removeProductId:currentItem.id});
+      }
     }
     var m=await loadMenuData(); syncFromAPI(S.biz,m);
     S.edCat=catSel;
@@ -3046,7 +3145,8 @@ async function publishAndGenQR(){
 // ─────────────────────────────────────────
 // PUBLIC MENU & PREVIEW
 // ─────────────────────────────────────────
-function buildMenuHTML(biz,cats,t){
+function buildMenuHTML(biz,cats,t,d){
+  d=d||S.data;
   var c=t?t.color:'#0f3b68';
   var pc=t?t.priceColor:'#7dd3fc';
   var h='<div class="ph-header" style="background:'+c+'">';
@@ -3097,6 +3197,22 @@ function buildMenuHTML(biz,cats,t){
   h+='</div><div class="ph-body">';
   var catTypeBadges={offer:'<span class="ph-cat-type pct-offer">Today\'s Offer</span>',combo:'<span class="ph-cat-type pct-combo">Combo</span>',special:'<span class="ph-cat-type pct-special">Chef\'s Special</span>',new:'<span class="ph-cat-type pct-special" style="background:#eff6ff;color:#1d4ed8">New</span>'};
   var any=false;
+  var specialIds=(d&&d.todaysSpecialProductIds)||[];
+  var specialItems=[];
+  if(d&&d.todaysSpecialEnabled){
+    (cats||[]).forEach(function(cat){(cat.items||[]).forEach(function(item){
+      if(item.id&&specialIds.includes(item.id)&&item.avail!==false&&!specialItems.some(function(x){return x.id===item.id;}))specialItems.push(item);
+    });});
+  }
+  if(specialItems.length){
+    h+='<div class="ph-cat">'+escapeHtmlAttribute((d&&d.todaysSpecialTitle)||"Today's Special")+'</div>';
+    specialItems.forEach(function(item){
+      h+='<div class="ph-item"><div><div class="ph-item-name">'+escapeHtmlAttribute(item.name)+'</div>';
+      if(item.highlightLabel)h+='<div style="font-size:.65rem;color:#5b21b6;font-weight:800;margin-top:3px">'+escapeHtmlAttribute(item.highlightLabel)+'</div>';
+      if(item.desc)h+='<div style="font-size:.7rem;color:#9ca3af;margin-top:1px">'+escapeHtmlAttribute(item.desc)+'</div>';
+      h+='</div><span class="ph-item-price" style="color:'+pc+'">₹'+item.price+'</span></div>';
+    });
+  }
   (cats||[]).forEach(cat=>{
     if(!cat.items.length) return;
     var badge=catTypeBadges[cat.type]||'';
@@ -3104,7 +3220,8 @@ function buildMenuHTML(biz,cats,t){
     cat.items.forEach(item=>{
       if(!item.avail) return; any=true;
       h+='<div class="ph-item"><div><div class="ph-item-name">'+item.name+'</div>';
-      if(item.tag){var ts={bestseller:'⭐ Bestseller',special:'🔥 Special',new:'✨ New'};if(ts[item.tag])h+='<div style="font-size:.65rem;color:#d97706;font-weight:600;margin-top:1px">'+ts[item.tag]+'</div>';}
+      if(item.highlightLabel){h+='<span style="display:inline-block;font-size:.62rem;color:#5b21b6;background:#ede9fe;font-weight:800;padding:3px 7px;border-radius:6px;margin-top:4px">'+escapeHtmlAttribute(item.highlightLabel)+'</span>';}
+      else if(item.tag){var ts={bestseller:'⭐ Bestseller',special:'🔥 Special',new:'✨ New'};if(ts[item.tag])h+='<div style="font-size:.65rem;color:#d97706;font-weight:600;margin-top:1px">'+ts[item.tag]+'</div>';}
       if(item.desc)h+='<div style="font-size:.7rem;color:#9ca3af;margin-top:1px">'+item.desc+'</div>';
       h+='</div><span class="ph-item-price" style="color:'+pc+'">₹'+item.price+'</span></div>';
     });
@@ -3199,10 +3316,13 @@ function renderPubMenu(){
         return {name:cat.name,items:(cat.products||[]).map(function(p){
           return {name:p.name,price:parseFloat(p.price),desc:p.description||'',
             veg:p.isVeg===true?'veg':p.isVeg===false?'nonveg':'',
-            tag:p.isBestseller?'bestseller':p.isSpecial?'special':'',avail:true};
+            tag:p.isBestseller?'bestseller':p.isSpecial?'special':'',highlightLabel:p.highlightLabel||'',id:p.id,avail:true};
         })};
       })},
-      tmpl:tmplIdx
+      tmpl:tmplIdx,
+      todaysSpecialEnabled:!!(raw.menu&&raw.menu.todaysSpecialEnabled),
+      todaysSpecialTitle:raw.menu&&raw.menu.todaysSpecialTitle||"Today's Special",
+      todaysSpecialProductIds:raw.menu&&raw.menu.todaysSpecialProductIds||[]
     };
   } else {
     d=S.data;
@@ -3222,7 +3342,7 @@ function renderPubMenu(){
   } else {
     document.getElementById('s-menu-preview').style.display='';
     document.getElementById('s-menu-fullpage').style.display='none';
-    document.getElementById('pub-menu-frame').innerHTML=buildMenuHTML(d.biz||{},d.menu.cats||[],t);
+    document.getElementById('pub-menu-frame').innerHTML=buildMenuHTML(d.biz||{},d.menu.cats||[],t,d);
   }
 }
 function setPublicCategoryActive(index){
@@ -3342,6 +3462,14 @@ function buildFullPageMenu(d,t){
   }
   h+='</div></header>';
 
+  // The special section is a view over existing product records, not a duplicate category.
+  var specialIds=(d.menu&&d.menu.todaysSpecialProductIds)||[];
+  var specialItems=[];
+  if(d.menu&&d.menu.todaysSpecialEnabled){
+    cats.forEach(function(cat){(cat.items||[]).forEach(function(item){
+      if(item.id&&specialIds.includes(item.id)&&item.avail!==false&&!specialItems.some(function(x){return x.id===item.id;})) specialItems.push(item);
+    });});
+  }
   // Template-driven category navigation.
   var visCats=cats.filter(function(cat){return (cat.items||[]).some(function(i){return i.avail!==false;});});
   if(visCats.length>1){
@@ -3354,6 +3482,22 @@ function buildFullPageMenu(d,t){
 
   h+='<main style="max-width:'+maxWidth+'px;margin:0 auto;padding:20px 18px 48px">';
   var any=false;
+  if(specialItems.length){
+    any=true;
+    h+='<section style="padding-top:10px;margin-bottom:28px">';
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0 10px;border-bottom:2px solid '+(isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)')+'"><span style="font-size:.85rem;font-weight:900;color:'+accent+'">'+esc((d.menu&&d.menu.todaysSpecialTitle)||"Today's Special")+'</span><span style="height:1px;flex:1;background:'+(isDark?'rgba(255,255,255,.08)':'#e5e7eb')+'"></span></div>';
+    specialItems.forEach(function(item){
+      var label=String(item.highlightLabel||'').trim();
+      var badge=label?'<span style="font-size:.62rem;background:#ede9fe;color:#5b21b6;font-weight:800;padding:3px 7px;border-radius:6px;margin-left:7px;white-space:nowrap">'+esc(label)+'</span>':'';
+      h+='<article style="display:flex;align-items:center;gap:14px;padding:14px;margin-top:8px;background:'+cardBg+';border:1px solid '+cardBorder+';border-radius:14px;box-shadow:'+(isDark?'none':'0 2px 10px rgba(0,0,0,.035)')+'">';
+      h+='<div style="flex:1;min-width:0"><div style="font-size:.98rem;font-weight:750;color:'+textColor+';line-height:1.35">'+esc(item.name)+badge+'</div>';
+      if(item.desc)h+='<div style="font-size:.76rem;color:'+muted+';margin-top:4px;line-height:1.5">'+esc(item.desc)+'</div>';
+      h+='</div>';
+      if(item.img)h+='<img src="'+esc(item.img)+'" alt="'+esc(item.name)+'" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:12px;flex-shrink:0;border:1px solid '+cardBorder+'">';
+      h+='<div style="font-size:1.05rem;font-weight:900;color:'+price+';white-space:nowrap;flex-shrink:0">₹'+esc(item.price)+'</div></article>';
+    });
+    h+='</section>';
+  }
   visCats.forEach(function(cat,ci){
     var avItems=(cat.items||[]).filter(function(i){return i.avail!==false;});
     if(!avItems.length) return;
@@ -3370,7 +3514,8 @@ function buildFullPageMenu(d,t){
         nonveg?'<span style="width:14px;height:14px;border:1.5px solid #dc2626;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#dc2626"></span></span>':'';
 
       var tagBadge='';
-      if(item.tag==='bestseller') tagBadge='<span style="font-size:.62rem;background:#fef3c7;color:#92400e;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">⭐ Bestseller</span>';
+      if(item.highlightLabel) tagBadge='<span style="font-size:.62rem;background:#ede9fe;color:#5b21b6;font-weight:800;padding:2px 6px;border-radius:5px;margin-left:6px">'+esc(item.highlightLabel)+'</span>';
+      else if(item.tag==='bestseller') tagBadge='<span style="font-size:.62rem;background:#fef3c7;color:#92400e;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">⭐ Bestseller</span>';
       else if(item.tag==='special') tagBadge='<span style="font-size:.62rem;background:#fee2e2;color:#b91c1c;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">🔥 Special</span>';
       else if(item.tag==='new') tagBadge='<span style="font-size:.62rem;background:#dcfce7;color:#166534;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">✨ New</span>';
 
