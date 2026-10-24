@@ -3181,7 +3181,7 @@ async function downloadBrandedQR(){
 
     // Logo and restaurant name sit close together as one centered group.
     c.textBaseline='middle';c.textAlign='center';
-    var logoSize=72, headerY=76, gap=18, logoImg=null;
+    var logoSize=64, headerY=70, gap=12, logoImg=null;
     if(logoUrl){
       try{
         logoImg=new Image();logoImg.crossOrigin='anonymous';
@@ -3203,19 +3203,19 @@ async function downloadBrandedQR(){
 
     // Elegant title case CTA, spaced away from QR.
     c.textAlign='center';c.fillStyle=muted;
-    c.font='600 21px Georgia, "Times New Roman", serif';
-    c.fillText('Scan • Browse • Enjoy',cw/2,157);
+    c.font='600 19px Georgia, "Times New Roman", serif';
+    c.fillText('Scan • Browse • Enjoy',cw/2,139);
 
     // QR with a clean white quiet zone.
-    var qrSize=220,qrX=(cw-qrSize)/2,qrY=190,quiet=12;
+    var qrSize=190,qrX=(cw-qrSize)/2,qrY=164,quiet=10;
     c.fillStyle='#FFFFFF';c.fillRect(qrX-quiet,qrY-quiet,qrSize+quiet*2,qrSize+quiet*2);
     c.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
 
     // Clearly separated footer.
     c.fillStyle=muted;c.font='500 16px Georgia, "Times New Roman", serif';
-    c.fillText('Powered by',cw/2,459);
+    c.fillText('Powered by',cw/2,414);
     c.fillStyle=ink;c.font='700 22px Georgia, "Times New Roman", serif';
-    c.fillText('ZenVentora',cw/2,490);
+    c.fillText('ZenVentora',cw/2,441);
 
     var link=document.createElement('a');
     link.download='emenu-voter-card.png';
