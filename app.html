@@ -3152,74 +3152,74 @@ async function downloadBrandedQR(){
     qrImage.crossOrigin='anonymous';
     await new Promise(function(resolve,reject){qrImage.onload=resolve;qrImage.onerror=reject;qrImage.src=source;});
 
-    // One compact landscape ID-style card only (85.6 x 54 mm proportions).
-    var card=document.createElement('canvas');
-    var cw=856,ch=540,scale=4;
-    card.width=cw*scale;card.height=ch*scale;
-    var c=card.getContext('2d');c.scale(scale,scale);
+    // Single ID-card-sized image: 85.6 x 54 mm at 300 DPI.
+    var w=1011,h=638,scale=1;
+    var canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
     var biz=(S.data&&S.data.biz)||{};
     var name=biz.name||'Your Restaurant';
     var logoUrl=biz.logo||'';
     var bg='#F5EFE4', ink='#173F63', muted='#61778B';
-    c.fillStyle=bg;c.fillRect(0,0,cw,ch);
+    ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
 
-    // Rounded card background and restrained pastel corner accents.
-    c.save();c.beginPath();c.moveTo(12,0);c.lineTo(cw-12,0);c.quadraticCurveTo(cw,0,cw,12);
-    c.lineTo(cw,ch-12);c.quadraticCurveTo(cw,ch,cw-12,ch);c.lineTo(12,ch);
-    c.quadraticCurveTo(0,ch,0,ch-12);c.lineTo(0,12);c.quadraticCurveTo(0,0,12,0);c.closePath();c.clip();
-    c.fillStyle=bg;c.fillRect(0,0,cw,ch);
-    c.fillStyle='#E7DCCB';c.beginPath();c.arc(cw+2,2,74,0,Math.PI*2);c.fill();
-    c.fillStyle='#E4E9DE';c.beginPath();c.arc(-2,ch-2,58,0,Math.PI*2);c.fill();
-    c.restore();
+    // Soft pastel corner accents clipped inside a 12px rounded card.
+    ctx.save();ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(w-12,0);ctx.quadraticCurveTo(w,0,w,12);
+    ctx.lineTo(w,h-12);ctx.quadraticCurveTo(w,h,w-12,h);ctx.lineTo(12,h);
+    ctx.quadraticCurveTo(0,h,0,h-12);ctx.lineTo(0,12);ctx.quadraticCurveTo(0,0,12,0);ctx.closePath();ctx.clip();
+    ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#E7DCCB';ctx.beginPath();ctx.arc(w+4,4,82,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#E4E9DE';ctx.beginPath();ctx.arc(-4,h-4,66,0,Math.PI*2);ctx.fill();
+    ctx.restore();
 
-    // Thin rounded border (12 px corner radius).
-    c.strokeStyle='#D3C2A8';c.lineWidth=2;c.beginPath();
-    c.moveTo(14,1);c.lineTo(cw-14,1);c.quadraticCurveTo(cw-1,1,cw-1,14);
-    c.lineTo(cw-1,ch-14);c.quadraticCurveTo(cw-1,ch-1,cw-14,ch-1);
-    c.lineTo(14,ch-1);c.quadraticCurveTo(1,ch-1,1,ch-14);
-    c.lineTo(1,14);c.quadraticCurveTo(1,1,14,1);c.closePath();c.stroke();
+    // Light border with 12px rounded corners.
+    ctx.strokeStyle='#D3C2A8';ctx.lineWidth=2;ctx.beginPath();
+    ctx.moveTo(14,1);ctx.lineTo(w-14,1);ctx.quadraticCurveTo(w-1,1,w-1,14);
+    ctx.lineTo(w-1,h-14);ctx.quadraticCurveTo(w-1,h-1,w-14,h-1);
+    ctx.lineTo(14,h-1);ctx.quadraticCurveTo(1,h-1,1,h-14);
+    ctx.lineTo(1,14);ctx.quadraticCurveTo(1,1,14,1);ctx.closePath();ctx.stroke();
 
-    // Logo and restaurant name sit close together as one centered group.
-    c.textBaseline='middle';c.textAlign='center';
-    var logoSize=64, headerY=70, gap=12, logoImg=null;
+    // Compact centered logo + restaurant name.
+    var logoImg=null;
     if(logoUrl){
       try{
         logoImg=new Image();logoImg.crossOrigin='anonymous';
         await new Promise(function(resolve,reject){logoImg.onload=resolve;logoImg.onerror=reject;logoImg.src=logoUrl;});
       }catch(e){logoImg=null;}
     }
-    var nameFont=name.length>22?25:(name.length>15?29:34);
-    c.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
-    var nameWidth=Math.min(c.measureText(name).width,390);
+    var logoSize=58,gap=12,headerY=82;
+    ctx.textBaseline='middle';ctx.textAlign='left';
+    var nameFont=name.length>22?26:(name.length>15?30:35);
+    ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
+    var nameWidth=Math.min(ctx.measureText(name).width,450);
     var logoW=logoImg?logoSize:0;
     var groupW=logoW+(logoW?gap:0)+nameWidth;
-    var groupX=(cw-groupW)/2;
+    var groupX=(w-groupW)/2;
     if(logoImg){
-      c.save();c.beginPath();c.arc(groupX+logoSize/2,headerY,logoSize/2,0,Math.PI*2);c.clip();
-      c.drawImage(logoImg,groupX,headerY-logoSize/2,logoSize,logoSize);c.restore();
+      ctx.save();ctx.beginPath();ctx.arc(groupX+logoSize/2,headerY,logoSize/2,0,Math.PI*2);ctx.clip();
+      ctx.drawImage(logoImg,groupX,headerY-logoSize/2,logoSize,logoSize);ctx.restore();
     }
-    c.fillStyle=ink;c.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
-    c.textAlign='left';c.fillText(name,groupX+logoW+(logoW?gap:0),headerY,390);
+    ctx.fillStyle=ink;ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
+    ctx.fillText(name,groupX+logoW+(logoW?gap:0),headerY,450);
 
-    // Elegant title case CTA, spaced away from QR.
-    c.textAlign='center';c.fillStyle=muted;
-    c.font='600 19px Georgia, "Times New Roman", serif';
-    c.fillText('Scan • Browse • Enjoy',cw/2,139);
+    // Requested call to action.
+    ctx.fillStyle=muted;ctx.textAlign='center';ctx.font='600 22px Georgia, "Times New Roman", serif';
+    ctx.fillText('Scan to View the Menu',w/2,166);
 
-    // QR with a clean white quiet zone.
-    var qrSize=190,qrX=(cw-qrSize)/2,qrY=164,quiet=10;
-    c.fillStyle='#FFFFFF';c.fillRect(qrX-quiet,qrY-quiet,qrSize+quiet*2,qrSize+quiet*2);
-    c.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
+    // QR code, centered and sized for reliable scanning.
+    var qrSize=238,qrX=(w-qrSize)/2,qrY=205,quiet=12;
+    ctx.fillStyle='#FFFFFF';ctx.fillRect(qrX-quiet,qrY-quiet,qrSize+quiet*2,qrSize+quiet*2);
+    ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
 
-    // Clearly separated footer.
-    c.fillStyle=muted;c.font='500 16px Georgia, "Times New Roman", serif';
-    c.fillText('Powered by',cw/2,414);
-    c.fillStyle=ink;c.font='700 22px Georgia, "Times New Roman", serif';
-    c.fillText('ZenVentora',cw/2,441);
+    // Brand footer.
+    ctx.fillStyle=muted;ctx.font='500 17px Georgia, "Times New Roman", serif';
+    ctx.fillText('Powered by',w/2,505);
+    ctx.fillStyle=ink;ctx.font='700 22px Georgia, "Times New Roman", serif';
+    ctx.fillText('eMenu - ZenVentora',w/2,538);
 
     var link=document.createElement('a');
     link.download='emenu-voter-card.png';
-    link.href=card.toDataURL('image/png');
+    link.href=canvas.toDataURL('image/png');
     document.body.appendChild(link);link.click();link.remove();
   }catch(err){
     console.error('Branded card download failed',err);
