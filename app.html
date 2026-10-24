@@ -3152,8 +3152,7 @@ async function downloadBrandedQR(){
     qrImage.crossOrigin='anonymous';
     await new Promise(function(resolve,reject){qrImage.onload=resolve;qrImage.onerror=reject;qrImage.src=source;});
 
-    // Reference design is portrait; use a single voter-ID-sized portrait card.
-    // 54 x 85.6 mm at 300 DPI = approximately 638 x 1011 px.
+    // Real ID-card aspect ratio, landscape-independent portrait layout.
     var w=638,h=1011;
     var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
     var ctx=canvas.getContext('2d');
@@ -3163,18 +3162,16 @@ async function downloadBrandedQR(){
     var bg='#FFF6E8',ink='#173F63',muted='#61778B';
     ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
 
-    // Thin border near the card edge, with a 12px rounded corner.
     ctx.save();
     ctx.beginPath();ctx.moveTo(12,2);ctx.lineTo(w-12,2);ctx.quadraticCurveTo(w-2,2,w-2,12);
     ctx.lineTo(w-2,h-12);ctx.quadraticCurveTo(w-2,h-2,w-12,h-2);ctx.lineTo(12,h-2);
     ctx.quadraticCurveTo(2,h-2,2,h-12);ctx.lineTo(2,12);ctx.quadraticCurveTo(2,2,12,2);ctx.closePath();
     ctx.strokeStyle='#D3C2A8';ctx.lineWidth=2;ctx.stroke();
     ctx.save();ctx.clip();
-    ctx.fillStyle='#F4E4CC';ctx.beginPath();ctx.arc(w+4,4,65,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#F0E3D1';ctx.beginPath();ctx.arc(-4,h-4,48,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#F4E4CC';ctx.beginPath();ctx.arc(w+4,4,50,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#F0E3D1';ctx.beginPath();ctx.arc(-4,h-4,38,0,Math.PI*2);ctx.fill();
     ctx.restore();ctx.restore();
 
-    // Small restaurant logo and name together at the top; no separate eMenu logo.
     var logoImg=null;
     if(logoUrl){
       try{
@@ -3182,9 +3179,9 @@ async function downloadBrandedQR(){
         await new Promise(function(resolve,reject){logoImg.onload=resolve;logoImg.onerror=reject;logoImg.src=logoUrl;});
       }catch(e){logoImg=null;}
     }
-    var logoSize=58,gap=10,headerY=82;
+    var logoSize=50,gap=9,headerY=76;
     ctx.textBaseline='middle';ctx.textAlign='left';
-    var nameFont=name.length>22?23:(name.length>15?26:30);
+    var nameFont=name.length>22?22:(name.length>15?25:28);
     ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
     var nameWidth=Math.min(ctx.measureText(name).width,400);
     var logoW=logoImg?logoSize:0,groupW=logoW+(logoW?gap:0)+nameWidth,groupX=(w-groupW)/2;
@@ -3195,29 +3192,27 @@ async function downloadBrandedQR(){
     ctx.fillStyle=ink;ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
     ctx.fillText(name,groupX+logoW+(logoW?gap:0),headerY,400);
 
-    // Clear, legible call to action.
-    ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 29px Georgia, "Times New Roman", serif';
-    ctx.fillText('Scan to View',w/2,170);
-    ctx.fillText('Our Menu',w/2,207);
+    ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 25px Georgia, "Times New Roman", serif';
+    ctx.fillText('Scan to View',w/2,150);
+    ctx.fillText('Our Menu',w/2,181);
 
-    // Large centered QR in a softly rounded white panel.
-    var qrSize=300,qrX=(w-qrSize)/2,qrY=248,quiet=13;
-    var boxX=qrX-quiet-8,boxY=qrY-quiet-8,boxSize=qrSize+2*(quiet+8),radius=20;
+    // Preserve the supplied QR image pixels as-is; no smoothing, recoloring, or regeneration.
+    var qrSize=276,qrX=Math.round((w-qrSize)/2),qrY=224,quiet=10;
+    var boxX=qrX-quiet-6,boxY=qrY-quiet-6,boxSize=qrSize+2*(quiet+6),radius=16;
     ctx.fillStyle='#FFFFFF';ctx.beginPath();ctx.moveTo(boxX+radius,boxY);
     ctx.lineTo(boxX+boxSize-radius,boxY);ctx.quadraticCurveTo(boxX+boxSize,boxY,boxX+boxSize,boxY+radius);
     ctx.lineTo(boxX+boxSize,boxY+boxSize-radius);ctx.quadraticCurveTo(boxX+boxSize,boxY+boxSize,boxX+boxSize-radius,boxY+boxSize);
     ctx.lineTo(boxX+radius,boxY+boxSize);ctx.quadraticCurveTo(boxX,boxY+boxSize,boxX,boxY+boxSize-radius);
     ctx.lineTo(boxX,boxY+radius);ctx.quadraticCurveTo(boxX,boxY,boxX+radius,boxY);ctx.closePath();ctx.fill();
+    ctx.imageSmoothingEnabled=false;
     ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
 
-    // Simple eMenu label only; intentionally no eMenu icon/logo above it.
     ctx.fillStyle=ink;ctx.font='700 23px Georgia, "Times New Roman", serif';
-    ctx.fillText('eMenu',w/2,650);
-
-    ctx.fillStyle=muted;ctx.font='500 19px Georgia, "Times New Roman", serif';
-    ctx.fillText('Powered by',w/2,718);
-    ctx.fillStyle=ink;ctx.font='700 25px Georgia, "Times New Roman", serif';
-    ctx.fillText('ZenVentora',w/2,754);
+    ctx.fillText('eMenu',w/2,560);
+    ctx.fillStyle=muted;ctx.font='500 18px Georgia, "Times New Roman", serif';
+    ctx.fillText('Powered by',w/2,622);
+    ctx.fillStyle=ink;ctx.font='700 24px Georgia, "Times New Roman", serif';
+    ctx.fillText('ZenVentora',w/2,655);
 
     var link=document.createElement('a');
     link.download='emenu-voter-card.png';
