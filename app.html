@@ -3152,53 +3152,51 @@ async function downloadBrandedQR(){
     qrImage.crossOrigin='anonymous';
     await new Promise(function(resolve,reject){qrImage.onload=resolve;qrImage.onerror=reject;qrImage.src=source;});
 
-    // Print-ready ID-card layout: 85.6 × 54 mm proportions (landscape).
+    // Print-ready landscape card with the same proportions as an ID card.
     var canvas=document.createElement('canvas');
-    var scale=4;
-    canvas.width=856*scale/1; canvas.height=540*scale/1;
-    var ctx=canvas.getContext('2d');
-    var w=canvas.width,h=canvas.height;
+    var scale=4, w=856, h=540;
+    canvas.width=w*scale;canvas.height=h*scale;
+    var ctx=canvas.getContext('2d');ctx.scale(scale,scale);
     var biz=(S.data&&S.data.biz)||{};
     var name=biz.name||'Your Restaurant';
     var logoUrl=biz.logo||'';
     var bg='#F4EDE0', ink='#173F63', muted='#62778A';
     ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
 
-    // Soft pastel decorative shapes, kept away from the QR quiet zone.
-    ctx.fillStyle='#E7DCCB';ctx.beginPath();ctx.arc(w+30,30,170,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#E4E9DE';ctx.beginPath();ctx.arc(-25,h-15,145,0,Math.PI*2);ctx.fill();
+    // Subtle pastel decoration, away from the QR code's scanning area.
+    ctx.fillStyle='#E7DCCB';ctx.beginPath();ctx.arc(w+10,5,100,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#E4E9DE';ctx.beginPath();ctx.arc(-8,h-5,85,0,Math.PI*2);ctx.fill();
 
-    // Restaurant logo and name header.
-    var headerY=90, logoSize=86, nameX=w/2;
+    // Logo and restaurant name.
+    var headerY=65, logoSize=48, textCenter=w/2;
     if(logoUrl){
       try{
         var logoImg=new Image();logoImg.crossOrigin='anonymous';
         await new Promise(function(resolve,reject){logoImg.onload=resolve;logoImg.onerror=reject;logoImg.src=logoUrl;});
-        ctx.save();ctx.beginPath();ctx.arc(w/2-250,headerY,logoSize/2,0,Math.PI*2);ctx.clip();
-        ctx.drawImage(logoImg,w/2-250-logoSize/2,headerY-logoSize/2,logoSize,logoSize);ctx.restore();
-        nameX=w/2+30;
-      }catch(e){ nameX=w/2; }
+        ctx.save();ctx.beginPath();ctx.arc(w/2-170,headerY,logoSize/2,0,Math.PI*2);ctx.clip();
+        ctx.drawImage(logoImg,w/2-170-logoSize/2,headerY-logoSize/2,logoSize,logoSize);ctx.restore();
+        textCenter=w/2+35;
+      }catch(e){ textCenter=w/2; }
     }
     ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';
-    var nameFont= name.length>22?42:(name.length>15?48:56);
+    var nameFont=name.length>22?22:(name.length>15?25:29);
     ctx.font='700 '+nameFont+'px Arial, sans-serif';
-    ctx.fillText(name,w/2+(nameX===w/2?0:28),headerY+2, w-170);
+    ctx.fillText(name,textCenter,headerY,390);
 
     // Scan instruction.
-    ctx.fillStyle=muted;ctx.font='600 30px Arial, sans-serif';
-    ctx.fillText('Scan to View this Menu',w/2,176);
+    ctx.fillStyle=muted;ctx.font='600 20px Arial, sans-serif';
+    ctx.fillText('Scan to View this Menu',w/2,128);
 
-    // QR is centered and large enough for reliable scanning, with a white quiet zone.
-    var qrSize=268, qrX=(w-qrSize)/2, qrY=220, quiet=16;
-    ctx.fillStyle='#FFFFFF';
-    ctx.fillRect(qrX-quiet,qrY-quiet,qrSize+quiet*2,qrSize+quiet*2);
+    // QR centered with a white quiet zone for dependable scanning.
+    var qrSize=220, qrX=(w-qrSize)/2, qrY=157, quiet=10;
+    ctx.fillStyle='#FFFFFF';ctx.fillRect(qrX-quiet,qrY-quiet,qrSize+quiet*2,qrSize+quiet*2);
     ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
 
-    // Brand footer.
-    ctx.fillStyle=muted;ctx.font='500 25px Arial, sans-serif';
-    ctx.fillText('Powered by',w/2,520);
-    ctx.fillStyle=ink;ctx.font='700 31px Arial, sans-serif';
-    ctx.fillText('ZenVentora',w/2,570);
+    // Powered-by footer.
+    ctx.fillStyle=muted;ctx.font='500 15px Arial, sans-serif';
+    ctx.fillText('Powered by',w/2,440);
+    ctx.fillStyle=ink;ctx.font='700 19px Arial, sans-serif';
+    ctx.fillText('ZenVentora',w/2,466);
 
     var link=document.createElement('a');
     link.download='emenu-table-card.png';
