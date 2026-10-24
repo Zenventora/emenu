@@ -3152,34 +3152,35 @@ async function downloadBrandedQR(){
     qrImage.crossOrigin='anonymous';
     await new Promise(function(resolve,reject){qrImage.onload=resolve;qrImage.onerror=reject;qrImage.src=source;});
 
-    // Single ID-card-sized image: 85.6 x 54 mm at 300 DPI.
-    var w=1011,h=638,scale=1;
+    // True ID-card aspect ratio: 85.6 x 54 mm. Export at 300 DPI (1011 x 638 px).
+    var w=1011,h=638;
     var canvas=document.createElement('canvas');
     canvas.width=w;canvas.height=h;
     var ctx=canvas.getContext('2d');
     var biz=(S.data&&S.data.biz)||{};
     var name=biz.name||'Your Restaurant';
     var logoUrl=biz.logo||'';
-    var bg='#F5EFE4', ink='#173F63', muted='#61778B';
+    var bg='#F5EFE4',ink='#173F63',muted='#61778B';
     ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
 
-    // Soft pastel corner accents clipped inside a 12px rounded card.
-    ctx.save();ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(w-12,0);ctx.quadraticCurveTo(w,0,w,12);
+    // Rounded border clips all decoration/content to the card edge.
+    ctx.save();
+    ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(w-12,0);ctx.quadraticCurveTo(w,0,w,12);
     ctx.lineTo(w,h-12);ctx.quadraticCurveTo(w,h,w-12,h);ctx.lineTo(12,h);
     ctx.quadraticCurveTo(0,h,0,h-12);ctx.lineTo(0,12);ctx.quadraticCurveTo(0,0,12,0);ctx.closePath();ctx.clip();
     ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-    ctx.fillStyle='#E7DCCB';ctx.beginPath();ctx.arc(w+4,4,82,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#E4E9DE';ctx.beginPath();ctx.arc(-4,h-4,66,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#E7DCCB';ctx.beginPath();ctx.arc(w+4,4,65,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#E4E9DE';ctx.beginPath();ctx.arc(-4,h-4,52,0,Math.PI*2);ctx.fill();
     ctx.restore();
 
-    // Light border with 12px rounded corners.
+    // Keep content within a 20px inset from the card edges.
     ctx.strokeStyle='#D3C2A8';ctx.lineWidth=2;ctx.beginPath();
     ctx.moveTo(14,1);ctx.lineTo(w-14,1);ctx.quadraticCurveTo(w-1,1,w-1,14);
     ctx.lineTo(w-1,h-14);ctx.quadraticCurveTo(w-1,h-1,w-14,h-1);
     ctx.lineTo(14,h-1);ctx.quadraticCurveTo(1,h-1,1,h-14);
     ctx.lineTo(1,14);ctx.quadraticCurveTo(1,1,14,1);ctx.closePath();ctx.stroke();
 
-    // Compact centered logo + restaurant name.
+    // Small logo beside the restaurant name; group centered as one unit.
     var logoImg=null;
     if(logoUrl){
       try{
@@ -3187,35 +3188,30 @@ async function downloadBrandedQR(){
         await new Promise(function(resolve,reject){logoImg.onload=resolve;logoImg.onerror=reject;logoImg.src=logoUrl;});
       }catch(e){logoImg=null;}
     }
-    var logoSize=58,gap=12,headerY=82;
+    var logoSize=52,gap=10,headerY=74;
     ctx.textBaseline='middle';ctx.textAlign='left';
-    var nameFont=name.length>22?26:(name.length>15?30:35);
+    var nameFont=name.length>22?24:(name.length>15?28:32);
     ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
-    var nameWidth=Math.min(ctx.measureText(name).width,450);
-    var logoW=logoImg?logoSize:0;
-    var groupW=logoW+(logoW?gap:0)+nameWidth;
-    var groupX=(w-groupW)/2;
+    var nameWidth=Math.min(ctx.measureText(name).width,420);
+    var logoW=logoImg?logoSize:0,groupW=logoW+(logoW?gap:0)+nameWidth,groupX=(w-groupW)/2;
     if(logoImg){
       ctx.save();ctx.beginPath();ctx.arc(groupX+logoSize/2,headerY,logoSize/2,0,Math.PI*2);ctx.clip();
       ctx.drawImage(logoImg,groupX,headerY-logoSize/2,logoSize,logoSize);ctx.restore();
     }
     ctx.fillStyle=ink;ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
-    ctx.fillText(name,groupX+logoW+(logoW?gap:0),headerY,450);
+    ctx.fillText(name,groupX+logoW+(logoW?gap:0),headerY,420);
 
-    // Requested call to action.
-    ctx.fillStyle=muted;ctx.textAlign='center';ctx.font='600 22px Georgia, "Times New Roman", serif';
-    ctx.fillText('Scan to View the Menu',w/2,166);
+    ctx.fillStyle=muted;ctx.textAlign='center';ctx.font='600 20px Georgia, "Times New Roman", serif';
+    ctx.fillText('Scan to View the Menu',w/2,145);
 
-    // QR code, centered and sized for reliable scanning.
-    var qrSize=238,qrX=(w-qrSize)/2,qrY=205,quiet=12;
+    var qrSize=218,qrX=(w-qrSize)/2,qrY=174,quiet=10;
     ctx.fillStyle='#FFFFFF';ctx.fillRect(qrX-quiet,qrY-quiet,qrSize+quiet*2,qrSize+quiet*2);
     ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
 
-    // Brand footer.
-    ctx.fillStyle=muted;ctx.font='500 17px Georgia, "Times New Roman", serif';
-    ctx.fillText('Powered by',w/2,505);
-    ctx.fillStyle=ink;ctx.font='700 22px Georgia, "Times New Roman", serif';
-    ctx.fillText('eMenu - ZenVentora',w/2,538);
+    ctx.fillStyle=muted;ctx.font='500 15px Georgia, "Times New Roman", serif';
+    ctx.fillText('Powered by',w/2,438);
+    ctx.fillStyle=ink;ctx.font='700 20px Georgia, "Times New Roman", serif';
+    ctx.fillText('eMenu - ZenVentora',w/2,464);
 
     var link=document.createElement('a');
     link.download='emenu-voter-card.png';
