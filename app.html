@@ -3318,29 +3318,23 @@ async function downloadBrandedQR(){
     ctx.fillStyle='#34475A';ctx.font='500 38px Inter, Arial, sans-serif';
     ctx.fillText('Powered by',center,poweredY);
 
-    // Compact two-tone ZenVentora wordmark and flowing ribbon emblem.
+    // Use the hand-and-leaf icon cropped from the user's original poster.
+    // The poster layout, text, colors, and QR code stay unchanged.
     var brandY=hasLogo?1400:1242;
     ctx.save();
-    var markX=276,markY=brandY-4;
-    ctx.beginPath();
-    ctx.moveTo(markX,markY+2);
-    ctx.bezierCurveTo(markX+28,markY-25,markX+61,markY-30,markX+91,markY-8);
-    ctx.bezierCurveTo(markX+72,markY+3,markX+51,markY+13,markX+26,markY+10);
-    ctx.bezierCurveTo(markX+47,markY+18,markX+71,markY+12,markX+91,markY+3);
-    ctx.bezierCurveTo(markX+67,markY+36,markX+28,markY+34,markX,markY+2);
-    ctx.closePath();ctx.fillStyle='#103B68';ctx.fill();
+    var handMarkImage=new Image();
+    handMarkImage.src='data:image/png;base64,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';
+    await new Promise(function(resolve,reject){
+      handMarkImage.onload=resolve;
+      handMarkImage.onerror=function(){reject(new Error('ZenVentora hand mark image failed to load'));};
+      if(handMarkImage.complete&&handMarkImage.naturalWidth) resolve();
+    });
+    ctx.drawImage(handMarkImage,277,brandY-30,165,59);
 
-    ctx.beginPath();
-    ctx.moveTo(markX+57,markY-13);
-    ctx.bezierCurveTo(markX+82,markY-37,markX+111,markY-31,markX+123,markY-18);
-    ctx.bezierCurveTo(markX+105,markY-3,markX+84,markY+2,markX+66,markY-2);
-    ctx.bezierCurveTo(markX+85,markY+6,markX+103,markY+3,markX+119,markY-5);
-    ctx.bezierCurveTo(markX+102,markY+17,markX+75,markY+10,markX+57,markY-13);
-    ctx.closePath();ctx.fillStyle='#15966B';ctx.fill();
     var brandFont=50;
     ctx.font='700 '+brandFont+'px Georgia, "Times New Roman", serif';
     var zenWidth=ctx.measureText('Zen').width;
-    var wordX=markX+145;
+    var wordX=454;
     ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.fillStyle='#103B68';ctx.fillText('Zen',wordX,brandY);
     ctx.fillStyle='#188653';ctx.fillText('Ventora',wordX+zenWidth,brandY);
