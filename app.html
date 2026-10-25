@@ -3176,83 +3176,185 @@ async function saveBiz(){
 }
 async function downloadBrandedQR(){
   var imgEl=document.getElementById('qr-img');
-  var source=(S.data&&S.data.qr&&S.data.qr.qrPng)||imgEl.src;
-  if(!source){await publishAndGenQR();source=(S.data&&S.data.qr&&S.data.qr.qrPng)||imgEl.src;}
-  if(!source){toast('Generate the QR code first','error');return;}
-  try{
-    var qrImage=new Image();
-    qrImage.crossOrigin='anonymous';
-    await new Promise(function(resolve,reject){qrImage.onload=resolve;qrImage.onerror=reject;qrImage.src=source;});
+  var source=(S.data&&S.data.qr&&S.data.qr.qrPng)||((imgEl&&imgEl.src)||'');
+  if(!source){await publishAndGenQR();source=(S.data&&S.data.qr&&S.data.qr.qrPng)||((imgEl&&imgEl.src)||'');}
+  if(!source){toast('Generate the QR code first, then download the poster','error');return;}
 
-    // Real ID-card aspect ratio, landscape-independent portrait layout.
-    var w=638,h=1011;
-    var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-    var ctx=canvas.getContext('2d');
+  function loadImage(url){
+    return new Promise(function(resolve,reject){
+      var image=new Image();
+      image.crossOrigin='anonymous';
+      image.onload=function(){resolve(image);};
+      image.onerror=function(){reject(new Error('Image could not be loaded'));};
+      image.src=url;
+    });
+  }
+  function roundRectPath(context,x,y,width,height,radius){
+    var r=Math.min(radius,width/2,height/2);
+    context.beginPath();
+    context.moveTo(x+r,y);
+    context.lineTo(x+width-r,y);
+    context.quadraticCurveTo(x+width,y,x+width,y+r);
+    context.lineTo(x+width,y+height-r);
+    context.quadraticCurveTo(x+width,y+height,x+width-r,y+height);
+    context.lineTo(x+r,y+height);
+    context.quadraticCurveTo(x,y+height,x,y+height-r);
+    context.lineTo(x,y+r);
+    context.quadraticCurveTo(x,y,x+r,y);
+    context.closePath();
+  }
+  function fitFont(context,text,maxWidth,startSize,minSize,weight,family){
+    var size=startSize;
+    context.font=weight+' '+size+'px '+family;
+    while(context.measureText(text).width>maxWidth&&size>minSize){
+      size-=2;
+      context.font=weight+' '+size+'px '+family;
+    }
+    return size;
+  }
+  try{
+    var qrImage=await loadImage(source);
     var biz=(S.data&&S.data.biz)||{};
-    var name=biz.name||'Your Restaurant';
-    var logoUrl=biz.logo||'';
-    var bg='#FFF6E8',ink='#173F63',muted='#61778B';
+    var name=String(biz.name||'Your Restaurant').trim()||'Your Restaurant';
+    var logoUrl=String(biz.logo||'').trim();
+    var logoImage=null;
+    if(logoUrl){
+      try{logoImage=await loadImage(logoUrl);}catch(logoError){console.warn('Business logo could not be loaded for QR poster',logoError);}
+    }
+
+    // High-resolution portrait poster designed from the supplied reference.
+    var w=1024,h=1536;
+    var canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    if(!ctx) throw new Error('Canvas is not supported in this browser');
+
+    // Soft ivory background with mint and blue flowing corners.
+    var bg=ctx.createLinearGradient(0,0,w,h);
+    bg.addColorStop(0,'#F0FBF8');
+    bg.addColorStop(.45,'#FFFEF8');
+    bg.addColorStop(1,'#EAF7FC');
     ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
 
     ctx.save();
-    ctx.beginPath();ctx.moveTo(12,2);ctx.lineTo(w-12,2);ctx.quadraticCurveTo(w-2,2,w-2,12);
-    ctx.lineTo(w-2,h-12);ctx.quadraticCurveTo(w-2,h-2,w-12,h-2);ctx.lineTo(12,h-2);
-    ctx.quadraticCurveTo(2,h-2,2,h-12);ctx.lineTo(2,12);ctx.quadraticCurveTo(2,2,12,2);ctx.closePath();
-    ctx.strokeStyle='#D3C2A8';ctx.lineWidth=2;ctx.stroke();
-    ctx.save();ctx.clip();
-    ctx.fillStyle='#F4E4CC';ctx.beginPath();ctx.arc(w+4,4,50,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#F0E3D1';ctx.beginPath();ctx.arc(-4,h-4,38,0,Math.PI*2);ctx.fill();
-    ctx.restore();ctx.restore();
+    ctx.beginPath();
+    ctx.moveTo(652,0);
+    ctx.bezierCurveTo(736,50,706,112,779,181);
+    ctx.bezierCurveTo(848,248,936,265,w,331);
+    ctx.lineTo(w,0);ctx.closePath();
+    ctx.fillStyle='#C8EDE0';ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,1182);
+    ctx.bezierCurveTo(77,1253,151,1283,222,1340);
+    ctx.bezierCurveTo(278,1392,193,1490,0,h);
+    ctx.closePath();ctx.fillStyle='#BFE8F0';ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(w,1268);
+    ctx.bezierCurveTo(940,1320,927,1410,847,h);
+    ctx.lineTo(w,h);ctx.closePath();ctx.fillStyle='#D6EBF8';ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,0);ctx.lineTo(172,0);
+    ctx.bezierCurveTo(120,72,66,93,0,115);
+    ctx.closePath();ctx.fillStyle='rgba(255,255,255,.34)';ctx.fill();
+    ctx.restore();
 
-    var logoImg=null;
-    if(logoUrl){
-      try{
-        logoImg=new Image();logoImg.crossOrigin='anonymous';
-        await new Promise(function(resolve,reject){logoImg.onload=resolve;logoImg.onerror=reject;logoImg.src=logoUrl;});
-      }catch(e){logoImg=null;}
+    // Thin, rounded gold frame.
+    roundRectPath(ctx,58,56,w-116,h-112,44);
+    ctx.strokeStyle='#C9AD6C';ctx.lineWidth=5;ctx.stroke();
+
+    var center=w/2;
+    var hasLogo=!!logoImage;
+    var shift=hasLogo?0:174;
+    var logoCenterY=245;
+    if(logoImage){
+      ctx.save();
+      ctx.beginPath();ctx.arc(center,logoCenterY,137,0,Math.PI*2);
+      ctx.fillStyle='#D1B16C';ctx.fill();
+      ctx.beginPath();ctx.arc(center,logoCenterY,130,0,Math.PI*2);
+      ctx.fillStyle='#FFF9E8';ctx.fill();
+      ctx.beginPath();ctx.arc(center,logoCenterY,124,0,Math.PI*2);ctx.clip();
+      // Cover-crop the logo while preserving its circular presentation.
+      var side=Math.min(logoImage.width,logoImage.height);
+      var sx=(logoImage.width-side)/2,sy=(logoImage.height-side)/2;
+      ctx.drawImage(logoImage,sx,sy,side,side,center-124,logoCenterY-124,248,248);
+      ctx.restore();
+      ctx.beginPath();ctx.arc(center,logoCenterY,130,0,Math.PI*2);
+      ctx.strokeStyle='#E3C77E';ctx.lineWidth=4;ctx.stroke();
     }
-    var logoSize=50,gap=9,headerY=76;
-    ctx.textBaseline='middle';ctx.textAlign='left';
-    var nameFont=name.length>22?22:(name.length>15?25:28);
-    ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
-    var nameWidth=Math.min(ctx.measureText(name).width,400);
-    var logoW=logoImg?logoSize:0,groupW=logoW+(logoW?gap:0)+nameWidth,groupX=(w-groupW)/2;
-    if(logoImg){
-      ctx.save();ctx.beginPath();ctx.arc(groupX+logoSize/2,headerY,logoSize/2,0,Math.PI*2);ctx.clip();
-      ctx.drawImage(logoImg,groupX,headerY-logoSize/2,logoSize,logoSize);ctx.restore();
-    }
-    ctx.fillStyle=ink;ctx.font='700 '+nameFont+'px Georgia, "Times New Roman", serif';
-    ctx.fillText(name,groupX+logoW+(logoW?gap:0),headerY,400);
 
-    ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 25px Georgia, "Times New Roman", serif';
-    ctx.fillText('Scan to View',w/2,150);
-    ctx.fillText('Our Menu',w/2,181);
+    // Business name is always centered beneath the logo (or at top when no logo exists).
+    var nameY=hasLogo?484:326;
+    var nameSize=fitFont(ctx,name,850,86,42,'800','Inter, Arial, sans-serif');
+    ctx.fillStyle='#103B68';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+nameSize+'px Inter, Arial, sans-serif';
+    ctx.fillText(name,center,nameY,850);
 
-    // Preserve the supplied QR image pixels as-is; no smoothing, recoloring, or regeneration.
-    var qrSize=276,qrX=Math.round((w-qrSize)/2),qrY=224,quiet=10;
-    var boxX=qrX-quiet-6,boxY=qrY-quiet-6,boxSize=qrSize+2*(quiet+6),radius=16;
-    ctx.fillStyle='#FFFFFF';ctx.beginPath();ctx.moveTo(boxX+radius,boxY);
-    ctx.lineTo(boxX+boxSize-radius,boxY);ctx.quadraticCurveTo(boxX+boxSize,boxY,boxX+boxSize,boxY+radius);
-    ctx.lineTo(boxX+boxSize,boxY+boxSize-radius);ctx.quadraticCurveTo(boxX+boxSize,boxY+boxSize,boxX+boxSize-radius,boxY+boxSize);
-    ctx.lineTo(boxX+radius,boxY+boxSize);ctx.quadraticCurveTo(boxX,boxY+boxSize,boxX,boxY+boxSize-radius);
-    ctx.lineTo(boxX,boxY+radius);ctx.quadraticCurveTo(boxX,boxY,boxX+radius,boxY);ctx.closePath();ctx.fill();
+    var scanOneY=hasLogo?572:414;
+    var scanTwoY=hasLogo?635:477;
+    ctx.fillStyle='#253A4F';ctx.font='500 51px Inter, Arial, sans-serif';
+    ctx.fillText('Scan to View',center,scanOneY);
+    ctx.fillText('Our Menu',center,scanTwoY);
+
+    // White QR panel with a gold outline; the original QR pixels are kept intact.
+    var frameSize=536,frameX=(w-frameSize)/2,frameY=hasLogo?666:508;
+    roundRectPath(ctx,frameX,frameY,frameSize,536,31);
+    ctx.fillStyle='rgba(255,255,255,.88)';ctx.fill();
+    ctx.strokeStyle='#F0DCAF';ctx.lineWidth=5;ctx.stroke();
+    var qrSize=478,qrX=(w-qrSize)/2,qrY=frameY+29;
     ctx.imageSmoothingEnabled=false;
     ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
 
-    ctx.fillStyle=ink;ctx.font='700 23px Georgia, "Times New Roman", serif';
-    ctx.fillText('eMenu',w/2,560);
-    ctx.fillStyle=muted;ctx.font='500 18px Georgia, "Times New Roman", serif';
-    ctx.fillText('Powered by',w/2,622);
-    ctx.fillStyle=ink;ctx.font='700 24px Georgia, "Times New Roman", serif';
-    ctx.fillText('ZenVentora',w/2,655);
+    // Product label below the QR code.
+    ctx.fillStyle='#103B68';
+    ctx.font='800 56px Inter, Arial, sans-serif';
+    ctx.fillText('eMenu',center,hasLogo?1241:1083);
 
-    var link=document.createElement('a');
-    link.download='emenu-voter-card.png';
-    link.href=canvas.toDataURL('image/png');
-    document.body.appendChild(link);link.click();link.remove();
+    // Powered-by line with fine gold dividers.
+    var poweredY=hasLogo?1314:1156;
+    ctx.strokeStyle='#C9AD6C';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(250,poweredY);ctx.lineTo(384,poweredY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(640,poweredY);ctx.lineTo(774,poweredY);ctx.stroke();
+    ctx.fillStyle='#34475A';ctx.font='500 38px Inter, Arial, sans-serif';
+    ctx.fillText('Powered by',center,poweredY);
+
+    // Compact two-tone ZenVentora wordmark and flowing ribbon emblem.
+    var brandY=hasLogo?1400:1242;
+    ctx.save();
+    var markX=276,markY=brandY-4;
+    ctx.beginPath();
+    ctx.moveTo(markX,markY+2);
+    ctx.bezierCurveTo(markX+28,markY-25,markX+61,markY-30,markX+91,markY-8);
+    ctx.bezierCurveTo(markX+72,markY+3,markX+51,markY+13,markX+26,markY+10);
+    ctx.bezierCurveTo(markX+47,markY+18,markX+71,markY+12,markX+91,markY+3);
+    ctx.bezierCurveTo(markX+67,markY+36,markX+28,markY+34,markX,markY+2);
+    ctx.closePath();ctx.fillStyle='#103B68';ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(markX+57,markY-13);
+    ctx.bezierCurveTo(markX+82,markY-37,markX+111,markY-31,markX+123,markY-18);
+    ctx.bezierCurveTo(markX+105,markY-3,markX+84,markY+2,markX+66,markY-2);
+    ctx.bezierCurveTo(markX+85,markY+6,markX+103,markY+3,markX+119,markY-5);
+    ctx.bezierCurveTo(markX+102,markY+17,markX+75,markY+10,markX+57,markY-13);
+    ctx.closePath();ctx.fillStyle='#15966B';ctx.fill();
+    var brandFont=50;
+    ctx.font='700 '+brandFont+'px Georgia, "Times New Roman", serif';
+    var zenWidth=ctx.measureText('Zen').width;
+    var wordX=markX+145;
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillStyle='#103B68';ctx.fillText('Zen',wordX,brandY);
+    ctx.fillStyle='#188653';ctx.fillText('Ventora',wordX+zenWidth,brandY);
+    ctx.restore();
+
+    var anchor=document.createElement('a');
+    var filename=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'restaurant';
+    anchor.download=filename+'-emenu-qr-poster.png';
+    anchor.href=canvas.toDataURL('image/png');
+    document.body.appendChild(anchor);anchor.click();anchor.remove();
+    toast('Branded QR poster downloaded ✓','success');
   }catch(err){
-    console.error('Branded card download failed',err);
-    toast('Please click Generate QR first, then try downloading again','error');
+    console.error('Branded QR poster download failed',err);
+    toast('Could not create the QR poster. Generate the QR again and retry.','error');
   }
 }
 
