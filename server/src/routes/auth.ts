@@ -15,11 +15,11 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too
 function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
   res.cookie('access_token', accessToken, {
     httpOnly: true, secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none', maxAge: 15 * 60 * 1000,
+    sameSite: 'none', path: '/', maxAge: 15 * 60 * 1000,
   })
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true, secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none', maxAge: 30 * 24 * 60 * 60 * 1000,
+    sameSite: 'none', path: '/', maxAge: 30 * 24 * 60 * 60 * 1000,
   })
 }
 
@@ -162,7 +162,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     const newAccessToken = signAccessToken({ userId: payload.userId, email: payload.email })
     res.cookie('access_token', newAccessToken, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none', maxAge: 15 * 60 * 1000,
+      sameSite: 'none', path: '/', maxAge: 15 * 60 * 1000,
     })
     res.json({ message: 'Token refreshed' })
   } catch {
@@ -175,8 +175,8 @@ router.post('/logout', async (req: Request, res: Response): Promise<void> => {
   try {
     const token = req.cookies?.refresh_token
     if (token) await prisma.session.deleteMany({ where: { refreshToken: token } })
-    res.clearCookie('access_token')
-    res.clearCookie('refresh_token')
+    res.clearCookie('access_token', { path: '/' })
+    res.clearCookie('refresh_token', { path: '/' })
     res.json({ message: 'Logged out successfully' })
   } catch {
     res.status(500).json({ message: 'Logout failed' })
@@ -244,8 +244,8 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response):
     // Invalidate all sessions
     await prisma.session.deleteMany({ where: { userId: record.userId } })
 
-    res.clearCookie('access_token')
-    res.clearCookie('refresh_token')
+    res.clearCookie('access_token', { path: '/' })
+    res.clearCookie('refresh_token', { path: '/' })
     res.json({ message: 'Password reset successfully. Please log in.' })
   } catch (err) {
     console.error('Reset password error:', err)
