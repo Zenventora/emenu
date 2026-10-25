@@ -98,6 +98,7 @@ model Menu {
   templateId   String?
   menuMode     String     @default("EDITOR")
   uploadedMenuImage String?
+  uploadedMenuImages String[] @default([])
   todaysSpecialEnabled Boolean @default(false)
   todaysSpecialTitle String @default("Today's Special")
   todaysSpecialProductIds String[] @default([])
