@@ -13,6 +13,12 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .screen{display:none}
 .screen.active{display:block}
 
+/* Keep the app on a neutral loading screen while auth/public menu data resolves. */
+.boot-stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;color:#475569;font-family:'Inter',sans-serif;background:#f8fafc}
+.boot-spinner{width:42px;height:42px;border:4px solid #dbeafe;border-top-color:#0ea5a4;border-radius:50%;animation:bootSpin .8s linear infinite}
+@keyframes bootSpin{to{transform:rotate(360deg)}}
+.boot-message{font-size:.95rem;font-weight:600;line-height:1.5}
+
 /* TOAST */
 #toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{padding:12px 20px;border-radius:14px;font-size:.875rem;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);animation:toastIn .3s ease;max-width:320px}
@@ -503,7 +509,15 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 <!-- ═══════════════════════════════════════
      LOGIN
 ════════════════════════════════════════ -->
-<div id="s-login" class="screen active">
+<div id="s-boot" class="screen active" aria-live="polite">
+  <div class="boot-stage">
+    <div id="boot-spinner" class="boot-spinner" aria-hidden="true"></div>
+    <div id="boot-message" class="boot-message">Loading E-Menu…</div>
+    <button id="boot-retry" class="btn btn-primary" style="display:none;margin-top:8px" onclick="init()">Try again</button>
+  </div>
+</div>
+
+<div id="s-login" class="screen">
   <div class="auth-wrap">
     <div class="auth-left">
       <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
@@ -1337,24 +1351,27 @@ async function doGoogleAuth(credential){
 // API HELPER — all calls go to the same-origin Express server
 // ─────────────────────────────────────────
 async function api(method, path, body, _retry) {
-  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+  var opts = { method: method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
   if (body) opts.body = JSON.stringify(body);
   var res = await fetch('/api' + path, opts);
   // Auth endpoints return 401 for wrong credentials — never for expired tokens.
   // Skip the refresh logic for these paths so the real error message reaches the caller.
   var skipRefreshPaths = ['/auth/login','/auth/signup','/auth/forgot-password','/auth/reset-password','/auth/google'];
   var isAuthPath = skipRefreshPaths.some(function(p){ return path.startsWith(p); });
+  var isPublicPath = path.startsWith('/public/');
   // Auto-refresh token on 401, then retry once (protected routes only)
-  if (res.status === 401 && !_retry && !isAuthPath) {
+  if (res.status === 401 && !_retry && !isAuthPath && !isPublicPath) {
     try {
-      var rf = await fetch('/api/auth/refresh', { method: 'POST' });
+      var rf = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin', cache: 'no-store' });
       if (rf.ok) return api(method, path, body, true);
     } catch(e) {}
     // Refresh failed — only show toast if user was actually logged in this session
     if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
     show('s-login');
-    throw new Error('Session expired');
+    var expiredError = new Error('Session expired');
+    expiredError.status = 401;
+    throw expiredError;
   }
   var json; try { json = await res.json(); } catch(e) { json = {}; }
   var err = new Error(json.message || 'Request failed ('+res.status+')');
@@ -1542,13 +1559,23 @@ function show(id){
   if(id==='s-menu') renderPubMenu();
 }
 
+function showBootError(message){
+  var spinner=document.getElementById('boot-spinner');
+  var label=document.getElementById('boot-message');
+  var retry=document.getElementById('boot-retry');
+  if(spinner) spinner.style.display='none';
+  if(label) label.textContent=message;
+  if(retry) retry.style.display='inline-flex';
+  show('s-boot');
+}
+
 async function init(){
   // Public menu: /menu/:slug route or ?m=slug param
   var pathParts=window.location.pathname.split('/');
   var mSlug=(pathParts[1]==='menu'&&pathParts[2])?pathParts[2]:new URLSearchParams(window.location.search).get('m');
   if(mSlug){
     try { var _ld=new Date(),_td=_ld.getFullYear()+'-'+String(_ld.getMonth()+1).padStart(2,'0')+'-'+String(_ld.getDate()).padStart(2,'0'); var pubData=await api('GET','/public/menu/'+mSlug+'?localDate='+_td); S._qrMenuData=pubData; show('s-menu'); return; }
-    catch(e){ show('s-login'); return; }
+    catch(e){ showBootError('Unable to load this menu. Check your connection and try again.'); return; }
   }
   S._qrMenuData=null;
   // Check auth
@@ -1565,7 +1592,8 @@ async function init(){
     var _pe=new URLSearchParams(window.location.search);
     if(_pe.get('google')==='error') { setTimeout(function(){toast('Google sign-in failed. Please try again.','error');},300); window.history.replaceState({},'','/'); }
     if(_pe.get('signup')==='true'){ window.history.replaceState({},'','/'); show('s-signup'); }
-    else { show('s-login'); }
+    else if(e && (e.status===401 || e.message==='Session expired' || e.message==='Authentication required' || e.message==='Invalid or expired token')) { show('s-login'); }
+    else { showBootError('Could not restore your session or load your account. Your sign-in has not been cleared; please retry.'); }
   }
   finally { S.initialized = true; }
 }
@@ -2405,7 +2433,7 @@ function tab(name, btn){
   document.getElementById('dash-title').textContent=titles[name]||name;
   if(name==='editor'){
     renderEdCats();
-    updateMenuEditorModeUI();
+    setModeUI();
   }
   if(name==='templates') renderTmplSplit('d');
   if(name==='today') initTodayTab();
@@ -3649,7 +3677,8 @@ async function doLogout(){
 // ─────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────
-window.addEventListener('load', init);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+else init();
 </script>
 <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleSignIn()"></script>
 </body>
