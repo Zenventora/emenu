@@ -926,15 +926,15 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
                 </div>
                 <span style="font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px;background:#f0fdfa;color:#0f766e">File Upload</span>
               </div>
-              <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:30px 20px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('dash-menu-file').click()">
+              <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:24px 18px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('dash-menu-file').click()">
                 <div id="dash-upload-placeholder">
                   <div style="font-size:2.4rem;margin-bottom:8px">🖼️</div>
-                  <div style="font-size:.92rem;font-weight:800;color:#374151">Choose menu image</div>
-                  <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">PNG, JPG or WebP · up to 15MB</div>
+                  <div style="font-size:.92rem;font-weight:800;color:#374151">Choose menu images</div>
+                  <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">Select multiple PNG, JPG or WebP files · up to 15MB each · maximum 20 images</div>
                 </div>
-                <img id="dash-upload-preview" src="" alt="Uploaded menu" style="display:none;max-width:100%;max-height:650px;border-radius:12px;object-fit:contain"/>
+                <div id="dash-upload-preview" style="display:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;text-align:left"></div>
               </div>
-              <input type="file" id="dash-menu-file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleDashboardMenuImage(this)"/>
+              <input type="file" id="dash-menu-file" accept="image/png,image/jpeg,image/webp" multiple style="display:none" onchange="handleDashboardMenuImages(this)"/>
               <div id="dash-upload-status" style="font-size:.78rem;color:#64748b;text-align:center;margin-top:10px"></div>
               <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
                 <button class="btn btn-primary" onclick="publishUploadedMenu()">⚡ Publish & Update QR</button>
@@ -1435,6 +1435,7 @@ function syncFromAPI(biz, menu) {
     tmpl: menu ? parseInt(menu.templateId||'0') : 0,
     menuMode: menu ? String(menu.menuMode||'EDITOR').toUpperCase() : 'EDITOR',
     uploadedMenuImage: menu ? (menu.uploadedMenuImage || '') : '',
+    uploadedMenuImages: menu ? (Array.isArray(menu.uploadedMenuImages) && menu.uploadedMenuImages.length ? menu.uploadedMenuImages : (menu.uploadedMenuImage ? [menu.uploadedMenuImage] : [])) : [],
     todaysSpecialEnabled: !!(menu && menu.todaysSpecialEnabled),
     todaysSpecialTitle: menu && menu.todaysSpecialTitle || "Today's Special",
     todaysSpecialProductIds: menu && menu.todaysSpecialProductIds || [],
@@ -2300,88 +2301,74 @@ function refreshDash(){
 }
 
 function setModeUI(){
-  var uploadMode=!!(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD');
-  var tBtn=document.getElementById('nav-templates'), dBtn=document.getElementById('nav-today'), mToday=document.getElementById('mob-btn-today');
-  [tBtn,dBtn,mToday].forEach(function(btn){
-    if(!btn) return;
-    btn.disabled=uploadMode;
-    btn.style.opacity=uploadMode?'0.42':'1';
-    btn.style.cursor=uploadMode?'not-allowed':'pointer';
-    btn.style.pointerEvents=uploadMode?'none':'auto';
-    btn.setAttribute('aria-disabled',uploadMode?'true':'false');
-    btn.title=uploadMode?'Switch Menu Creation to Menu Editor to enable this feature':'';
-  });
-  var addBtn=document.querySelector('.dash-topbar .btn-primary');
-  if(addBtn){
-    addBtn.disabled=false;
-    addBtn.textContent=uploadMode?'🖼️ Upload Menu':'+ Add Item';
-    addBtn.onclick=uploadMode?function(){
-      tab('editor',document.getElementById('nav-editor'));
-      setMenuEditorMode('UPLOAD');
-      setTimeout(function(){var f=document.getElementById('dash-menu-file');if(f)f.click();},50);
-    }:function(){tab('editor',document.getElementById('nav-editor'));openProdModal();};
-  }
-  updateMenuEditorModeUI();
-}
-
-async function setMenuEditorMode(mode){
-  mode=String(mode||'EDITOR').toUpperCase()==='UPLOAD'?'UPLOAD':'EDITOR';
-  S.data=S.data||{};
-  var current=String(S.data.menuMode||'EDITOR').toUpperCase();
-
-  // Switching from a published Upload Menu back to Menu Editor must persist
-  // immediately so Templates and Today's Menu become genuinely available.
-  if(mode==='EDITOR' && current==='UPLOAD'){
-    try{
-      await api('PATCH','/menu/'+S.menuId+'/use-editor',{});
-      var m=await loadMenuData();
-      syncFromAPI(S.biz,m);
-      S.data.menuMode='EDITOR';
-      updateMenuEditorModeUI();
-      setModeUI();
-      toast('Menu Editor enabled ✓','success');
-    }catch(e){
-      toast(e.message||'Could not enable Menu Editor','error');
-    }
-    return;
-  }
-
-  // Selecting File Upload is a local editing state until Publish is pressed.
-  S.data.menuMode=mode;
-  updateMenuEditorModeUI();
-  setModeUI();
-}
-
-function updateMenuEditorModeUI(){
   var upload=String(S.data&&S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD';
-  var eb=document.getElementById('mode-editor-btn'), ub=document.getElementById('mode-upload-btn');
-  var ep=document.getElementById('editor-structured-panel'), up=document.getElementById('editor-upload-panel');
-  if(eb){eb.style.background=upload?'transparent':'#fff';eb.style.color=upload?'#64748b':'var(--blue)';eb.style.boxShadow=upload?'none':'0 1px 4px rgba(0,0,0,.08)';}
-  if(ub){ub.style.background=upload?'#fff':'transparent';ub.style.color=upload?'var(--teal)':'#64748b';ub.style.boxShadow=upload?'0 1px 4px rgba(0,0,0,.08)':'none';}
+  var ep=document.getElementById('editor-structured-panel'),up=document.getElementById('editor-upload-panel');
+  var eb=document.getElementById('mode-editor-btn'),ub=document.getElementById('mode-upload-btn');
+  if(eb){eb.style.background=upload?'#f8fafc':'#fff';eb.style.color=upload?'#64748b':'var(--teal)';eb.style.boxShadow=upload?'none':'0 1px 4px rgba(0,0,0,.08)';}
+  if(ub){ub.style.background=upload?'#fff':'#f8fafc';ub.style.color=upload?'var(--teal)':'#64748b';ub.style.boxShadow=upload?'0 1px 4px rgba(0,0,0,.08)':'none';}
   if(ep) ep.style.display=upload?'none':'block';
   if(up) up.style.display=upload?'block':'none';
-  var img=document.getElementById('dash-upload-preview'), ph=document.getElementById('dash-upload-placeholder');
-  if(img&&S.data&&S.data.uploadedMenuImage){img.src=S.data.uploadedMenuImage;img.style.display='block';if(ph)ph.style.display='none';}
-  else{if(img)img.style.display='none';if(ph)ph.style.display='block';}
+  renderDashboardMenuImages();
 }
 
-async function handleDashboardMenuImage(input){
-  var file=input&&input.files&&input.files[0];
-  if(!file)return;
-  if(file.size>15*1024*1024){toast('Image is too large. Maximum 15MB.','error');input.value='';return;}
-  if(!/^image\/(png|jpeg|webp)$/i.test(file.type)){toast('Please upload a PNG, JPG, or WebP image','error');input.value='';return;}
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    var data=e.target.result, img=document.getElementById('dash-upload-preview'), ph=document.getElementById('dash-upload-placeholder'), st=document.getElementById('dash-upload-status');
-    if(img){img.src=data;img.style.display='block';} if(ph)ph.style.display='none'; if(st)st.textContent='Uploading and optimizing image…';
+function renderDashboardMenuImages(){
+  var preview=document.getElementById('dash-upload-preview');
+  var placeholder=document.getElementById('dash-upload-placeholder');
+  var images=(S.data&&Array.isArray(S.data.uploadedMenuImages))?S.data.uploadedMenuImages:[];
+  if(!images.length && S.data&&S.data.uploadedMenuImage) images=[S.data.uploadedMenuImage];
+  if(preview){
+    preview.innerHTML=images.map(function(url,i){
+      return '<div style="border:1px solid #e2e8f0;border-radius:12px;background:#fff;padding:8px;min-width:0">'+
+        '<img src="'+url+'" alt="Menu page '+(i+1)+'" style="display:block;width:100%;height:220px;object-fit:contain;border-radius:8px;background:#f8fafc">'+
+        '<div style="font-size:.75rem;font-weight:700;color:#475569;text-align:center;margin-top:7px">Page '+(i+1)+'</div></div>';
+    }).join('');
+    preview.style.display=images.length?'grid':'none';
+  }
+  if(placeholder) placeholder.style.display=images.length?'none':'block';
+}
+
+async function handleDashboardMenuImages(input){
+  var files=Array.from((input&&input.files)||[]);
+  if(!files.length)return;
+  if(files.length>20){toast('You can upload up to 20 menu images at a time','error');input.value='';return;}
+  for(var i=0;i<files.length;i++){
+    if(files[i].size>15*1024*1024){toast(files[i].name+' is too large. Maximum 15MB per image.','error');input.value='';return;}
+    if(!/^image\/(png|jpeg|webp)$/i.test(files[i].type)){toast('Please upload PNG, JPG, or WebP images only','error');input.value='';return;}
+  }
+  if(!S.menuId){toast('No menu found','error');input.value='';return;}
+  var st=document.getElementById('dash-upload-status');
+  if(!S.data) S.data={};
+  S.data.uploadedMenuImages=[];
+  S.data.uploadedMenuImage='';
+  renderDashboardMenuImages();
+  for(var i=0;i<files.length;i++){
     try{
-      var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:data});
-      S.data.uploadedMenuImage=r.imageUrl||data;
-      if(st)st.textContent='Menu image uploaded ✓';
-      toast('Menu image uploaded ✓','success');
-    }catch(err){if(st)st.textContent='';toast(err.message||'Upload failed','error');}
-  };
-  reader.readAsDataURL(file);
+      var data=await new Promise(function(resolve,reject){
+        var reader=new FileReader();
+        reader.onload=function(e){resolve(e.target.result);};
+        reader.onerror=function(){reject(new Error('Could not read selected image'));};
+        reader.readAsDataURL(files[i]);
+      });
+      if(st) st.textContent='Uploading image '+(i+1)+' of '+files.length+'…';
+      var r=await api('POST','/menu/'+S.menuId+'/upload-image',{
+        imageBase64:data,
+        replaceAll:i===0,
+        append:i>0
+      });
+      var url=r.imageUrl||data;
+      S.data.uploadedMenuImages.push(url);
+      S.data.uploadedMenuImage=S.data.uploadedMenuImages[0];
+      renderDashboardMenuImages();
+    }catch(err){
+      if(st) st.textContent='';
+      toast((files[i].name||'Image')+': '+(err.message||'Upload failed'),'error');
+      input.value='';
+      return;
+    }
+  }
+  if(st) st.textContent=files.length+' menu image'+(files.length===1?'':'s')+' uploaded ✓';
+  toast(files.length+' menu image'+(files.length===1?'':'s')+' uploaded ✓','success');
+  input.value='';
 }
 
 async function publishUploadedMenu(){
