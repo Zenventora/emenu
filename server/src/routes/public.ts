@@ -94,6 +94,7 @@ router.get('/menu/:slug', async (req: Request, res: Response): Promise<void> => 
           todaysSpecialProductIds: menu.todaysSpecialProductIds,
           menuMode: 'UPLOAD',
           uploadedMenuImage: menu.uploadedMenuImage,
+          uploadedMenuImages: menu.uploadedMenuImages || (menu.uploadedMenuImage ? [menu.uploadedMenuImage] : []),
           categories: [],
         },
       })
