@@ -1361,11 +1361,22 @@ async function api(method, path, body, _retry) {
   var isPublicPath = path.startsWith('/public/');
   // Auto-refresh token on 401, then retry once (protected routes only)
   if (res.status === 401 && !_retry && !isAuthPath && !isPublicPath) {
+    var rf;
     try {
-      var rf = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin', cache: 'no-store' });
-      if (rf.ok) return api(method, path, body, true);
-    } catch(e) {}
-    // Refresh failed — only show toast if user was actually logged in this session
+      rf = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin', cache: 'no-store' });
+    } catch(refreshNetworkError) {
+      var networkError = new Error('Could not verify your session. Check your connection and retry.');
+      networkError.status = 0;
+      throw networkError;
+    }
+    if (rf.ok) return api(method, path, body, true);
+    // Only end the session when the server explicitly confirms the refresh token is invalid.
+    // A transient API/database error must not make the app look as if the user logged out.
+    if (rf.status !== 401) {
+      var refreshError = new Error('Unable to restore your session right now. Please retry.');
+      refreshError.status = rf.status;
+      throw refreshError;
+    }
     if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
     show('s-login');
