@@ -137,22 +137,34 @@ router.post('/:menuId/upload-image', async (req: AuthRequest, res: Response): Pr
       res.status(413).json({ message: 'Image is too large. Maximum upload size is 15MB.' }); return
     }
 
-    // Normalize to WebP and cap dimensions to keep DB/API payloads reasonable.
     const output = await sharp(input)
       .rotate()
       .resize({ width: 1800, height: 2400, fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 84 })
       .toBuffer()
-
     const imageBase64 = 'data:image/webp;base64,' + output.toString('base64')
+
+    const existingImages: string[] = Array.isArray(menu.uploadedMenuImages) && menu.uploadedMenuImages.length
+      ? menu.uploadedMenuImages
+      : (menu.uploadedMenuImage ? [menu.uploadedMenuImage] : [])
+    let nextImages: string[]
+    if (req.body.replaceAll === true) nextImages = [imageBase64]
+    else if (req.body.append === true) nextImages = [...existingImages, imageBase64]
+    else nextImages = [imageBase64]
+
+    if (nextImages.length > 20) {
+      res.status(400).json({ message: 'You can upload up to 20 menu images.' }); return
+    }
+
     const updated = await prisma.menu.update({
       where: { id: menu.id },
-      data: { uploadedMenuImage: imageBase64 },
+      data: { uploadedMenuImages: nextImages, uploadedMenuImage: nextImages[0] || null },
     })
 
     res.json({
       menu: updated,
       imageUrl: imageBase64,
+      images: nextImages,
       mode: String(updated.menuMode || 'EDITOR').toUpperCase(),
     })
   } catch (err) {
@@ -169,7 +181,7 @@ router.delete('/:menuId/upload-image', async (req: AuthRequest, res: Response): 
 
     const updated = await prisma.menu.update({
       where: { id: menu.id },
-      data: { uploadedMenuImage: null },
+      data: { uploadedMenuImage: null, uploadedMenuImages: [] },
     })
     res.json({ menu: updated })
   } catch (err) {
