@@ -6,7 +6,7 @@ import prisma from '../lib/prisma'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt'
 import { sendOTPEmail } from '../lib/mailer'
 import { requireAuth, AuthRequest } from '../middleware/auth'
-import { resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken } from '../lib/common-auth'
+import { refreshCommonSession, resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken } from '../lib/common-auth'
 
 const router = Router()
 
@@ -25,16 +25,22 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
 }
 
 
-function setCommonAuthCookie(res: Response, accessToken: string) {
-  // Supabase refresh tokens stay on accounts.zenventora.in. EMenu stores only
-  // a short-lived access token and asks Accounts for a fresh handoff at expiry.
-  const maxAge = 60 * 60 * 1000
+function setCommonAuthCookies(res: Response, accessToken: string, refreshToken: string, expiresIn = 3600) {
+  // Keep both Supabase tokens in HttpOnly, same-origin cookies. The browser never
+  // reads either token; EMenu rotates them server-side through Supabase Auth.
   res.cookie('emenu_common_access_token', accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge,
+    maxAge: Math.max(60, expiresIn) * 1000,
+  })
+  res.cookie('emenu_common_refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
   })
 }
 
@@ -121,14 +127,15 @@ router.post('/legacy/verify', authLimiter, async (req: Request, res: Response): 
 router.post('/common/session', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const accessToken = String(req.body?.accessToken || '')
-    if (!accessToken) {
-      res.status(400).json({ message: 'A ZenVentora account session is required.' })
+    const refreshToken = String(req.body?.refreshToken || '')
+    if (!accessToken || !refreshToken || refreshToken.length > 2048) {
+      res.status(400).json({ message: 'A complete ZenVentora account session is required.' })
       return
     }
     const commonUser = await verifyCommonAccessToken(accessToken)
     const productFlow = String(req.body?.productFlow || '')
     const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' })
-    setCommonAuthCookie(res, accessToken)
+    setCommonAuthCookies(res, accessToken, refreshToken)
     res.json({ message: 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
   } catch (err) {
     console.error('Common account handoff failed:', err)
@@ -258,6 +265,21 @@ router.patch('/me', requireAuth, async (req: AuthRequest, res: Response): Promis
 
 // ─── POST /api/auth/refresh ───────────────────────────────────────────────────
 router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
+  const commonRefreshToken = req.cookies?.emenu_common_refresh_token
+  if (commonRefreshToken) {
+    try {
+      const refreshed = await refreshCommonSession(commonRefreshToken)
+      await verifyCommonAccessToken(refreshed.access_token)
+      setCommonAuthCookies(res, refreshed.access_token, refreshed.refresh_token, refreshed.expires_in)
+      res.json({ message: 'ZenVentora session refreshed.' })
+    } catch {
+      clearCommonAuthCookies(res)
+      res.status(401).json({ message: 'ZenVentora session expired. Please sign in again.' })
+    }
+    return
+  }
+
+  // Compatibility for sessions created before EMenu stored the refresh token.
   const commonToken = req.cookies?.emenu_common_access_token
   if (commonToken) {
     try {
@@ -265,7 +287,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
       res.json({ message: 'ZenVentora session is valid.' })
     } catch {
       clearCommonAuthCookies(res)
-      res.status(401).json({ message: 'ZenVentora session expired. Reconnecting to Accounts.' })
+      res.status(401).json({ message: 'ZenVentora session expired. Please sign in again.' })
     }
     return
   }
