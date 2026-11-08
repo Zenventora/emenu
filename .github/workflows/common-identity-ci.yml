@@ -1,0 +1,76 @@
+name: EMenu Common Identity CI
+
+on:
+  push:
+    branches:
+      - feature/common-identity-auth
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "app.html"
+      - "server/**"
+      - ".github/workflows/common-identity-ci.yml"
+
+jobs:
+  server-build:
+    name: Validate EMenu server and production HTML
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    env:
+      DATABASE_URL: postgresql://emenu_ci:emenu_ci@127.0.0.1:5432/emenu_ci
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Build TypeScript server
+        run: npm run build
+
+      - name: Check production app.html inline JavaScript syntax
+        working-directory: .
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const os = require('node:os');
+          const path = require('node:path');
+          const { spawnSync } = require('node:child_process');
+
+          const html = fs.readFileSync('app.html', 'utf8');
+          const inlineScripts = [...html.matchAll(/<script\\b(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+            .map(match => match[1])
+            .filter(source => source.trim().length > 0);
+
+          if (inlineScripts.length === 0) {
+            throw new Error('No inline scripts were found in app.html.');
+          }
+
+          inlineScripts.forEach((source, index) => {
+            const file = path.join(os.tmpdir(), `emenu-inline-${index}.js`);
+            fs.writeFileSync(file, source);
+            const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+            if (result.status !== 0) {
+              process.stderr.write(result.stderr || result.stdout);
+              process.exit(result.status || 1);
+            }
+          });
+
+          console.log(`Validated ${inlineScripts.length} inline script block(s).`);
+          NODE
