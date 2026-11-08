@@ -6,7 +6,7 @@ import prisma from '../lib/prisma'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt'
 import { sendOTPEmail } from '../lib/mailer'
 import { requireAuth, AuthRequest } from '../middleware/auth'
-import { resolveEmenuUser, revokeCommonSession, verifyCommonAccessToken } from '../lib/common-auth'
+import { resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken } from '../lib/common-auth'
 
 const router = Router()
 
@@ -85,51 +85,47 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
 })
 
 // ─── POST /api/auth/signup ────────────────────────────────────────────────────
+// EMenu owns the product signup experience; credentials are created in Common Accounts.
 router.post('/signup', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, phone, password } = req.body
-
-    if (!name || !email || !password) {
-      res.status(400).json({ message: 'Name, email, and password are required' })
+    if (!name || !email || !phone || !password) {
+      res.status(400).json({ message: 'Name, phone, email, and password are required' })
       return
     }
-    if (password.length < 8) {
+    if (String(password).length < 8) {
       res.status(400).json({ message: 'Password must be at least 8 characters' })
       return
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
-    if (existing) {
-      res.status(409).json({ message: 'An account with this email already exists' })
+    const result = await signUpCommonIdentity({
+      name: String(name),
+      email: String(email),
+      phone: String(phone),
+      password: String(password),
+      origin: String(req.get('origin') || ''),
+    })
+
+    if (!result.access_token) {
+      res.status(202).json({
+        message: 'Your ZenVentora account has been created. Check your email to verify it; you will return to EMenu automatically.',
+        requiresVerification: true,
+      })
       return
     }
 
-    const passwordHash = await bcrypt.hash(password, 12)
-    const user = await prisma.user.create({
-      data: { name, email: email.toLowerCase(), phone: phone || null, passwordHash },
-    })
-
-    const accessToken = signAccessToken({ userId: user.id, email: user.email })
-    const refreshToken = signRefreshToken({ userId: user.id, email: user.email })
-
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        refreshToken,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      },
-    })
-
-    setAuthCookies(res, accessToken, refreshToken)
+    const commonUser = await verifyCommonAccessToken(result.access_token)
+    const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: true })
+    setCommonAuthCookie(res, result.access_token)
     res.status(201).json({
-      message: 'Account created successfully',
-      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+      message: 'Account created successfully.',
+      user: commonUserResponse(emenuUser, commonUser),
+      requiresVerification: false,
     })
   } catch (err) {
-    console.error('Signup error:', err)
-    res.status(500).json({ message: 'Something went wrong. Please try again.' })
+    const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+    const status = message.includes('already exist') ? 409 : 400
+    res.status(status).json({ message })
   }
 })
 
