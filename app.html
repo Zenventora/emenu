@@ -496,6 +496,29 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
   .modal-box{padding:20px 16px}
   .mob-nav-btn{min-width:0;padding:6px 3px}
 }
+
+/* Common ZenVentora identity card in the EMenu dashboard */
+.emenu-profile-wrap{position:relative}
+.emenu-profile-trigger{display:flex;align-items:center;gap:9px;min-height:40px;max-width:320px;padding:4px 11px 4px 5px;border:1px solid #dbe6f3;border-radius:999px;background:#fff;color:#102033;cursor:pointer;font:inherit;text-align:left;transition:.18s}
+.emenu-profile-trigger:hover,.emenu-profile-trigger[aria-expanded=true]{border-color:#8bbfc0;box-shadow:0 5px 18px rgba(15,59,104,.08)}
+.emenu-profile-avatar{width:32px;height:32px;flex:none;border-radius:50%;object-fit:cover}
+.emenu-profile-initials{display:inline-grid;place-items:center;background:linear-gradient(135deg,#0f3b68,#0ea5a4);color:#fff;font-size:11px;font-weight:800}
+.emenu-profile-label{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:180px}
+.emenu-profile-label strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emenu-profile-label small{font-size:9px;color:#718397;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emenu-profile-chevron{width:7px;height:7px;border-right:2px solid #72849a;border-bottom:2px solid #72849a;transform:rotate(45deg);margin:0 2px 4px 4px;flex:none}
+.emenu-profile-menu{position:absolute;right:0;top:calc(100% + 10px);z-index:1000;width:min(290px,calc(100vw - 30px));padding:12px;background:#fff;border:1px solid #e2eaf0;border-radius:14px;box-shadow:0 18px 48px rgba(11,36,64,.16)}
+.emenu-profile-menu[hidden]{display:none}
+.emenu-profile-menu-head{display:flex;align-items:center;gap:10px;padding:6px 5px 13px;border-bottom:1px solid #edf1f5;margin-bottom:5px;min-width:0}
+.emenu-profile-menu-head>span:last-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.emenu-profile-menu-head strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.emenu-profile-menu-head small{font-size:10px;color:#718397;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.emenu-profile-menu>button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 9px;border:0;border-radius:8px;background:#fff;color:#334b63;text-align:left;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.emenu-profile-menu>button:hover{background:#f3f8fa;color:#087f83}
+.emenu-profile-menu>button.emenu-profile-signout{color:#b42318}
+@media(max-width:760px){.emenu-profile-label{max-width:120px}.emenu-profile-trigger{gap:6px}.emenu-profile-trigger .emenu-profile-avatar{width:29px;height:29px}}
+@media(max-width:480px){.emenu-profile-label small{display:none}.emenu-profile-label{max-width:100px}}
+
 </style>
 </head>
 <body>
@@ -525,29 +548,23 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
         <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
       </div>
-      <h2>Welcome back to E-Menu</h2>
-      <p>Manage your digital menu, update prices in real-time, and track customer engagement.</p>
+      <h2>Your menu, one ZenVentora ID.</h2>
+      <p>Sign in securely with your ZenVentora account to manage your digital menu, business profile and QR code.</p>
       <div class="auth-features">
+        <div class="af-item"><div class="af-icon">🔐</div>One secure account across ZenVentora</div>
+        <div class="af-item"><div class="af-icon">📱</div>Your permanent menu QR code</div>
         <div class="af-item"><div class="af-icon">⚡</div>Real-time menu updates</div>
-        <div class="af-item"><div class="af-icon">📱</div>Permanent QR code</div>
-        <div class="af-item"><div class="af-icon">🎙️</div>Voice menu input</div>
-        <div class="af-item"><div class="af-icon">🆓</div>Free forever plan</div>
       </div>
     </div>
     <div class="auth-right">
       <div class="auth-form-box">
-        <h1>Sign in</h1>
-        <p class="auth-sub">No account? <a class="alink" onclick="show('s-signup')">Sign up free →</a></p>
-        <div class="ig"><label>Email address</label><input type="email" id="li-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-        <div class="ig">
-          <label>Password</label>
-          <div class="pw-wrap"><input type="password" id="li-pass" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/><button class="pw-eye" onclick="togglePwd('li-pass',this)">👁️</button></div>
-        </div>
-        <div style="text-align:right;margin-top:-8px;margin-bottom:20px"><a class="alink" style="font-size:.82rem" onclick="show('s-forgot')">Forgot password?</a></div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">Sign In →</button>
+        <h1>Continue to E-Menu</h1>
+        <p class="auth-sub">Use your common ZenVentora identity. New to ZenVentora? Create one account and choose the products you need.</p>
+        <button class="btn btn-primary btn-full btn-lg" onclick="openCommonAccount('signin')">Continue with ZenVentora Account →</button>
         <div class="g-divider">or</div>
-        <div id="g-btn-login" style="display:flex;justify-content:center;min-height:44px"></div>
-        <p style="text-align:center;margin-top:16px;font-size:.82rem;color:#9ca3af">New here? <a class="alink" onclick="show('s-signup')">Create a free account</a></p>
+        <button class="btn btn-outline btn-full btn-lg" onclick="openCommonAccount('signup')">Create a ZenVentora account</button>
+        <p style="text-align:center;margin-top:20px;font-size:.82rem;color:#718096">Forgot your password? <a class="alink" onclick="openCommonAccount('forgot')">Reset it in Accounts</a></p>
+        <p style="text-align:center;margin-top:18px;font-size:.78rem;color:#9ca3af">Your E-Menu business, menus, products and QR codes remain in E-Menu.</p>
       </div>
     </div>
   </div>
@@ -559,42 +576,24 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 <div id="s-signup" class="screen">
   <div class="auth-wrap">
     <div class="auth-left">
-      <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
       <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
         <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
       </div>
-      <h2>Create your digital menu today</h2>
-      <p>Join thousands of restaurants and cafes using E-Menu to go digital in under 5 minutes.</p>
+      <h2>Start your E-Menu journey</h2>
+      <p>Create one ZenVentora identity, then add your E-Menu business profile and build your digital menu.</p>
       <div class="auth-features">
-        <div class="af-item"><div class="af-icon">✅</div>Free forever plan available</div>
-        <div class="af-item"><div class="af-icon">⏱️</div>Live in under 5 minutes</div>
-        <div class="af-item"><div class="af-icon">🔄</div>Update menu without new QR</div>
-        <div class="af-item"><div class="af-icon">🎙️</div>Voice-powered menu entry</div>
+        <div class="af-item"><div class="af-icon">🔐</div>One identity for ZenVentora products</div>
+        <div class="af-item"><div class="af-icon">✅</div>Verified email and secure recovery</div>
+        <div class="af-item"><div class="af-icon">🍽️</div>Business onboarding stays in E-Menu</div>
       </div>
     </div>
     <div class="auth-right">
       <div class="auth-form-box">
-        <h1>Create account</h1>
-        <p class="auth-sub">Already have one? <a class="alink" onclick="show('s-login')">Sign in</a></p>
-        <div class="row2">
-          <div class="ig"><label>Full Name *</label><input type="text" id="su-name" placeholder="Mohan Kumar"/></div>
-          <div class="ig"><label>Phone *</label><input type="tel" id="su-phone" placeholder="+91 98765 43210"/></div>
-        </div>
-        <div class="ig"><label>Email address *</label><input type="email" id="su-email" placeholder="you@example.com"/></div>
-        <div class="ig">
-          <label>Password *</label>
-          <div class="pw-wrap"><input type="password" id="su-pass" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/><button class="pw-eye" onclick="togglePwd('su-pass',this)">👁️</button></div>
-          <div class="ps-bars"><div class="ps-bar" id="pb1"></div><div class="ps-bar" id="pb2"></div><div class="ps-bar" id="pb3"></div><div class="ps-bar" id="pb4"></div></div>
-        </div>
-        <div class="ig">
-          <label>Confirm Password *</label>
-          <div class="pw-wrap"><input type="password" id="su-pass2" placeholder="Repeat password"/><button class="pw-eye" onclick="togglePwd('su-pass2',this)">👁️</button></div>
-        </div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()" style="margin-top:6px">Create Free Account →</button>
-        <div class="g-divider">or</div>
-        <div id="g-btn-signup" style="display:flex;justify-content:center;min-height:44px"></div>
-        <p style="text-align:center;margin-top:12px;font-size:.76rem;color:#9ca3af;line-height:1.6">By signing up you agree to our Terms of Service and Privacy Policy.</p>
+        <h1>Create your ZenVentora ID</h1>
+        <p class="auth-sub">Your account is shared across ZenVentora. E-Menu asks for your restaurant details after sign-up.</p>
+        <button class="btn btn-primary btn-full btn-lg" onclick="openCommonAccount('signup')">Continue to secure signup →</button>
+        <p style="text-align:center;margin-top:20px;font-size:.84rem;color:#718096">Already have an account? <a class="alink" onclick="openCommonAccount('signin')">Sign in</a></p>
       </div>
     </div>
   </div>
@@ -885,6 +884,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <h1 id="dash-title">Overview</h1>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:.72rem;padding:3px 10px;border-radius:999px;font-weight:700;background:#dcfce7;color:#166534">Free Plan</span>
+          <div id="emenu-account-profile"></div>
           <button class="btn btn-primary btn-sm" onclick="if(document.getElementById('t-editor').style.display!=='none'){openProdModal()}else{tab('editor',document.getElementById('nav-editor'))}">+ Add Item</button>
         </div>
       </div>
@@ -1086,11 +1086,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <div id="t-settings" style="display:none">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
             <div class="card card-p">
-              <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:18px">Account Details</h3>
-              <div class="ig"><label>Full Name</label><input type="text" id="st-name"/></div>
-              <div class="ig"><label>Email</label><input type="email" id="st-email"/></div>
-              <div class="ig"><label>Phone</label><input type="tel" id="st-phone"/></div>
-              <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
+              <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:8px">ZenVentora Account</h3>
+              <p style="font-size:.78rem;color:#64748b;line-height:1.6;margin-bottom:14px">Your sign-in, email, password, profile photo and sessions are managed centrally by ZenVentora Accounts.</p>
+              <div id="settings-common-account" style="font-size:.83rem;color:#334b63;margin-bottom:14px"></div>
+              <button class="btn btn-primary btn-sm" onclick="openCommonAccount('dashboard',true)">Manage ZenVentora Account ↗</button>
             </div>
             <div class="card card-p">
               <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:18px">Business Details</h3>
@@ -1300,10 +1299,132 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 
 <script>
 // ─────────────────────────────────────────
+/* COMMON ZENVENTORA IDENTITY */
+var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in/';
+var EMENU_ORIGIN = window.location.origin;
+
+function commonAccountUrl(view, manage) {
+  var url = new URL(COMMON_ACCOUNTS_URL);
+  url.searchParams.set('view', view || 'signin');
+  url.searchParams.set('product', 'emenu');
+  if (manage) {
+    url.searchParams.set('postLogoutTo', EMENU_ORIGIN);
+  } else {
+    url.searchParams.set('returnTo', EMENU_ORIGIN);
+  }
+  return url.toString();
+}
+
+function openCommonAccount(view, manage) {
+  window.location.assign(commonAccountUrl(view, !!manage));
+}
+
+function safeAvatarUrl(value) {
+  if (typeof value !== 'string') return '';
+  try {
+    var parsed = new URL(value);
+    return parsed.protocol === 'https:' ? parsed.href : '';
+  } catch (e) { return ''; }
+}
+
+function escapeAccountText(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function emenuInitials(name) {
+  return String(name || 'ZenVentora').trim().split(/\\s+/).slice(0,2).map(function(part){return part.charAt(0).toUpperCase();}).join('') || 'Z';
+}
+
+function renderEmenuAccountProfile() {
+  var host = document.getElementById('emenu-account-profile');
+  if (!host) return;
+  var user = S.user;
+  if (!user) { host.innerHTML = ''; return; }
+
+  var name = user.name || 'ZenVentora account';
+  var email = user.email || '';
+  var avatar = safeAvatarUrl(user.avatar);
+  var linked = user.authProvider === 'zenventora' || !!user.authUserId;
+  var avatarHtml = avatar
+    ? '<img class="emenu-profile-avatar" src="' + escapeAccountText(avatar) + '" alt="" referrerpolicy="no-referrer">'
+    : '<span class="emenu-profile-avatar emenu-profile-initials">' + escapeAccountText(emenuInitials(name)) + '</span>';
+
+  host.innerHTML =
+    '<div class="emenu-profile-wrap">' +
+      '<button class="emenu-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">' +
+        avatarHtml +
+        '<span class="emenu-profile-label"><strong>' + escapeAccountText(name) + '</strong><small>' + escapeAccountText(email) + '</small></span>' +
+        '<span class="emenu-profile-chevron" aria-hidden="true"></span>' +
+      '</button>' +
+      '<div class="emenu-profile-menu" hidden>' +
+        '<div class="emenu-profile-menu-head">' + avatarHtml + '<span><strong>' + escapeAccountText(name) + '</strong><small>' + escapeAccountText(email) + '</small></span></div>' +
+        (linked
+          ? '<button type="button" data-emenu-manage>Manage ZenVentora Account <span>↗</span></button>'
+          : '<button type="button" data-emenu-connect>Connect ZenVentora ID <span>↗</span></button>') +
+        '<button type="button" class="emenu-profile-signout" data-emenu-signout>Sign out</button>' +
+      '</div>' +
+    '</div>';
+
+  var trigger = host.querySelector('.emenu-profile-trigger');
+  var menu = host.querySelector('.emenu-profile-menu');
+  trigger.addEventListener('click', function() {
+    var isOpen = menu.hidden;
+    menu.hidden = !isOpen;
+    trigger.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  var manage = host.querySelector('[data-emenu-manage]');
+  if (manage) manage.addEventListener('click', function() {
+    window.location.assign(commonAccountUrl('dashboard', true));
+  });
+  var connect = host.querySelector('[data-emenu-connect]');
+  if (connect) connect.addEventListener('click', function() { openCommonAccount('signin'); });
+  var signout = host.querySelector('[data-emenu-signout]');
+  if (signout) signout.addEventListener('click', function() { doLogout(); });
+}
+
+function renderCommonAccountSettings() {
+  var host = document.getElementById('settings-common-account');
+  if (!host) return;
+  if (!S.user) { host.textContent = 'No signed-in account'; return; }
+  host.textContent = (S.user.name || 'ZenVentora account') + ' · ' + (S.user.email || '');
+}
+
+
+async function finishCommonAccountHandoff() {
+  var params = new URLSearchParams(window.location.hash.slice(1));
+  if (params.get('type') !== 'account_handoff' || params.get('product') !== 'emenu') return false;
+
+  var accessToken = params.get('access_token');
+  var refreshToken = params.get('refresh_token');
+  // Remove one-time tokens from browser history before any network request.
+  window.history.replaceState({}, '', window.location.pathname + window.location.search);
+  if (!accessToken || !refreshToken) throw new Error('ZenVentora returned an incomplete account session.');
+
+  var result = await api('POST', '/auth/common/session', {
+    accessToken: accessToken,
+    refreshToken: refreshToken
+  });
+  S.user = result.user;
+  return true;
+}
+
+async function clearCommonAccountSignoutFlag() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('account_signed_out') !== '1') return false;
+  // Clear the URL first. The POST only clears EMenu cookies; it never deletes product data.
+  window.history.replaceState({}, '', window.location.pathname);
+  try { await api('POST', '/auth/logout'); } catch (e) {}
+  return true;
+}
+
+// ─────────────────────────────────────────
 // GOOGLE SIGN-IN CONFIG
 // ─────────────────────────────────────────
 // Paste your Google Client ID here (see setup steps below)
-var GOOGLE_CLIENT_ID = '147155455700-8tb2ova0g6i9cfrjlsvgjcqheqr2vbse.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = ''; // Google sign-in is handled by ZenVentora Accounts.
 
 function initGoogleSignIn(){
   if(!GOOGLE_CLIENT_ID||!window.google) return;
@@ -1565,7 +1686,7 @@ function show(id){
   var el=document.getElementById(id);
   if(el) el.classList.add('active');
   window.scrollTo(0,0);
-  if(id==='s-dashboard') refreshDash();
+  if(id==='s-dashboard') { refreshDash(); renderEmenuAccountProfile(); renderCommonAccountSettings(); }
   if(id==='s-onboard') initOb();
   if(id==='s-menu') renderPubMenu();
 }
@@ -1581,32 +1702,44 @@ function showBootError(message){
 }
 
 async function init(){
-  // Public menu: /menu/:slug route or ?m=slug param
+  // Public QR menu routes are independent of account authentication.
   var pathParts=window.location.pathname.split('/');
   var mSlug=(pathParts[1]==='menu'&&pathParts[2])?pathParts[2]:new URLSearchParams(window.location.search).get('m');
   if(mSlug){
     try { var _ld=new Date(),_td=_ld.getFullYear()+'-'+String(_ld.getMonth()+1).padStart(2,'0')+'-'+String(_ld.getDate()).padStart(2,'0'); var pubData=await api('GET','/public/menu/'+mSlug+'?localDate='+_td); S._qrMenuData=pubData; show('s-menu'); return; }
     catch(e){ showBootError('Unable to load this menu. Check your connection and try again.'); return; }
   }
-  S._qrMenuData=null;
-  // Check auth
+
+  // A password-recovery or email-verification return is completed by Accounts first.
+  // Exchange the one-time account handoff for HttpOnly EMenu cookies.
   try {
-    var meRes=await api('GET','/auth/me'); S.user=meRes.user;
+    await clearCommonAccountSignoutFlag();
+    await finishCommonAccountHandoff();
+  } catch (handoffError) {
+    console.error('ZenVentora account handoff failed:', handoffError);
+    showBootError(handoffError.message || 'Could not connect your ZenVentora account. Please try again.');
+    return;
+  }
+
+  S._qrMenuData=null;
+  try {
+    var meRes=await api('GET','/auth/me');
+    S.user=meRes.user;
     var bizRes=await api('GET','/business/me');
     var biz=bizRes.business;
     var menu=biz&&biz.menus&&biz.menus[0]?biz.menus[0]:null;
     syncFromAPI(biz,menu);
-    var _p=new URLSearchParams(window.location.search);
-    if(_p.get('google')==='ok') { setTimeout(function(){toast('Welcome, '+S.user.name.split(' ')[0]+'! 👋');},300); window.history.replaceState({},'','/'); }
     show(biz&&biz.name?'s-dashboard':'s-onboard');
-  } catch(e){
-    var _pe=new URLSearchParams(window.location.search);
-    if(_pe.get('google')==='error') { setTimeout(function(){toast('Google sign-in failed. Please try again.','error');},300); window.history.replaceState({},'','/'); }
-    if(_pe.get('signup')==='true'){ window.history.replaceState({},'','/'); show('s-signup'); }
-    else if(e && (e.status===401 || e.message==='Session expired' || e.message==='Authentication required' || e.message==='Invalid or expired token')) { show('s-login'); }
-    else { showBootError('Could not restore your session or load your account. Your sign-in has not been cleared; please retry.'); }
+  } catch(e) {
+    if(e && e.status===401) {
+      // No EMenu cookie: send the user to the one common identity UI.
+      openCommonAccount('signin');
+      return;
+    }
+    showBootError('Could not restore your account or load EMenu. Your ZenVentora session has not been signed out; please retry.');
+  } finally {
+    S.initialized=true;
   }
-  finally { S.initialized = true; }
 }
 
 // ─────────────────────────────────────────
@@ -1657,56 +1790,12 @@ function checkStrength(pw){
 // ─────────────────────────────────────────
 // LOGIN
 // ─────────────────────────────────────────
-async function doLogin(){
-  var email=document.getElementById('li-email').value.trim().toLowerCase();
-  var pass=document.getElementById('li-pass').value;
-  if(!email||!pass){toast('Please fill in all fields','error');return;}
-  var btn=document.querySelector('#s-login .btn-primary');
-  if(btn){btn.disabled=true;btn.textContent='Signing in…';}
-  try {
-    resetState();
-    var r=await api('POST','/auth/login',{email,password:pass});
-    S.user=r.user;
-    var bizRes=await api('GET','/business/me');
-    var biz=bizRes.business, menu=biz&&biz.menus&&biz.menus[0]?biz.menus[0]:null;
-    syncFromAPI(biz,menu);
-    toast('Welcome back, '+r.user.name.split(' ')[0]+'! 👋');
-    show(biz&&biz.name?'s-dashboard':'s-onboard');
-  } catch(e){toast(e.message||'Login failed','error');}
-  finally{if(btn){btn.disabled=false;btn.textContent='Sign In →';}}
-}
+async function doLogin(){ openCommonAccount('signin'); }
 
 // ─────────────────────────────────────────
 // SIGNUP
 // ─────────────────────────────────────────
-async function doSignup(){
-  var name=document.getElementById('su-name').value.trim();
-  var phone=document.getElementById('su-phone').value.trim();
-  var email=document.getElementById('su-email').value.trim().toLowerCase();
-  var pass=document.getElementById('su-pass').value;
-  var pass2=document.getElementById('su-pass2').value;
-  if(!name||!phone||!email||!pass){toast('Please fill in all required fields','error');return;}
-  if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
-  if(pass!==pass2){toast('Passwords do not match','error');return;}
-  var btn=document.querySelector('#s-signup .btn-primary');
-  if(btn){btn.disabled=true;btn.textContent='Creating account…';}
-  try {
-    resetState();
-    var r=await api('POST','/auth/signup',{name,phone,email,password:pass});
-    S.user=r.user; syncFromAPI(null,null);
-    toast('Account created! Let\'s set up your menu 🎉');
-    show('s-onboard');
-  } catch(e){
-    if(e.status===409){
-      // Account already exists — nudge the user to login instead
-      toast('An account with this email already exists. Please sign in.','error');
-      setTimeout(function(){ show('s-login'); }, 1800);
-    } else {
-      toast(e.message||'Signup failed','error');
-    }
-  }
-  finally{if(btn){btn.disabled=false;btn.textContent='Create Account →';}}
-}
+async function doSignup(){ openCommonAccount('signup'); }
 
 // ─────────────────────────────────────────
 // FORGOT PASSWORD
@@ -3775,10 +3864,15 @@ function buildFullPageMenu(d,t){
 // LOGOUT
 // ─────────────────────────────────────────
 async function doLogout(){
-  if(!confirm('Log out of E-Menu?')) return;
-  try{await api('POST','/auth/logout');}catch(e){}
+  if(!confirm('Sign out of your ZenVentora account? This will sign you out of connected products.')) return;
+  try {
+    await api('POST','/auth/logout');
+  } catch(e) {
+    toast(e.message || 'Sign out failed. Please retry.','error');
+    return;
+  }
   resetState();
-  toast('Logged out','info'); show('s-login');
+  window.location.assign(commonAccountUrl('signin'));
 }
 
 // ─────────────────────────────────────────
