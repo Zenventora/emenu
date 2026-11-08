@@ -11,14 +11,6 @@ export interface CommonAuthUser {
   app_metadata?: Record<string, unknown>
 }
 
-export interface CommonTokenResponse {
-  access_token: string
-  refresh_token: string
-  expires_in?: number
-  token_type?: string
-  user?: CommonAuthUser
-}
-
 function commonAuthConfig() {
   const url = process.env.COMMON_SUPABASE_URL?.replace(/\/$/, '')
   const key = process.env.COMMON_SUPABASE_PUBLISHABLE_KEY
@@ -41,21 +33,6 @@ export async function verifyCommonAccessToken(accessToken: string): Promise<Comm
     throw new Error('Verify your email address before accessing EMenu.')
   }
   return user
-}
-
-export async function refreshCommonSession(refreshToken: string): Promise<CommonTokenResponse> {
-  if (!refreshToken || refreshToken.length > 12000) throw new Error('Your ZenVentora session has expired.')
-  const { url, key } = commonAuthConfig()
-  const response = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
-    method: 'POST',
-    headers: { apikey: key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  })
-  const result = await response.json() as CommonTokenResponse & { msg?: string; message?: string }
-  if (!response.ok || !result.access_token || !result.refresh_token) {
-    throw new Error(result.msg || result.message || 'Your ZenVentora session has expired. Please sign in again.')
-  }
-  return result
 }
 
 export async function revokeCommonSession(accessToken: string): Promise<void> {
