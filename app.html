@@ -1752,6 +1752,29 @@ async function init(){
   }
 
   S._qrMenuData=null;
+  // Get Started Free is a product-level CTA: show EMenu's own signup screen.
+  // Keep the explicit Sign In entry point routed to Common ZenVentora Accounts.
+  var requestedSignup = new URLSearchParams(window.location.search).get('signup') === 'true';
+  if (requestedSignup) {
+    try {
+      var existingSession = await api('GET','/auth/me');
+      S.user = existingSession.user;
+      var existingBiz = await api('GET','/business/me');
+      var existingMenu = existingBiz.business && existingBiz.business.menus && existingBiz.business.menus[0] ? existingBiz.business.menus[0] : null;
+      syncFromAPI(existingBiz.business, existingMenu);
+      show(existingBiz.business && existingBiz.business.name ? 's-dashboard' : 's-onboard');
+    } catch (signupRouteError) {
+      if (signupRouteError && signupRouteError.status === 401) {
+        show('s-signup');
+      } else {
+        showBootError('Could not load EMenu signup. Please retry.');
+      }
+    } finally {
+      S.initialized=true;
+    }
+    return;
+  }
+
   try {
     var meRes=await api('GET','/auth/me');
     S.user=meRes.user;
