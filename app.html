@@ -1762,8 +1762,11 @@ async function init(){
     show(biz&&biz.name?'s-dashboard':'s-onboard');
   } catch(e) {
     if(e && e.status===401) {
-      // No EMenu cookie: send the user to the one common identity UI.
-      openCommonAccount('signin');
+      // The public EMenu landing page uses ?signup=true for its Get Started CTA.
+      // Preserve that intent and open the product-aware Common Accounts signup
+      // flow; normal visits and explicit sign-in actions continue to use sign-in.
+      var requestedSignup = new URLSearchParams(window.location.search).get('signup') === 'true';
+      openCommonAccount(requestedSignup ? 'signup' : 'signin');
       return;
     }
     showBootError('Could not restore your account or load EMenu. Your ZenVentora session has not been signed out; please retry.');
