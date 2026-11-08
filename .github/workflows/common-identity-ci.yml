@@ -54,7 +54,7 @@ jobs:
           const { spawnSync } = require('node:child_process');
 
           const html = fs.readFileSync('app.html', 'utf8');
-          const inlineScripts = [...html.matchAll(/<script\\b(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+          const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\\S]*?)<\/script>/gi)]
             .map(match => match[1])
             .filter(source => source.trim().length > 0);
 
