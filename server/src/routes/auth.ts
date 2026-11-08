@@ -73,7 +73,8 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
       return
     }
     const commonUser = await verifyCommonAccessToken(accessToken)
-    const emenuUser = await resolveEmenuUser(commonUser)
+    const productFlow = String(req.body?.productFlow || '')
+    const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' })
     setCommonAuthCookie(res, accessToken)
     res.json({ message: 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
   } catch (err) {
