@@ -63,6 +63,58 @@ function commonUserResponse(user: any, authUser: AuthRequest['commonUser'] | nul
   }
 }
 
+// ─── POST /api/auth/legacy/verify ────────────────────────────────────────────
+// One-time compatibility check for existing EMenu users signing in through
+// Common Accounts. This verifies the old bcrypt hash without creating a session,
+// changing the password hash, or exposing any legacy credential material.
+router.post('/legacy/verify', authLimiter, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const password = String(req.body?.password || '')
+    if (!email || !password || email.length > 254 || password.length > 1024) {
+      res.status(401).json({ message: 'Invalid email or password.' })
+      return
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, phone: true, passwordHash: true },
+    })
+    if (!user) {
+      res.status(401).json({ message: 'Invalid email or password.' })
+      return
+    }
+
+    // Never let an old product password bypass an already-linked Common identity.
+    const existingLink = await prisma.emenuIdentityLink.findUnique({
+      where: { emenuUserId: user.id },
+      select: { id: true },
+    })
+    if (existingLink) {
+      res.status(401).json({ message: 'Invalid email or password.' })
+      return
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash)
+    if (!valid) {
+      res.status(401).json({ message: 'Invalid email or password.' })
+      return
+    }
+
+    res.setHeader('Cache-Control', 'no-store')
+    res.json({
+      verified: true,
+      profile: {
+        name: user.name,
+        phone: user.phone || '',
+      },
+    })
+  } catch (err) {
+    console.error('Legacy EMenu credential verification failed:', err)
+    res.status(503).json({ message: 'Legacy account verification is temporarily unavailable.' })
+  }
+})
+
 // ─── POST /api/auth/common/session ───────────────────────────────────────────
 // Exchanges the one-time browser handoff for HttpOnly EMenu-origin session cookies.
 // Supabase verifies the access token and email; EMenu then links the immutable identity.
