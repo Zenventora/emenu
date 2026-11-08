@@ -1491,7 +1491,7 @@ async function doGoogleAuth(credential){
 // ─────────────────────────────────────────
 // API HELPER — all calls go to the same-origin Express server
 // ─────────────────────────────────────────
-async function api(method, path, body, _retry) {
+async function api(method, path, body, _retry, _skipAuthRefresh) {
   var opts = { method: method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
   if (body) opts.body = JSON.stringify(body);
   var res = await fetch('/api' + path, opts);
@@ -1501,7 +1501,7 @@ async function api(method, path, body, _retry) {
   var isAuthPath = skipRefreshPaths.some(function(p){ return path.startsWith(p); });
   var isPublicPath = path.startsWith('/public/');
   // Auto-refresh token on 401, then retry once (protected routes only)
-  if (res.status === 401 && !_retry && !isAuthPath && !isPublicPath) {
+  if (res.status === 401 && !_retry && !_skipAuthRefresh && !isAuthPath && !isPublicPath) {
     var rf;
     try {
       rf = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin', cache: 'no-store' });
@@ -1757,7 +1757,9 @@ async function init(){
   var requestedSignup = new URLSearchParams(window.location.search).get('signup') === 'true';
   if (requestedSignup) {
     try {
-      var existingSession = await api('GET','/auth/me');
+      // This is an optional session probe: a missing/expired EMenu session must show
+      // the product signup form, not trigger the global Common Accounts sign-in redirect.
+      var existingSession = await api('GET','/auth/me',null,false,true);
       S.user = existingSession.user;
       var existingBiz = await api('GET','/business/me');
       var existingMenu = existingBiz.business && existingBiz.business.menus && existingBiz.business.menus[0] ? existingBiz.business.menus[0] : null;
