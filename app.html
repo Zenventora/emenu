@@ -559,10 +559,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
     <div class="auth-right">
       <div class="auth-form-box">
         <h1>Continue to E-Menu</h1>
-        <p class="auth-sub">Use your common ZenVentora identity. New to ZenVentora? Create one account and choose the products you need.</p>
+        <p class="auth-sub">Sign in with your common ZenVentora account to manage E-Menu.</p>
         <button class="btn btn-primary btn-full btn-lg" onclick="openCommonAccount('signin')">Continue with ZenVentora Account →</button>
         <div class="g-divider">or</div>
-        <button class="btn btn-outline btn-full btn-lg" onclick="openCommonAccount('signup')">Create a ZenVentora account</button>
+        <button class="btn btn-outline btn-full btn-lg" onclick="show('s-signup')">Create an E-Menu account</button>
         <p style="text-align:center;margin-top:20px;font-size:.82rem;color:#718096">Forgot your password? <a class="alink" onclick="openCommonAccount('forgot')">Reset it in Accounts</a></p>
         <p style="text-align:center;margin-top:18px;font-size:.78rem;color:#9ca3af">Your E-Menu business, menus, products and QR codes remain in E-Menu.</p>
       </div>
@@ -570,34 +570,48 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SIGNUP
-════════════════════════════════════════ -->
 <div id="s-signup" class="screen">
   <div class="auth-wrap">
     <div class="auth-left">
+      <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
       <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
         <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
       </div>
-      <h2>Start your E-Menu journey</h2>
-      <p>Create one ZenVentora identity, then add your E-Menu business profile and build your digital menu.</p>
+      <h2>Create your digital menu today</h2>
+      <p>Join thousands of restaurants and cafes using E-Menu to go digital in under 5 minutes.</p>
       <div class="auth-features">
-        <div class="af-item"><div class="af-icon">🔐</div>One identity for ZenVentora products</div>
-        <div class="af-item"><div class="af-icon">✅</div>Verified email and secure recovery</div>
-        <div class="af-item"><div class="af-icon">🍽️</div>Business onboarding stays in E-Menu</div>
+        <div class="af-item"><div class="af-icon">✅</div>Free forever plan available</div>
+        <div class="af-item"><div class="af-icon">⏱️</div>Live in under 5 minutes</div>
+        <div class="af-item"><div class="af-icon">🔄</div>Update menu without new QR</div>
+        <div class="af-item"><div class="af-icon">🎙️</div>Voice-powered menu entry</div>
       </div>
     </div>
     <div class="auth-right">
       <div class="auth-form-box">
-        <h1>Create your ZenVentora ID</h1>
-        <p class="auth-sub">Your account is shared across ZenVentora. E-Menu asks for your restaurant details after sign-up.</p>
-        <button class="btn btn-primary btn-full btn-lg" onclick="openCommonAccount('signup')">Continue to secure signup →</button>
-        <p style="text-align:center;margin-top:20px;font-size:.84rem;color:#718096">Already have an account? <a class="alink" onclick="openCommonAccount('signin')">Sign in</a></p>
+        <h1>Create account</h1>
+        <p class="auth-sub">Already have a ZenVentora account? <a class="alink" onclick="openCommonAccount('signin')">Sign in</a></p>
+        <div class="row2">
+          <div class="ig"><label>Full Name *</label><input type="text" id="su-name" placeholder="Mohan Kumar"/></div>
+          <div class="ig"><label>Phone *</label><input type="tel" id="su-phone" placeholder="+91 98765 43210"/></div>
+        </div>
+        <div class="ig"><label>Email address *</label><input type="email" id="su-email" placeholder="you@example.com"/></div>
+        <div class="ig">
+          <label>Password *</label>
+          <div class="pw-wrap"><input type="password" id="su-pass" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/><button class="pw-eye" onclick="togglePwd('su-pass',this)">👁️</button></div>
+          <div class="ps-bars"><div class="ps-bar" id="pb1"></div><div class="ps-bar" id="pb2"></div><div class="ps-bar" id="pb3"></div><div class="ps-bar" id="pb4"></div></div>
+        </div>
+        <div class="ig">
+          <label>Confirm Password *</label>
+          <div class="pw-wrap"><input type="password" id="su-pass2" placeholder="Repeat password"/><button class="pw-eye" onclick="togglePwd('su-pass2',this)">👁️</button></div>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()" style="margin-top:6px">Create Free Account →</button>
+        <div class="g-divider">or</div>
+        <div id="g-btn-signup" style="display:flex;justify-content:center;min-height:44px"></div>
+        <p style="text-align:center;margin-top:12px;font-size:.76rem;color:#9ca3af;line-height:1.6">By signing up you agree to our Terms of Service and Privacy Policy.</p>
       </div>
     </div>
   </div>
-</div>
 
 <!-- ═══════════════════════════════════════
      FORGOT PASSWORD
@@ -1810,7 +1824,34 @@ async function doLogin(){ openCommonAccount('signin'); }
 // ─────────────────────────────────────────
 // SIGNUP
 // ─────────────────────────────────────────
-async function doSignup(){ openCommonAccount('signup'); }
+async function doSignup(){
+  var name=document.getElementById('su-name').value.trim();
+  var phone=document.getElementById('su-phone').value.trim();
+  var email=document.getElementById('su-email').value.trim().toLowerCase();
+  var pass=document.getElementById('su-pass').value;
+  var pass2=document.getElementById('su-pass2').value;
+  if(!name||!phone||!email||!pass){toast('Please fill in all required fields','error');return;}
+  if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
+  if(pass!==pass2){toast('Passwords do not match','error');return;}
+  var btn=document.querySelector('#s-signup .btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='Creating account…';}
+  try {
+    resetState();
+    var r=await api('POST','/auth/signup',{name,phone,email,password:pass});
+    S.user=r.user; syncFromAPI(null,null);
+    toast('Account created! Let\'s set up your menu 🎉');
+    show('s-onboard');
+  } catch(e){
+    if(e.status===409){
+      // Account already exists — nudge the user to login instead
+      toast('An account with this email already exists. Please sign in.','error');
+      setTimeout(function(){ show('s-login'); }, 1800);
+    } else {
+      toast(e.message||'Signup failed','error');
+    }
+  }
+  finally{if(btn){btn.disabled=false;btn.textContent='Create Account →';}}
+}
 
 // ─────────────────────────────────────────
 // FORGOT PASSWORD
