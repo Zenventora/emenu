@@ -73,8 +73,15 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
       return
     }
     const commonUser = await verifyCommonAccessToken(accessToken)
+    // Rotate the supplied refresh token once and confirm it belongs to the same Auth user.
+    const rotatedTokens = await refreshCommonSession(refreshToken)
+    const refreshedUser = rotatedTokens.user || await verifyCommonAccessToken(rotatedTokens.access_token)
+    if (refreshedUser.id !== commonUser.id) {
+      res.status(401).json({ message: 'The account tokens do not belong to the same ZenVentora user.' })
+      return
+    }
     const emenuUser = await resolveEmenuUser(commonUser)
-    setCommonAuthCookies(res, { access_token: accessToken, refresh_token: refreshToken, expires_in: 3600 })
+    setCommonAuthCookies(res, rotatedTokens)
     res.json({ message: 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
   } catch (err) {
     console.error('Common account handoff failed:', err)
