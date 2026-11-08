@@ -1414,9 +1414,13 @@ async function finishCommonAccountHandoff() {
 async function clearCommonAccountSignoutFlag() {
   var params = new URLSearchParams(window.location.search);
   if (params.get('account_signed_out') !== '1') return false;
-  // Clear the URL first. The POST only clears EMenu cookies; it never deletes product data.
+  // The Accounts service has already revoked the global session. Only clear
+  // local EMenu cookies here; never revoke globally a second time.
   window.history.replaceState({}, '', window.location.pathname);
-  try { await api('POST', '/auth/logout'); } catch (e) {}
+  try {
+    var response = await fetch('/api/auth/session/clear', { method:'POST', credentials:'same-origin', cache:'no-store' });
+    if (!response.ok) console.warn('Could not clear local EMenu auth cookies.');
+  } catch (e) { console.warn('Could not clear local EMenu auth cookies:', e); }
   return true;
 }
 
@@ -1713,8 +1717,8 @@ async function init(){
   // A password-recovery or email-verification return is completed by Accounts first.
   // Exchange the one-time account handoff for HttpOnly EMenu cookies.
   try {
-    await clearCommonAccountSignoutFlag();
-    await finishCommonAccountHandoff();
+    var signedOutFromAccounts = await clearCommonAccountSignoutFlag();
+    if (!signedOutFromAccounts) await finishCommonAccountHandoff();
   } catch (handoffError) {
     console.error('ZenVentora account handoff failed:', handoffError);
     showBootError(handoffError.message || 'Could not connect your ZenVentora account. Please try again.');
