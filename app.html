@@ -1697,13 +1697,17 @@ function show(id){
   if(id==='s-menu') renderPubMenu();
 }
 
-function showBootError(message){
+function showBootError(message, actionLabel, actionHandler){
   var spinner=document.getElementById('boot-spinner');
   var label=document.getElementById('boot-message');
   var retry=document.getElementById('boot-retry');
   if(spinner) spinner.style.display='none';
   if(label) label.textContent=message;
-  if(retry) retry.style.display='inline-flex';
+  if(retry) {
+    retry.textContent=actionLabel || 'Try again';
+    retry.onclick=typeof actionHandler==='function' ? actionHandler : function(){init();};
+    retry.style.display='inline-flex';
+  }
   show('s-boot');
 }
 
@@ -1723,7 +1727,12 @@ async function init(){
     if (!signedOutFromAccounts) await finishCommonAccountHandoff();
   } catch (handoffError) {
     console.error('ZenVentora account handoff failed:', handoffError);
-    showBootError(handoffError.message || 'Could not connect your ZenVentora account. Please try again.');
+    var handoffMessage = handoffError && handoffError.message ? handoffError.message : 'Could not connect your ZenVentora account. Please try again.';
+    if (String(handoffMessage).indexOf('No EMenu profile is linked') !== -1) {
+      showBootError(handoffMessage, 'Create EMenu Account', function(){ openCommonAccount('signup'); });
+    } else {
+      showBootError(handoffMessage);
+    }
     return;
   }
 
@@ -2385,7 +2394,7 @@ function refreshDash(){
   var biz=S.data.biz||{}, cats=S.data.menu.cats||[];
   var total=cats.reduce((s,c)=>s+c.items.length,0);
   // Sidebar user
-  document.getElementById('sb-user').innerHTML='<div class="u-avatar">'+user.name.charAt(0).toUpperCase()+'</div><div style="min-width:0;flex:1"><div class="u-name">'+user.name+'</div><div class="u-email">'+user.email+'</div></div>';
+  document.getElementById('sb-user').innerHTML='<div class="u-avatar">'+escapeAccountText((user.name||'Z').charAt(0).toUpperCase())+'</div><div style="min-width:0;flex:1"><div class="u-name">'+escapeAccountText(user.name||'ZenVentora account')+'</div><div class="u-email">'+escapeAccountText(user.email||'')+'</div></div>';
   // Stats — real data only
   var uploadMode=!!(S.data&&String(S.data.menuMode||'EDITOR').toUpperCase()==='UPLOAD');
   document.getElementById('sv-items').textContent=uploadMode?'—':total;
