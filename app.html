@@ -1307,6 +1307,7 @@ function commonAccountUrl(view, manage) {
   var url = new URL(COMMON_ACCOUNTS_URL);
   url.searchParams.set('view', view || 'signin');
   url.searchParams.set('product', 'emenu');
+  if (view === 'signup') url.searchParams.set('productFlow', 'signup');
   if (manage) {
     url.searchParams.set('postLogoutTo', EMENU_ORIGIN);
   } else {
@@ -1405,7 +1406,7 @@ async function finishCommonAccountHandoff() {
 
   var result = await api('POST', '/auth/common/session', {
     accessToken: accessToken,
-    refreshToken: refreshToken
+    productFlow: params.get('productFlow') === 'signup' ? 'signup' : 'signin'
   });
   S.user = result.user;
   return true;
