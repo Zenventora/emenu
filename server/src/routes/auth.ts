@@ -6,6 +6,7 @@ import prisma from '../lib/prisma'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt'
 import { sendOTPEmail } from '../lib/mailer'
 import { requireAuth, AuthRequest } from '../middleware/auth'
+import { CommonTokenResponse, refreshCommonSession, resolveEmenuUser, revokeCommonSession, verifyCommonAccessToken } from '../lib/common-auth'
 
 const router = Router()
 
@@ -22,6 +23,64 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
     sameSite: 'none', path: '/', maxAge: 30 * 24 * 60 * 60 * 1000,
   })
 }
+
+
+function setCommonAuthCookies(res: Response, tokens: CommonTokenResponse) {
+  const accessMaxAge = Math.max(60, Number(tokens.expires_in || 3600)) * 1000
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+  }
+  res.cookie('emenu_common_access_token', tokens.access_token, { ...options, maxAge: accessMaxAge })
+  res.cookie('emenu_common_refresh_token', tokens.refresh_token, { ...options, maxAge: 30 * 24 * 60 * 60 * 1000 })
+}
+
+function clearCommonAuthCookies(res: Response) {
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+  }
+  res.clearCookie('emenu_common_access_token', options)
+  res.clearCookie('emenu_common_refresh_token', options)
+}
+
+function commonUserResponse(user: any, authUser: AuthRequest['commonUser']) {
+  const metadata = authUser?.user_metadata || {}
+  return {
+    id: user.id,
+    name: user.name,
+    email: authUser?.email || user.email,
+    phone: user.phone,
+    authUserId: authUser?.id || null,
+    avatar: typeof metadata.avatar_url === 'string' ? metadata.avatar_url : (typeof metadata.picture === 'string' ? metadata.picture : null),
+    authProvider: authUser ? 'zenventora' : 'legacy',
+  }
+}
+
+// ─── POST /api/auth/common/session ───────────────────────────────────────────
+// Exchanges the one-time browser handoff for HttpOnly EMenu-origin session cookies.
+// Supabase verifies the access token and email; EMenu then links the immutable identity.
+router.post('/common/session', authLimiter, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const accessToken = String(req.body?.accessToken || '')
+    const refreshToken = String(req.body?.refreshToken || '')
+    if (!accessToken || !refreshToken) {
+      res.status(400).json({ message: 'A ZenVentora account session is required.' })
+      return
+    }
+    const commonUser = await verifyCommonAccessToken(accessToken)
+    const emenuUser = await resolveEmenuUser(commonUser)
+    setCommonAuthCookies(res, { access_token: accessToken, refresh_token: refreshToken, expires_in: 3600 })
+    res.json({ message: 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
+  } catch (err) {
+    console.error('Common account handoff failed:', err)
+    res.status(401).json({ message: err instanceof Error ? err.message : 'Could not connect your ZenVentora account.' })
+  }
+})
 
 // ─── POST /api/auth/signup ────────────────────────────────────────────────────
 router.post('/signup', authLimiter, async (req: Request, res: Response): Promise<void> => {
@@ -126,7 +185,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
       select: { id: true, name: true, email: true, phone: true },
     })
     if (!user) { res.status(404).json({ message: 'User not found' }); return }
-    res.json({ user })
+    res.json({ user: commonUserResponse(user, req.commonUser || null) })
   } catch (err) {
     res.status(500).json({ message: 'Server error' })
   }
@@ -149,16 +208,30 @@ router.patch('/me', requireAuth, async (req: AuthRequest, res: Response): Promis
 
 // ─── POST /api/auth/refresh ───────────────────────────────────────────────────
 router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
+  const commonRefresh = req.cookies?.emenu_common_refresh_token
+  if (commonRefresh) {
+    try {
+      const tokens = await refreshCommonSession(commonRefresh)
+      const commonUser = await verifyCommonAccessToken(tokens.access_token)
+      await resolveEmenuUser(commonUser)
+      setCommonAuthCookies(res, tokens)
+      res.json({ message: 'ZenVentora session refreshed.' })
+    } catch (err) {
+      clearCommonAuthCookies(res)
+      res.status(401).json({ message: err instanceof Error ? err.message : 'ZenVentora session expired.' })
+    }
+    return
+  }
+
+  // Temporary compatibility for pre-migration EMenu sessions.
   try {
     const token = req.cookies?.refresh_token
     if (!token) { res.status(401).json({ message: 'No refresh token' }); return }
-
     const payload = verifyRefreshToken(token)
     const session = await prisma.session.findUnique({ where: { refreshToken: token } })
     if (!session || session.expiresAt < new Date()) {
       res.status(401).json({ message: 'Session expired' }); return
     }
-
     const newAccessToken = signAccessToken({ userId: payload.userId, email: payload.email })
     res.cookie('access_token', newAccessToken, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
@@ -173,11 +246,27 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 // ─── POST /api/auth/logout ────────────────────────────────────────────────────
 router.post('/logout', async (req: Request, res: Response): Promise<void> => {
   try {
-    const token = req.cookies?.refresh_token
-    if (token) await prisma.session.deleteMany({ where: { refreshToken: token } })
+    const commonAccess = req.cookies?.emenu_common_access_token
+    const commonRefresh = req.cookies?.emenu_common_refresh_token
+    if (commonAccess) {
+      try {
+        await revokeCommonSession(commonAccess)
+      } catch {
+        // If the access token expired during sign-out, refresh once and revoke that session.
+        if (commonRefresh) {
+          try {
+            const refreshed = await refreshCommonSession(commonRefresh)
+            await revokeCommonSession(refreshed.access_token)
+          } catch { /* The refresh token is already invalid or revoked. */ }
+        }
+      }
+      clearCommonAuthCookies(res)
+    }
+    const legacyRefresh = req.cookies?.refresh_token
+    if (legacyRefresh) await prisma.session.deleteMany({ where: { refreshToken: legacyRefresh } })
     res.clearCookie('access_token', { path: '/' })
     res.clearCookie('refresh_token', { path: '/' })
-    res.json({ message: 'Logged out successfully' })
+    res.json({ message: 'Signed out of ZenVentora and EMenu.' })
   } catch {
     res.status(500).json({ message: 'Logout failed' })
   }
