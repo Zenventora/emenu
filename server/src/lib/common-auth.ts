@@ -76,7 +76,7 @@ export async function resolveEmenuUser(commonUser: CommonAuthUser, options: { al
   }
 
   if (!emenuUser) {
-    const metadata = commonUser.user_metadata || {
+    const metadata = commonUser.user_metadata || {}
     const fullName = String(metadata.full_name || metadata.name || email.split('@')[0]).trim().slice(0, 120)
     const phone = String(metadata.phone_number || metadata.phone || '').trim().slice(0, 40) || null
     const passwordHash = await bcrypt.hash(`common-account:${commonUser.id}:${uuidv4()}`, 12)
