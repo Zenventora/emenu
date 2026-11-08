@@ -22,6 +22,7 @@ model User {
   businesses    Business[]
   sessions      Session[]
   otps          OTP[]
+  identityLink  EmenuIdentityLink?
 
   @@map("users")
 }
@@ -169,4 +170,21 @@ model QRCode {
   menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
 
   @@map("qr_codes")
+}
+
+
+// Maps the immutable Common Accounts identity to an existing EMenu user.
+// Product records continue to reference User.id; this mapping never rewrites those IDs.
+model EmenuIdentityLink {
+  id          String   @id @default(uuid())
+  authUserId  String   @unique @db.Uuid
+  emenuUserId String   @unique
+  email       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [emenuUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([email])
+  @@map("emenu_identity_links")
 }

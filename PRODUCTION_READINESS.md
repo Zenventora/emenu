@@ -36,6 +36,56 @@ Use Supabase's direct connection string for Render migrations. If a pooled
 connection is used for runtime traffic, configure a separate direct URL for
 Prisma migrations before changing the Docker start command.
 
+## Common ZenVentora identity integration
+
+The EMenu product uses the Common Accounts service at
+`https://accounts.zenventora.in` for sign-up, sign-in, Google OAuth, email
+verification, password reset, session refresh and global sign-out.
+
+EMenu keeps its existing PostgreSQL database and all product tables. The
+migration adds only `public.emenu_identity_links`, which connects a Common
+Supabase Auth UUID to an immutable existing `public.users.id`. Existing
+`users`, `businesses`, `menus`, `categories`, `products`, and
+`qr_codes` records are not rewritten or copied.
+
+### Additional EMenu Render environment variables
+
+| Variable | Required value |
+| --- | --- |
+| `COMMON_SUPABASE_URL` | `https://flwzqlywdlwatycxexmk.supabase.co` |
+| `COMMON_SUPABASE_PUBLISHABLE_KEY` | The Common Accounts project's publishable key (`sb_publishable_…`), never a service-role key |
+
+The Accounts origin remains the only owner of the Supabase refresh token. EMenu
+stores only a short-lived access token in an HttpOnly cookie. When it expires,
+the browser returns to Accounts to refresh the canonical session and receives
+a new one-time handoff. EMenu never rotates the Accounts refresh token itself.
+
+### Product signup and legacy profile linking
+
+- A Common account created from the general ZenVentora website does not create
+  an EMenu user row.
+- An EMenu product-signup callback explicitly provisions an EMenu user only
+  when no existing row matches the verified email.
+- A normal EMenu sign-in links only an existing legacy EMenu user with the
+  same verified email. If none exists, the user is asked to use the product
+  signup flow or contact support; EMenu does not silently create a new row.
+- Existing `users.id` values and their business/menu/product foreign keys are
+  immutable. The mapping table has a restrictive FK to `users.id`.
+- Legacy EMenu JWT sessions remain temporarily supported during the rollout.
+
+### Production rollout safety
+
+Do not merge/deploy the migration until a fresh Supabase backup is confirmed
+and the current production row counts have been recorded. The Render Docker
+startup command runs `prisma migrate deploy`, so deployment applies the
+migration automatically. Do not manually run destructive SQL or truncate any
+table. Verify all existing product row counts after deployment.
+
+The Common Accounts Supabase Auth redirect allowlist must include the EMenu
+production origin, for example:
+`https://emenu-x75b.onrender.com/**` (and
+`https://emenu.zenventora.in/**` if that custom domain is enabled).
+
 ## What UptimeRobot is for
 
 Render's free service can sleep after inactivity. Create an UptimeRobot HTTP(s)
