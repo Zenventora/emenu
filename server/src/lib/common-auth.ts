@@ -52,7 +52,7 @@ export async function revokeCommonSession(accessToken: string): Promise<void> {
  * A same-email legacy record is linked in place; a new EMenu user is created only
  * when the person returns from the EMenu product-signup flow.
  */
-export async function resolveEmenuUser(commonUser: CommonAuthUser) {
+export async function resolveEmenuUser(commonUser: CommonAuthUser, options: { allowCreate?: boolean } = {}) {
   const email = commonUser.email.trim().toLowerCase()
   if (!commonUser.id || !email) throw new Error('A verified ZenVentora identity is required.')
 
@@ -71,8 +71,12 @@ export async function resolveEmenuUser(commonUser: CommonAuthUser) {
   }
 
   let emenuUser = await prisma.user.findUnique({ where: { email } })
+  if (!emenuUser && !options.allowCreate) {
+    throw new Error('No EMenu profile is linked to this ZenVentora account yet. Choose Create EMenu Account to activate the product, or contact support to connect an existing profile.')
+  }
+
   if (!emenuUser) {
-    const metadata = commonUser.user_metadata || {}
+    const metadata = commonUser.user_metadata || {
     const fullName = String(metadata.full_name || metadata.name || email.split('@')[0]).trim().slice(0, 120)
     const phone = String(metadata.phone_number || metadata.phone || '').trim().slice(0, 40) || null
     const passwordHash = await bcrypt.hash(`common-account:${commonUser.id}:${uuidv4()}`, 12)
