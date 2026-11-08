@@ -2424,6 +2424,8 @@ function refreshDash(){
   // Settings
   var f=function(id,v){var e=document.getElementById(id);if(e)e.value=v||'';};
   f('st-name',user.name); f('st-email',user.email); f('st-phone',user.phone||'');
+  renderEmenuAccountProfile();
+  renderCommonAccountSettings();
   f('st-bname',biz.name); f('st-bloc',biz.loc); f('st-btag',biz.tag);
   f('st-bphone',S.biz&&S.biz.phone||''); f('st-bwa',S.biz&&S.biz.whatsapp||'');
   f('st-big',S.biz&&S.biz.instagram||''); f('st-bfb',S.biz&&S.biz.facebook||'');
