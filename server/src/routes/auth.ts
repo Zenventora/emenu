@@ -48,7 +48,7 @@ function clearCommonAuthCookies(res: Response) {
   res.clearCookie('emenu_common_refresh_token', options)
 }
 
-function commonUserResponse(user: any, authUser: AuthRequest['commonUser']) {
+function commonUserResponse(user: any, authUser: AuthRequest['commonUser'] | null) {
   const metadata = authUser?.user_metadata || {}
   return {
     id: user.id,
