@@ -3878,7 +3878,7 @@ async function doLogout(){
     return;
   }
   resetState();
-  window.location.assign(commonAccountUrl('signin'));
+  window.location.assign(commonAccountUrl('signin', true) + '&signout=1');
 }
 
 // ─────────────────────────────────────────
