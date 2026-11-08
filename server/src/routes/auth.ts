@@ -132,10 +132,23 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
       res.status(400).json({ message: 'A complete ZenVentora account session is required.' })
       return
     }
-    const commonUser = await verifyCommonAccessToken(accessToken)
+    // A handoff can arrive just as the one-hour access token expires. In that
+    // case rotate the refresh token first, then verify the fresh access token.
+    let sessionAccessToken = accessToken
+    let sessionRefreshToken = refreshToken
+    let commonUser: CommonAuthUser
+    try {
+      commonUser = await verifyCommonAccessToken(sessionAccessToken)
+    } catch {
+      const refreshed = await refreshCommonSession(sessionRefreshToken)
+      sessionAccessToken = refreshed.access_token
+      sessionRefreshToken = refreshed.refresh_token
+      commonUser = await verifyCommonAccessToken(sessionAccessToken)
+      setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken, refreshed.expires_in)
+    }
     const productFlow = String(req.body?.productFlow || '')
     const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' })
-    setCommonAuthCookies(res, accessToken, refreshToken)
+    setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken)
     res.json({ message: 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
   } catch (err) {
     console.error('Common account handoff failed:', err)
@@ -175,7 +188,8 @@ router.post('/signup', authLimiter, async (req: Request, res: Response): Promise
 
     const commonUser = await verifyCommonAccessToken(result.access_token)
     const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: true })
-    setCommonAuthCookie(res, result.access_token)
+    if (!result.refresh_token) throw new Error('ZenVentora did not return a complete signup session. Please sign in again.')
+    setCommonAuthCookies(res, result.access_token, result.refresh_token)
     res.status(201).json({
       message: 'Account created successfully.',
       user: commonUserResponse(emenuUser, commonUser),
