@@ -136,6 +136,8 @@ export async function resolveEmenuUser(commonUser: CommonAuthUser, options: { al
 
 export interface CommonSignupResult {
   access_token?: string
+  refresh_token?: string
+  expires_in?: number
   user?: CommonAuthUser & { identities?: unknown[] }
   [key: string]: unknown
 }
