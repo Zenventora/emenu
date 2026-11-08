@@ -51,13 +51,14 @@ function clearCommonAuthCookies(res: Response) {
 
 function commonUserResponse(user: any, authUser: AuthRequest['commonUser'] | null) {
   const metadata = authUser?.user_metadata || {}
+  const avatarUrl = typeof metadata.avatar_url === 'string' ? metadata.avatar_url : (typeof metadata.picture === 'string' ? metadata.picture : null)
   return {
     id: user.id,
-    name: user.name,
+    name: String(metadata.full_name || metadata.name || user.name),
     email: authUser?.email || user.email,
-    phone: user.phone,
+    phone: String(metadata.phone_number || metadata.phone || user.phone || ''),
     authUserId: authUser?.id || null,
-    avatar: typeof metadata.avatar_url === 'string' ? metadata.avatar_url : (typeof metadata.picture === 'string' ? metadata.picture : null),
+    avatar: avatarUrl,
     authProvider: authUser ? 'zenventora' : 'legacy',
   }
 }
