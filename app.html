@@ -1502,9 +1502,10 @@ async function api(method, path, body, _retry) {
       refreshError.status = rf.status;
       throw refreshError;
     }
-    if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
+    if(S.initialized && S.user) toast('ZenVentora session expired — reconnecting securely', 'info');
     resetState();
-    show('s-login');
+    // Common Accounts owns the refresh token. Return there to refresh the canonical session.
+    openCommonAccount('signin');
     var expiredError = new Error('Session expired');
     expiredError.status = 401;
     throw expiredError;
