@@ -1838,6 +1838,10 @@ async function doSignup(){
   try {
     resetState();
     var r=await api('POST','/auth/signup',{name,phone,email,password:pass});
+    if(r.requiresVerification){
+      toast(r.message || 'Check your email to verify your ZenVentora account.','success');
+      return;
+    }
     S.user=r.user; syncFromAPI(null,null);
     toast('Account created! Let\'s set up your menu 🎉');
     show('s-onboard');
