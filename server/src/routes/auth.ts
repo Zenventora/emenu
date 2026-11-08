@@ -250,6 +250,15 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
   }
 })
 
+// ─── POST /api/auth/session/clear ────────────────────────────────────────────
+// Local-only cookie cleanup after Common Accounts has already performed global sign-out.
+router.post('/session/clear', async (_req: Request, res: Response): Promise<void> => {
+  clearCommonAuthCookies(res)
+  res.clearCookie('access_token', { path: '/' })
+  res.clearCookie('refresh_token', { path: '/' })
+  res.json({ message: 'Local EMenu session cleared.' })
+})
+
 // ─── POST /api/auth/logout ────────────────────────────────────────────────────
 router.post('/logout', async (req: Request, res: Response): Promise<void> => {
   try {
