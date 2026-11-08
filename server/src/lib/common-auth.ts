@@ -35,6 +35,31 @@ export async function verifyCommonAccessToken(accessToken: string): Promise<Comm
   return user
 }
 
+export interface RefreshedCommonSession {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+}
+
+/** Rotate a Supabase refresh token without sending the user back through login. */
+export async function refreshCommonSession(refreshToken: string): Promise<RefreshedCommonSession> {
+  if (!refreshToken || refreshToken.length > 2048) throw new Error('Invalid ZenVentora refresh token.')
+  const { url, key } = commonAuthConfig()
+  const response = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST',
+    headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  })
+  if (!response.ok) throw new Error('Your ZenVentora session has expired. Please sign in again.')
+  const payload = await response.json() as Partial<RefreshedCommonSession>
+  if (!payload.access_token || !payload.refresh_token) throw new Error('ZenVentora did not return a refreshed session.')
+  return {
+    access_token: payload.access_token,
+    refresh_token: payload.refresh_token,
+    expires_in: Number(payload.expires_in) > 0 ? Number(payload.expires_in) : 3600,
+  }
+}
+
 export async function revokeCommonSession(accessToken: string): Promise<void> {
   if (!accessToken) return
   const { url, key } = commonAuthConfig()
