@@ -108,3 +108,50 @@ export async function resolveEmenuUser(commonUser: CommonAuthUser, options: { al
 
   return emenuUser
 }
+
+export interface CommonSignupResult {
+  access_token?: string
+  user?: CommonAuthUser & { identities?: unknown[] }
+  [key: string]: unknown
+}
+
+/** Create the canonical identity from EMenu's product-branded signup form. */
+export async function signUpCommonIdentity(input: {
+  name: string
+  email: string
+  phone: string
+  password: string
+  origin: string
+}): Promise<CommonSignupResult> {
+  const { url, key } = commonAuthConfig()
+  const allowedOrigins = new Set([
+    'https://emenu.zenventora.in',
+    'https://emenu-x75b.onrender.com',
+  ])
+  const origin = allowedOrigins.has(input.origin) ? input.origin : 'https://emenu.zenventora.in'
+  const callback = new URL('https://accounts.zenventora.in/')
+  callback.searchParams.set('returnTo', origin)
+  callback.searchParams.set('product', 'emenu')
+  callback.searchParams.set('productFlow', 'signup')
+
+  const response = await fetch(`${url}/auth/v1/signup?redirect_to=${encodeURIComponent(callback.toString())}`, {
+    method: 'POST',
+    headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: input.email.trim().toLowerCase(),
+      password: input.password,
+      data: {
+        full_name: input.name.trim(),
+        phone_number: input.phone.trim(),
+      },
+    }),
+  })
+  const payload = await response.json() as CommonSignupResult & { msg?: string; message?: string }
+  if (!response.ok) {
+    throw new Error(payload.msg || payload.message || 'Could not create your ZenVentora account.')
+  }
+  if (payload.user && Array.isArray(payload.user.identities) && payload.user.identities.length === 0) {
+    throw new Error('An account with this email may already exist. Please use ZenVentora Sign in.')
+  }
+  return payload
+}
