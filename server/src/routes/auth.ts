@@ -6,7 +6,7 @@ import prisma from '../lib/prisma'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt'
 import { sendOTPEmail } from '../lib/mailer'
 import { requireAuth, AuthRequest } from '../middleware/auth'
-import { refreshCommonSession, resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken } from '../lib/common-auth'
+import { CommonAuthUser, refreshCommonSession, resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken } from '../lib/common-auth'
 
 const router = Router()
 
