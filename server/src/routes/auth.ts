@@ -6,7 +6,7 @@ import prisma from '../lib/prisma'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt'
 import { sendOTPEmail } from '../lib/mailer'
 import { requireAuth, AuthRequest } from '../middleware/auth'
-import { CommonAuthUser, refreshCommonSession, resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken } from '../lib/common-auth'
+import { CommonAuthUser, refreshCommonSession, resolveEmenuUser, revokeCommonSession, signUpCommonIdentity, verifyCommonAccessToken, verifyCommonSignupOtp } from '../lib/common-auth'
 
 const router = Router()
 
@@ -213,6 +213,26 @@ router.post('/signup', authLimiter, async (req: Request, res: Response): Promise
     const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
     const status = message.includes('already exist') ? 409 : 400
     res.status(status).json({ message })
+  }
+})
+
+// ─── POST /api/auth/verify-signup ─────────────────────────────────────────────
+router.post('/verify-signup', authLimiter, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const token = String(req.body?.token || '').trim()
+    if (!email || !/^\\d{6,8}$/.test(token)) {
+      res.status(400).json({ message: 'Enter the verification code from your email.' })
+      return
+    }
+    const session = await verifyCommonSignupOtp(email, token)
+    const commonUser = await verifyCommonAccessToken(session.access_token)
+    const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: true })
+    setCommonAuthCookies(res, session.access_token, session.refresh_token, session.expires_in)
+    res.setHeader('Cache-Control', 'no-store')
+    res.json({ message: 'Email verified. Your eMenu account is ready.', user: commonUserResponse(emenuUser, commonUser) })
+  } catch (err) {
+    res.status(400).json({ message: err instanceof Error ? err.message : 'Email verification failed.' })
   }
 })
 
