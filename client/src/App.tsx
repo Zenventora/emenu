@@ -47,6 +47,7 @@ export default function App() {
       {/* Auth — redirect to dashboard if already logged in */}
       <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
       <Route path="/signup" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
+      <Route path="/signup.html" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
