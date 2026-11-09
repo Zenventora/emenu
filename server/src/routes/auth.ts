@@ -156,6 +156,20 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
   }
 })
 
+// ─── GET /api/auth/public-config ──────────────────────────────────────────────
+// Exposes only the public Supabase project URL and publishable/anon key so product
+// pages can launch OAuth directly without sending users through the Accounts UI.
+router.get('/public-config', (_req: Request, res: Response): void => {
+  const url = process.env.COMMON_SUPABASE_URL?.replace(/\\/$/, '')
+  const key = process.env.COMMON_SUPABASE_PUBLISHABLE_KEY
+  if (!url || !key) {
+    res.status(503).json({ message: 'Google sign-in is not configured.' })
+    return
+  }
+  res.setHeader('Cache-Control', 'public, max-age=300')
+  res.json({ url, key })
+})
+
 // ─── POST /api/auth/signup ────────────────────────────────────────────────────
 // EMenu owns the product signup experience; credentials are created in Common Accounts.
 router.post('/signup', authLimiter, async (req: Request, res: Response): Promise<void> => {
