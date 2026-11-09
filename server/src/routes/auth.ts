@@ -160,7 +160,7 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
 // Exposes only the public Supabase project URL and publishable/anon key so product
 // pages can launch OAuth directly without sending users through the Accounts UI.
 router.get('/public-config', (_req: Request, res: Response): void => {
-  const url = process.env.COMMON_SUPABASE_URL?.replace(/\\/$/, '')
+  const url = process.env.COMMON_SUPABASE_URL?.replace(/\/$/, '')
   const key = process.env.COMMON_SUPABASE_PUBLISHABLE_KEY
   if (!url || !key) {
     res.status(503).json({ message: 'Google sign-in is not configured.' })
