@@ -45,6 +45,12 @@ app.use(express.json({ limit: '25mb' }))   // allow up to 15MB source images aft
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
+// Product-local signup URL serves the SPA signup screen; do not redirect to Accounts UI.
+app.get('/signup.html', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+  res.sendFile(path.join(process.env.NODE_ENV === 'production' ? path.join(__dirname, '../') : path.join(__dirname, '../../'), 'app.html'))
+})
+
 // ─── Static: serve app.html ──────────────────────────────────────────────────
 // Local dev  (ts-node): __dirname = server/src  → ../../ = Emenu/
 // Production (Docker):  __dirname = dist/       → ../   = /app  (app.html copied here)
