@@ -182,3 +182,18 @@ export async function signUpCommonIdentity(input: {
   }
   return payload
 }
+
+/** Verify the email OTP issued by the Common Accounts project. */
+export async function verifyCommonSignupOtp(email: string, token: string): Promise<RefreshedCommonSession> {
+  const { url, key } = commonAuthConfig()
+  const response = await fetch(`${url}/auth/v1/verify`, {
+    method: 'POST',
+    headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'signup', email: email.trim().toLowerCase(), token: token.trim() }),
+  })
+  const payload = await response.json() as Partial<RefreshedCommonSession> & { msg?: string; message?: string }
+  if (!response.ok || !payload.access_token || !payload.refresh_token) {
+    throw new Error(payload.msg || payload.message || 'Invalid or expired verification code. Please try again.')
+  }
+  return { access_token: payload.access_token, refresh_token: payload.refresh_token, expires_in: Number(payload.expires_in) > 0 ? Number(payload.expires_in) : 3600 }
+}
