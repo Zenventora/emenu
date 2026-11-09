@@ -1753,9 +1753,9 @@ async function init(){
   }
 
   S._qrMenuData=null;
-  // Get Started Free is a product-level CTA: show EMenu's own signup screen.
+  // Product-local /signup.html and legacy ?signup=true both open EMenu's own signup screen.
   // Keep the explicit Sign In entry point routed to Common ZenVentora Accounts.
-  var requestedSignup = new URLSearchParams(window.location.search).get('signup') === 'true';
+  var requestedSignup = window.location.pathname.replace(/\\/+$/, '').endsWith('/signup.html') || new URLSearchParams(window.location.search).get('signup') === 'true';
   if (requestedSignup) {
     try {
       // This is an optional session probe: a missing/expired EMenu session must show
@@ -1788,10 +1788,8 @@ async function init(){
     show(biz&&biz.name?'s-dashboard':'s-onboard');
   } catch(e) {
     if(e && e.status===401) {
-      // The public EMenu landing page uses ?signup=true for its Get Started CTA.
-      // Preserve that intent and open the product-aware Common Accounts signup
-      // flow; normal visits and explicit sign-in actions continue to use sign-in.
-      var requestedSignup = new URLSearchParams(window.location.search).get('signup') === 'true';
+      // If a non-signup page has no valid session, send the user to Common Accounts sign-in.
+      var requestedSignup = window.location.pathname.replace(/\\/+$/, '').endsWith('/signup.html') || new URLSearchParams(window.location.search).get('signup') === 'true';
       openCommonAccount(requestedSignup ? 'signup' : 'signin');
       return;
     }
