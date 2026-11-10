@@ -156,7 +156,7 @@ export async function signUpCommonIdentity(input: {
     'https://emenu-x75b.onrender.com',
   ])
   const origin = allowedOrigins.has(input.origin) ? input.origin : 'https://emenu.zenventora.in'
-  const callback = new URL('https://accounts.zenventora.in/')
+  const callback = new URL('https://accounts.zenventora.in/signup')
   callback.searchParams.set('returnTo', origin)
   callback.searchParams.set('product', 'emenu')
   callback.searchParams.set('productFlow', 'signup')
