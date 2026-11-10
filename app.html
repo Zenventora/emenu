@@ -1270,7 +1270,7 @@ function openCommonGoogleSignup() {
 function showEmenuSignup() {
   // EMenu signup is a product-branded entry on the ZenVentora main site.
   // Account creation is still handled by the Common Accounts/EMenu auth API.
-  var url = new URL('https://zenventora.in/eMenu/signup.html');
+  var url = new URL('https://zenventora.in/emenu/signup.html');
   url.searchParams.set('product', 'emenu');
   url.searchParams.set('returnTo', EMENU_ORIGIN);
   window.location.assign(url.toString());
