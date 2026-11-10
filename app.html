@@ -1320,6 +1320,19 @@ async function verifyEmenuSignup() {
     toast(e.message||'Email verification failed.','error');
   }
 }
+function showBootError(message, actionLabel, actionHandler) {
+  var spinner=document.getElementById('boot-spinner');
+  var label=document.getElementById('boot-message');
+  var retry=document.getElementById('boot-retry');
+  if(spinner) spinner.style.display='none';
+  if(label) label.textContent=message;
+  if(retry) {
+    retry.textContent=actionLabel||'Try again';
+    retry.onclick=typeof actionHandler==='function'?actionHandler:function(){init();};
+    retry.style.display='inline-flex';
+  }
+  show('s-boot');
+}
 async function bootstrapAuthenticatedProduct() {
   var response=await api('GET','/business/me',null,false,false);
   var business=response.business||null;
