@@ -1242,7 +1242,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 // GOOGLE SIGN-IN CONFIG
 // ─────────────────────────────────────────
 // Paste your Google Client ID here (see setup steps below)
-var GOOGLE_CLIENT_ID = '147155455700-8tb2ova0g6i9cfrjlsvgjcqheqr2vbse.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = ''; // Google authentication is handled by ZenVentora Accounts.
 
 /* COMMON ZENVENTORA IDENTITY */
 var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in';
@@ -1667,7 +1667,7 @@ var TEMPLATES = [
 // ROUTING
 // ─────────────────────────────────────────
 function show(id){
-  if(id==='s-signup'){ showEmenuSignup(); return; }
+  if(id==='s-login'){ openCommonAccount('signin'); return; }\n  if(id==='s-signup'){ showEmenuSignup(); return; }
   document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
   var el=document.getElementById(id);
   if(el) el.classList.add('active');
