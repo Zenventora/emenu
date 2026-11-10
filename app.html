@@ -570,50 +570,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
   </div>
 </div>
 
-<div id="s-signup" class="screen">
-  <div class="auth-wrap">
-    <div class="auth-left">
-      <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
-      <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
-        <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
-      </div>
-      <h2>Create your digital menu today</h2>
-      <p>Join thousands of restaurants and cafes using E-Menu to go digital in under 5 minutes.</p>
-      <div class="auth-features">
-        <div class="af-item"><div class="af-icon">✅</div>Free forever plan available</div>
-        <div class="af-item"><div class="af-icon">⏱️</div>Live in under 5 minutes</div>
-        <div class="af-item"><div class="af-icon">🔄</div>Update menu without new QR</div>
-        <div class="af-item"><div class="af-icon">🎙️</div>Voice-powered menu entry</div>
-      </div>
-    </div>
-    <div class="auth-right">
-      <div class="auth-form-box">
-        <h1>Create account</h1>
-        <p class="auth-sub">Already have a ZenVentora account? <a class="alink" onclick="openCommonAccount('signin')">Sign in</a></p>
-        <div class="row2">
-          <div class="ig"><label>Full Name *</label><input type="text" id="su-name" placeholder="Mohan Kumar"/></div>
-          <div class="ig"><label>Phone *</label><input type="tel" id="su-phone" placeholder="+91 98765 43210"/></div>
-        </div>
-        <div class="ig"><label>Email address *</label><input type="email" id="su-email" placeholder="you@example.com"/></div>
-        <div class="ig">
-          <label>Password *</label>
-          <div class="pw-wrap"><input type="password" id="su-pass" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/><button class="pw-eye" onclick="togglePwd('su-pass',this)">👁️</button></div>
-          <div class="ps-bars"><div class="ps-bar" id="pb1"></div><div class="ps-bar" id="pb2"></div><div class="ps-bar" id="pb3"></div><div class="ps-bar" id="pb4"></div></div>
-        </div>
-        <div class="ig">
-          <label>Confirm Password *</label>
-          <div class="pw-wrap"><input type="password" id="su-pass2" placeholder="Repeat password"/><button class="pw-eye" onclick="togglePwd('su-pass2',this)">👁️</button></div>
-        </div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()" style="margin-top:6px">Create Free Account →</button>
-        <div class="g-divider">or</div>
-        <div id="g-btn-signup" style="display:flex;justify-content:center;min-height:44px"></div>
-        <p style="text-align:center;margin-top:12px;font-size:.76rem;color:#9ca3af;line-height:1.6">By signing up you agree to our Terms of Service and Privacy Policy.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ═══════════════════════════════════════
      FORGOT PASSWORD
 ════════════════════════════════════════ -->
@@ -1447,45 +1403,6 @@ async function clearCommonAccountSignoutFlag() {
 // Paste your Google Client ID here (see setup steps below)
 var GOOGLE_CLIENT_ID = ''; // Google sign-in is handled by ZenVentora Accounts.
 
-function initGoogleSignIn(){
-  if(!GOOGLE_CLIENT_ID||!window.google) return;
-  try{
-    // Redirect mode: no popup — Google navigates the page, then POSTs credential
-    // to our server /api/auth/google/redirect. Server sets cookies and redirects back.
-    // This avoids all cross-origin iframe popup issues in Chrome.
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      ux_mode: 'redirect',
-      login_uri: window.location.origin + '/api/auth/google/redirect',
-      auto_select: false
-    });
-    var opts={type:'standard',theme:'outline',size:'large',width:320};
-    var btnL=document.getElementById('g-btn-login');
-    var btnS=document.getElementById('g-btn-signup');
-    if(btnL) google.accounts.id.renderButton(btnL, Object.assign({},opts,{text:'continue_with'}));
-    if(btnS) google.accounts.id.renderButton(btnS, Object.assign({},opts,{text:'signup_with'}));
-  }catch(e){ console.warn('Google Sign-In init failed:',e); }
-}
-
-function handleGoogleCredential(response){
-  // Remove overlay if open
-  var overlay=document.getElementById('g-overlay'); if(overlay) overlay.remove();
-  // Send the raw credential to backend — server verifies signature, never trust client decode
-  doGoogleAuth(response.credential);
-}
-
-async function doGoogleAuth(credential){
-  try {
-    var r=await api('POST','/auth/google',{credential});
-    S.user=r.user;
-    var bizRes=await api('GET','/business/me');
-    var biz=bizRes.business, menu=biz&&biz.menus&&biz.menus[0]?biz.menus[0]:null;
-    syncFromAPI(biz,menu);
-    toast('Welcome, '+S.user.name.split(' ')[0]+'! 👋');
-    show(biz&&biz.name?'s-dashboard':'s-onboard');
-  } catch(e){ toast('Google sign-in failed: '+(e.message||'Try again'),'error'); }
-}
-
 // ─────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────
@@ -2096,6 +2013,6 @@ async function doLogout(){
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init, {once:true});
 else init();
 </script>
-<script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleSignIn()"></script>
+
 </body>
 </html>
