@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>E-Menu — Digital Menu Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleSignIn()"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--blue:#0f3b68;--teal:#0ea5a4;--teal-d:#0b8786;--grad:linear-gradient(135deg,#0ea5a4,#0f3b68);--grad-h:linear-gradient(160deg,#0ea5a4 0%,#0a2f56 60%,#0f3b68 100%)}
@@ -12,12 +13,6 @@ html{scroll-behavior:smooth}
 body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-smoothing:antialiased}
 .screen{display:none}
 .screen.active{display:block}
-
-/* Keep the app on a neutral loading screen while auth/public menu data resolves. */
-.boot-stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;color:#475569;font-family:'Inter',sans-serif;background:#f8fafc}
-.boot-spinner{width:42px;height:42px;border:4px solid #dbeafe;border-top-color:#0ea5a4;border-radius:50%;animation:bootSpin .8s linear infinite}
-@keyframes bootSpin{to{transform:rotate(360deg)}}
-.boot-message{font-size:.95rem;font-weight:600;line-height:1.5}
 
 /* TOAST */
 #toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
@@ -383,12 +378,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 ══════════════════════════════════════ */
 .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;z-index:200;padding:4px 0 env(safe-area-inset-bottom,0)}
 .mob-nav-inner{display:flex;justify-content:space-around;align-items:center}
-.mob-nav-btn{display:flex;flex:1;flex-direction:column;align-items:center;gap:2px;padding:6px 5px;background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.6rem;font-weight:600;font-family:inherit;min-width:0}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.6rem;font-weight:600;font-family:inherit;min-width:56px}
 .mob-nav-btn svg{width:20px;height:20px;stroke:#9ca3af;transition:stroke .15s}
 .mob-nav-btn.active{color:var(--teal)}
 .mob-nav-btn.active svg{stroke:var(--teal)}
-.mob-nav-btn:disabled{opacity:.42;cursor:not-allowed}
-.mob-nav-btn:disabled svg{stroke:#9ca3af}
 .mob-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:#374151}
 .mob-menu-btn svg{width:22px;height:22px}
 
@@ -494,31 +487,8 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
   .ob-footer{padding:10px 12px}
   .btn-lg{padding:12px 20px;font-size:.88rem}
   .modal-box{padding:20px 16px}
-  .mob-nav-btn{min-width:0;padding:6px 3px}
+  .mob-nav-btn{min-width:44px;padding:6px 8px}
 }
-
-/* Common ZenVentora identity card in the EMenu dashboard */
-.emenu-profile-wrap{position:relative}
-.emenu-profile-trigger{display:flex;align-items:center;gap:9px;min-height:40px;max-width:320px;padding:4px 11px 4px 5px;border:1px solid #dbe6f3;border-radius:999px;background:#fff;color:#102033;cursor:pointer;font:inherit;text-align:left;transition:.18s}
-.emenu-profile-trigger:hover,.emenu-profile-trigger[aria-expanded=true]{border-color:#8bbfc0;box-shadow:0 5px 18px rgba(15,59,104,.08)}
-.emenu-profile-avatar{width:32px;height:32px;flex:none;border-radius:50%;object-fit:cover}
-.emenu-profile-initials{display:inline-grid;place-items:center;background:linear-gradient(135deg,#0f3b68,#0ea5a4);color:#fff;font-size:11px;font-weight:800}
-.emenu-profile-label{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:180px}
-.emenu-profile-label strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.emenu-profile-label small{font-size:9px;color:#718397;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.emenu-profile-chevron{width:7px;height:7px;border-right:2px solid #72849a;border-bottom:2px solid #72849a;transform:rotate(45deg);margin:0 2px 4px 4px;flex:none}
-.emenu-profile-menu{position:absolute;right:0;top:calc(100% + 10px);z-index:1000;width:min(290px,calc(100vw - 30px));padding:12px;background:#fff;border:1px solid #e2eaf0;border-radius:14px;box-shadow:0 18px 48px rgba(11,36,64,.16)}
-.emenu-profile-menu[hidden]{display:none}
-.emenu-profile-menu-head{display:flex;align-items:center;gap:10px;padding:6px 5px 13px;border-bottom:1px solid #edf1f5;margin-bottom:5px;min-width:0}
-.emenu-profile-menu-head>span:last-child{display:flex;flex-direction:column;gap:3px;min-width:0}
-.emenu-profile-menu-head strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.emenu-profile-menu-head small{font-size:10px;color:#718397;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.emenu-profile-menu>button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 9px;border:0;border-radius:8px;background:#fff;color:#334b63;text-align:left;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
-.emenu-profile-menu>button:hover{background:#f3f8fa;color:#087f83}
-.emenu-profile-menu>button.emenu-profile-signout{color:#b42318}
-@media(max-width:760px){.emenu-profile-label{max-width:120px}.emenu-profile-trigger{gap:6px}.emenu-profile-trigger .emenu-profile-avatar{width:29px;height:29px}}
-@media(max-width:480px){.emenu-profile-label small{display:none}.emenu-profile-label{max-width:100px}}
-
 </style>
 </head>
 <body>
@@ -532,15 +502,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 <!-- ═══════════════════════════════════════
      LOGIN
 ════════════════════════════════════════ -->
-<div id="s-boot" class="screen active" aria-live="polite">
-  <div class="boot-stage">
-    <div id="boot-spinner" class="boot-spinner" aria-hidden="true"></div>
-    <div id="boot-message" class="boot-message">Loading E-Menu…</div>
-    <button id="boot-retry" class="btn btn-primary" style="display:none;margin-top:8px" onclick="init()">Try again</button>
-  </div>
-</div>
-
-<div id="s-login" class="screen">
+<div id="s-login" class="screen active">
   <div class="auth-wrap">
     <div class="auth-left">
       <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
@@ -548,67 +510,76 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
         <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
       </div>
-      <h2>Your menu, one ZenVentora ID.</h2>
-      <p>Sign in securely with your ZenVentora account to manage your digital menu, business profile and QR code.</p>
+      <h2>Welcome back to E-Menu</h2>
+      <p>Manage your digital menu, update prices in real-time, and track customer engagement.</p>
       <div class="auth-features">
-        <div class="af-item"><div class="af-icon">🔐</div>One secure account across ZenVentora</div>
-        <div class="af-item"><div class="af-icon">📱</div>Your permanent menu QR code</div>
         <div class="af-item"><div class="af-icon">⚡</div>Real-time menu updates</div>
+        <div class="af-item"><div class="af-icon">📱</div>Permanent QR code</div>
+        <div class="af-item"><div class="af-icon">🎙️</div>Voice menu input</div>
+        <div class="af-item"><div class="af-icon">🆓</div>Free forever plan</div>
       </div>
     </div>
     <div class="auth-right">
       <div class="auth-form-box">
-        <h1>Continue to E-Menu</h1>
-        <p class="auth-sub">Sign in with your common ZenVentora account to manage E-Menu.</p>
-        <button class="btn btn-primary btn-full btn-lg" onclick="openCommonAccount('signin')">Continue with ZenVentora Account →</button>
+        <h1>Sign in</h1>
+        <p class="auth-sub">No account? <a class="alink" onclick="show('s-signup')">Sign up free →</a></p>
+        <div class="ig"><label>Email address</label><input type="email" id="li-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <div class="ig">
+          <label>Password</label>
+          <div class="pw-wrap"><input type="password" id="li-pass" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/><button class="pw-eye" onclick="togglePwd('li-pass',this)">👁️</button></div>
+        </div>
+        <div style="text-align:right;margin-top:-8px;margin-bottom:20px"><a class="alink" style="font-size:.82rem" onclick="show('s-forgot')">Forgot password?</a></div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">Sign In →</button>
         <div class="g-divider">or</div>
-        <button class="btn btn-outline btn-full btn-lg" onclick="openCommonAccount('signup')">Create an E-Menu account</button>
-        <p style="text-align:center;margin-top:20px;font-size:.82rem;color:#718096">Forgot your password? <a class="alink" onclick="openCommonAccount('forgot')">Reset it in Accounts</a></p>
-        <p style="text-align:center;margin-top:18px;font-size:.78rem;color:#9ca3af">Your E-Menu business, menus, products and QR codes remain in E-Menu.</p>
+        <div id="g-btn-login" style="display:flex;justify-content:center;min-height:44px"></div>
+        <p style="text-align:center;margin-top:16px;font-size:.82rem;color:#9ca3af">New here? <a class="alink" onclick="show('s-signup')">Create a free account</a></p>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════
-     SIGN UP — COMMON ZENVENTORA IDENTITY
+     SIGNUP
 ════════════════════════════════════════ -->
 <div id="s-signup" class="screen">
   <div class="auth-wrap">
     <div class="auth-left">
+      <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
       <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
         <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
       </div>
-      <h2>Start with one ZenVentora ID.</h2>
-      <p>Create your account here. Your identity is created in ZenVentora Accounts, then you return to E-Menu to complete your setup.</p>
+      <h2>Create your digital menu today</h2>
+      <p>Join thousands of restaurants and cafes using E-Menu to go digital in under 5 minutes.</p>
       <div class="auth-features">
-        <div class="af-item"><div class="af-icon">🔐</div>One secure account across ZenVentora</div>
-        <div class="af-item"><div class="af-icon">📱</div>Continue directly into E-Menu setup</div>
-        <div class="af-item"><div class="af-icon">⚡</div>Google or email signup</div>
+        <div class="af-item"><div class="af-icon">✅</div>Free forever plan available</div>
+        <div class="af-item"><div class="af-icon">⏱️</div>Live in under 5 minutes</div>
+        <div class="af-item"><div class="af-icon">🔄</div>Update menu without new QR</div>
+        <div class="af-item"><div class="af-icon">🎙️</div>Voice-powered menu entry</div>
       </div>
     </div>
     <div class="auth-right">
-      <div class="auth-form-box" id="emenu-signup-form">
-        <h1>Create your E-Menu account</h1>
-        <p class="auth-sub">Your account is created in ZenVentora Accounts. E-Menu will be connected automatically after verification.</p>
-        <button class="g-btn" onclick="openCommonGoogleSignup()">Continue with Google</button>
-        <div class="g-divider">or sign up with email</div>
-        <div class="ig"><label>Full name</label><input id="su-name" autocomplete="name" placeholder="Your full name"/></div>
-        <div class="ig"><label>Phone number</label><input id="su-phone" type="tel" autocomplete="tel" placeholder="+91"/></div>
-        <div class="ig"><label>Email address</label><input id="su-email" type="email" autocomplete="email" placeholder="you@example.com"/></div>
-        <div class="ig"><label>Password</label><div class="pw-wrap"><input id="su-password" type="password" autocomplete="new-password" placeholder="At least 8 characters"/><button class="pw-eye" type="button" onclick="togglePwd('su-password',this)">👁️</button></div></div>
-        <div class="ig"><label>Confirm password</label><div class="pw-wrap"><input id="su-confirm" type="password" autocomplete="new-password" placeholder="Repeat your password"/><button class="pw-eye" type="button" onclick="togglePwd('su-confirm',this)">👁️</button></div></div>
-        <button class="btn btn-primary btn-full btn-lg" id="su-submit" onclick="submitEmenuSignup()">Create account →</button>
-        <p style="text-align:center;margin-top:18px;font-size:.82rem">Already have an account? <a class="alink" onclick="openCommonAccount('signin')">Sign in</a></p>
-      </div>
-      <div class="auth-form-box" id="emenu-signup-verify" style="display:none">
-        <h1>Verify your email</h1>
-        <p class="auth-sub">We created your ZenVentora identity. Enter the verification code sent to your email to activate E-Menu.</p>
-        <div class="ig"><label>Email address</label><input id="su-verify-email" type="email" readonly/></div>
-        <div class="otp-row" id="su-otp-inputs"></div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="verifyEmenuSignup()">Verify and continue →</button>
-        <p style="text-align:center;margin-top:18px;font-size:.82rem"><a class="alink" onclick="openCommonAccount('signin')">Already verified? Sign in</a></p>
+      <div class="auth-form-box">
+        <h1>Create account</h1>
+        <p class="auth-sub">Already have one? <a class="alink" onclick="show('s-login')">Sign in</a></p>
+        <div class="row2">
+          <div class="ig"><label>Full Name *</label><input type="text" id="su-name" placeholder="Mohan Kumar"/></div>
+          <div class="ig"><label>Phone *</label><input type="tel" id="su-phone" placeholder="+91 98765 43210"/></div>
+        </div>
+        <div class="ig"><label>Email address *</label><input type="email" id="su-email" placeholder="you@example.com"/></div>
+        <div class="ig">
+          <label>Password *</label>
+          <div class="pw-wrap"><input type="password" id="su-pass" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/><button class="pw-eye" onclick="togglePwd('su-pass',this)">👁️</button></div>
+          <div class="ps-bars"><div class="ps-bar" id="pb1"></div><div class="ps-bar" id="pb2"></div><div class="ps-bar" id="pb3"></div><div class="ps-bar" id="pb4"></div></div>
+        </div>
+        <div class="ig">
+          <label>Confirm Password *</label>
+          <div class="pw-wrap"><input type="password" id="su-pass2" placeholder="Repeat password"/><button class="pw-eye" onclick="togglePwd('su-pass2',this)">👁️</button></div>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()" style="margin-top:6px">Create Free Account →</button>
+        <div class="g-divider">or</div>
+        <div id="g-btn-signup" style="display:flex;justify-content:center;min-height:44px"></div>
+        <p style="text-align:center;margin-top:12px;font-size:.76rem;color:#9ca3af;line-height:1.6">By signing up you agree to our Terms of Service and Privacy Policy.</p>
       </div>
     </div>
   </div>
@@ -861,19 +832,19 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
       </div>
       <nav class="sb-nav">
         <div class="nav-label">Menu</div>
-        <button class="nav-item active" id="nav-editor" onclick="tab('editor',this)">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 4 1-4 9.5-9.5z"/></svg>
-          Menu Editor
-        </button>
-        <button class="nav-item" id="nav-overview" onclick="tab('overview',this)">
+        <button class="nav-item" onclick="tab('overview',this)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Overview
         </button>
-        <button class="nav-item" id="nav-templates" onclick="tab('templates',this)">
+        <button class="nav-item active" onclick="tab('editor',this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Menu Editor
+        </button>
+        <button class="nav-item" onclick="tab('templates',this)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
           Templates
         </button>
-        <button class="nav-item" id="nav-qr" onclick="tab('qr',this)">
+        <button class="nav-item" onclick="tab('qr',this)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="17" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/></svg>
           QR Code
         </button>
@@ -899,8 +870,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <h1 id="dash-title">Overview</h1>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:.72rem;padding:3px 10px;border-radius:999px;font-weight:700;background:#dcfce7;color:#166534">Free Plan</span>
-          <div id="emenu-account-profile"></div>
-          <button class="btn btn-primary btn-sm" onclick="if(document.getElementById('t-editor').style.display!=='none'){openProdModal()}else{tab('editor',document.getElementById('nav-editor'))}">+ Add Item</button>
+          <button class="btn btn-primary btn-sm" onclick="if(document.getElementById('t-editor').style.display!=='none'){openProdModal()}else{tab('editor',document.querySelectorAll('.nav-item')[1])}">+ Add Item</button>
         </div>
       </div>
 
@@ -918,14 +888,14 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
               <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:4px">Your Menu</h3>
               <p id="ov-biz" style="font-size:.8rem;color:#9ca3af;margin-bottom:14px"></p>
               <div id="ov-items"></div>
-              <button class="btn btn-outline btn-sm btn-full" style="margin-top:14px" onclick="tab('editor',document.getElementById('nav-editor'))">Edit Menu →</button>
+              <button class="btn btn-outline btn-sm btn-full" style="margin-top:14px" onclick="tab('editor',document.querySelectorAll('.nav-item')[1])">Edit Menu →</button>
             </div>
             <div class="card card-p">
               <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:14px">Quick Actions</h3>
               <div style="display:flex;flex-direction:column;gap:9px">
-                <button class="btn btn-primary btn-full" onclick="tab('qr',document.getElementById('nav-qr'))">📱 View QR Code</button>
-                <button class="btn btn-outline btn-full" onclick="tab('editor',document.getElementById('nav-editor'))">✏️ Edit Menu</button>
-                <button class="btn btn-outline btn-full" onclick="tab('templates',document.getElementById('nav-templates'))">🎨 Change Template</button>
+                <button class="btn btn-primary btn-full" onclick="tab('qr',document.querySelectorAll('.nav-item')[3])">📱 View QR Code</button>
+                <button class="btn btn-outline btn-full" onclick="tab('editor',document.querySelectorAll('.nav-item')[1])">✏️ Edit Menu</button>
+                <button class="btn btn-outline btn-full" onclick="tab('templates',document.querySelectorAll('.nav-item')[2])">🎨 Change Template</button>
                 <button class="btn btn-ghost btn-full" onclick="previewMenu()">👁️ Preview Live Menu</button>
               </div>
             </div>
@@ -934,43 +904,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 
         <!-- EDITOR TAB -->
         <div id="t-editor">
-          <div class="card card-p" style="margin-bottom:18px;padding:16px 18px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-              <div>
-                <div style="font-size:.95rem;font-weight:800;color:var(--blue)">Menu Creation</div>
-                <div style="font-size:.76rem;color:#94a3b8;margin-top:3px">Choose how you want to manage your menu.</div>
-              </div>
-              <div style="display:flex;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:4px;gap:4px">
-                <button id="mode-editor-btn" class="btn btn-sm" onclick="setMenuEditorMode('EDITOR')" style="min-width:135px">✏️ Menu Editor</button>
-                <button id="mode-upload-btn" class="btn btn-sm" onclick="setMenuEditorMode('UPLOAD')" style="min-width:135px">🖼️ File Upload</button>
-              </div>
-            </div>
-          </div>
-          <div id="editor-upload-panel" style="display:none">
-            <div class="card card-p" style="max-width:760px;margin:0 auto">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px">
-                <div>
-                  <h2 style="font-size:1.15rem;font-weight:800;color:var(--blue);margin:0 0 5px">Upload Menu File</h2>
-                  <p style="font-size:.82rem;color:#6b7280;margin:0;line-height:1.5">Upload your ready-made menu image. After publishing, the same QR link will show this image.</p>
-                </div>
-                <span style="font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px;background:#f0fdfa;color:#0f766e">File Upload</span>
-              </div>
-              <div style="border:2px dashed #cbd5e1;border-radius:18px;padding:24px 18px;text-align:center;background:#f8fafc;cursor:pointer" onclick="document.getElementById('dash-menu-file').click()">
-                <div id="dash-upload-placeholder">
-                  <div style="font-size:2.4rem;margin-bottom:8px">🖼️</div>
-                  <div style="font-size:.92rem;font-weight:800;color:#374151">Choose menu images</div>
-                  <div style="font-size:.76rem;color:#9ca3af;margin-top:5px">Select multiple PNG, JPG or WebP files · up to 15MB each · maximum 20 images</div>
-                </div>
-                <div id="dash-upload-preview" style="display:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;text-align:left"></div>
-              </div>
-              <input type="file" id="dash-menu-file" accept="image/png,image/jpeg,image/webp" multiple style="display:none" onchange="handleDashboardMenuImages(this)"/>
-              <div id="dash-upload-status" style="font-size:.78rem;color:#64748b;text-align:center;margin-top:10px"></div>
-              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
-                <button class="btn btn-primary" onclick="publishUploadedMenu()">⚡ Publish & Update QR</button>
-              </div>
-            </div>
-          </div>
-          <div id="editor-structured-panel">
           <div class="editor-grid">
             <div class="cat-panel">
               <h3>Categories</h3>
@@ -980,12 +913,10 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
                 <h3 id="ed-cat-title" style="font-size:.95rem;font-weight:800;color:var(--blue)">Select a category</h3>
-                <button class="btn btn-outline btn-sm" style="margin-left:auto;margin-right:8px" onclick="openTodaysSpecialModal()">✨ Special Section</button>
                 <button class="btn btn-primary btn-sm" onclick="openProdModal()">+ Add Item</button>
               </div>
               <div id="ed-products"></div>
             </div>
-          </div>
           </div>
         </div>
 
@@ -1042,10 +973,9 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
               <h3 style="font-size:1.15rem;font-weight:800;color:var(--blue);margin-bottom:6px">Your Permanent QR Code</h3>
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:22px">This QR code never changes — even when you update your menu.</p>
               <div class="qr-frame"><img id="qr-img" src="" alt="QR Code" width="180" height="180"/></div>
-              <div style="text-align:center;margin:-10px 0 18px;font-size:12px;font-weight:700;letter-spacing:.25px;color:#64748b">Powered by <span style="color:#0f3b68">ZenVentora</span></div>
               <div class="qr-url-box" id="qr-url-txt"></div>
               <div class="qr-btns">
-                <a id="qr-dl" class="btn btn-primary" href="#" download="emenu-qr-zenventora.png" onclick="event.preventDefault();downloadBrandedQR()">⬇️ Download PNG</a>
+                <a id="qr-dl" class="btn btn-primary" download="emenu-qr.png" onclick="if(!S.data||!S.data.qr){event.preventDefault();publishAndGenQR();}">⬇️ Download PNG</a>
                 <button class="btn btn-outline" onclick="copyMenuURL()">🔗 Copy Link</button>
                 <button class="btn btn-outline" onclick="publishAndGenQR()">⚡ Generate QR</button>
                 <button class="btn btn-outline" onclick="previewMenu()">👁️ Preview</button>
@@ -1101,10 +1031,11 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <div id="t-settings" style="display:none">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
             <div class="card card-p">
-              <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:8px">ZenVentora Account</h3>
-              <p style="font-size:.78rem;color:#64748b;line-height:1.6;margin-bottom:14px">Your sign-in, email, password, profile photo and sessions are managed centrally by ZenVentora Accounts.</p>
-              <div id="settings-common-account" style="font-size:.83rem;color:#334b63;margin-bottom:14px"></div>
-              <button class="btn btn-primary btn-sm" onclick="openCommonAccount('dashboard',true)">Manage ZenVentora Account ↗</button>
+              <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:18px">Account Details</h3>
+              <div class="ig"><label>Full Name</label><input type="text" id="st-name"/></div>
+              <div class="ig"><label>Email</label><input type="email" id="st-email"/></div>
+              <div class="ig"><label>Phone</label><input type="tel" id="st-phone"/></div>
+              <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
             </div>
             <div class="card card-p">
               <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:18px">Business Details</h3>
@@ -1149,10 +1080,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3v3M21 21v.01M16 16v.01M16 21h3M11 3v3M3 11h3M11 11v3M11 8h.01M8 11h.01"/></svg>
         <span>QR</span>
       </button>
-      <button class="mob-nav-btn" id="mob-btn-today" onclick="tab('today',null);mobTab('today')">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span>Today</span>
-      </button>
       <button class="mob-nav-btn" id="mob-btn-settings" onclick="tab('settings',null);mobTab('settings')">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         <span>Settings</span>
@@ -1176,16 +1103,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 </div>
 
 <!-- MODALS -->
-<div class="modal-bg" id="ts-settings-modal">
-  <div class="modal-box" style="max-height:85vh;overflow:auto">
-    <h3>Special Section Settings</h3>
-    <div id="ts-settings-body"></div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('ts-settings-modal')">Cancel</button>
-      <button class="btn btn-primary btn-sm" id="ts-save-button" onclick="saveTodaysSpecialModal()">Save settings</button>
-    </div>
-  </div>
-</div>
 <div class="modal-bg" id="modal-prod">
   <div class="modal-box">
     <h3 id="mp-title">Add Menu Item</h3>
@@ -1217,9 +1134,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
     <div id="mp-more" style="display:none">
       <div class="row2">
         <div class="ig"><label>Type</label><select id="mp-veg"><option value="">Not specified</option><option value="veg">Vegetarian 🟢</option><option value="nonveg">Non-Veg 🔴</option></select></div>
-        <div class="ig"><label>Highlight Badge</label><select id="mp-tag" onchange="toggleCustomProductBadge()"><option value="">None</option><option value="Signature">⭐ Signature</option><option value="New">✨ New</option><option value="Offer">🔥 Offer</option><option value="Special">💎 Special</option><option value="Chef's Choice">👨‍🍳 Chef's Choice</option><option value="__custom__">Custom label…</option><option value="bestseller">⭐ Bestseller (legacy)</option><option value="special">🔥 Special (legacy)</option><option value="new">✨ New (legacy)</option></select></div>
-        <div class="ig" id="mp-custom-tag-wrap" style="display:none"><label>Custom label (max 24 characters)</label><input type="text" id="mp-custom-tag" maxlength="24" placeholder="e.g. Seasonal Pick"/></div>
-        <div class="ig"><label style="display:flex;align-items:center;gap:8px"><input id="mp-in-todays-special" type="checkbox" style="width:auto"/> Include in special section</label></div>
+        <div class="ig"><label>Badge</label><select id="mp-tag"><option value="">None</option><option value="bestseller">⭐ Bestseller</option><option value="special">🔥 Special</option><option value="new">✨ New</option></select></div>
       </div>
       <div class="ig">
         <label style="display:flex;align-items:center;gap:6px">
@@ -1314,6 +1229,11 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 
 <script>
 // ─────────────────────────────────────────
+// GOOGLE SIGN-IN CONFIG
+// ─────────────────────────────────────────
+// Paste your Google Client ID here (see setup steps below)
+var GOOGLE_CLIENT_ID = '147155455700-8tb2ova0g6i9cfrjlsvgjcqheqr2vbse.apps.googleusercontent.com';
+
 /* COMMON ZENVENTORA IDENTITY */
 var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in/';
 var EMENU_ORIGIN = window.location.origin;
@@ -1528,40 +1448,25 @@ var GOOGLE_CLIENT_ID = ''; // Google sign-in is handled by ZenVentora Accounts.
 // ─────────────────────────────────────────
 // API HELPER — all calls go to the same-origin Express server
 // ─────────────────────────────────────────
-async function api(method, path, body, _retry, _skipAuthRefresh) {
-  var opts = { method: method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
+async function api(method, path, body, _retry) {
+  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
   var res = await fetch('/api' + path, opts);
   // Auth endpoints return 401 for wrong credentials — never for expired tokens.
   // Skip the refresh logic for these paths so the real error message reaches the caller.
-  var skipRefreshPaths = ['/auth/login','/auth/signup','/auth/common/session','/auth/session/clear','/auth/forgot-password','/auth/reset-password','/auth/google'];
+  var skipRefreshPaths = ['/auth/login','/auth/signup','/auth/forgot-password','/auth/reset-password','/auth/google'];
   var isAuthPath = skipRefreshPaths.some(function(p){ return path.startsWith(p); });
-  var isPublicPath = path.startsWith('/public/');
   // Auto-refresh token on 401, then retry once (protected routes only)
-  if (res.status === 401 && !_retry && !_skipAuthRefresh && !isAuthPath && !isPublicPath) {
-    var rf;
+  if (res.status === 401 && !_retry && !isAuthPath) {
     try {
-      rf = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin', cache: 'no-store' });
-    } catch(refreshNetworkError) {
-      var networkError = new Error('Could not verify your session. Check your connection and retry.');
-      networkError.status = 0;
-      throw networkError;
-    }
-    if (rf.ok) return api(method, path, body, true);
-    // Only end the session when the server explicitly confirms the refresh token is invalid.
-    // A transient API/database error must not make the app look as if the user logged out.
-    if (rf.status !== 401) {
-      var refreshError = new Error('Unable to restore your session right now. Please retry.');
-      refreshError.status = rf.status;
-      throw refreshError;
-    }
-    if(S.initialized && S.user) toast('ZenVentora session expired — reconnecting securely', 'info');
+      var rf = await fetch('/api/auth/refresh', { method: 'POST' });
+      if (rf.ok) return api(method, path, body, true);
+    } catch(e) {}
+    // Refresh failed — only show toast if user was actually logged in this session
+    if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
-    // Common Accounts owns the refresh token. Return there to refresh the canonical session.
-    openCommonAccount('signin');
-    var expiredError = new Error('Session expired');
-    expiredError.status = 401;
-    throw expiredError;
+    show('s-login');
+    throw new Error('Session expired');
   }
   var json; try { json = await res.json(); } catch(e) { json = {}; }
   var err = new Error(json.message || 'Request failed ('+res.status+')');
@@ -1629,8 +1534,6 @@ function syncFromAPI(biz, menu) {
             desc:  p.description || '',
             veg:   p.isVeg===true?'veg': p.isVeg===false?'nonveg':'',
             tag:   p.isBestseller?'bestseller': p.isSpecial?'special': (p.tags&&p.tags[0])||'',
-            highlightLabel: p.highlightLabel || '',
-            inTodaysSpecial: !!(menu && menu.todaysSpecialProductIds && menu.todaysSpecialProductIds.includes(p.id)),
             avail: p.isAvailable !== false,
             availDays: p.availableDays || [],
             disabledDate: p.disabledDate || null,
@@ -1642,10 +1545,6 @@ function syncFromAPI(biz, menu) {
     tmpl: menu ? parseInt(menu.templateId||'0') : 0,
     menuMode: menu ? String(menu.menuMode||'EDITOR').toUpperCase() : 'EDITOR',
     uploadedMenuImage: menu ? (menu.uploadedMenuImage || '') : '',
-    uploadedMenuImages: menu ? (Array.isArray(menu.uploadedMenuImages) && menu.uploadedMenuImages.length ? menu.uploadedMenuImages : (menu.uploadedMenuImage ? [menu.uploadedMenuImage] : [])) : [],
-    todaysSpecialEnabled: !!(menu && menu.todaysSpecialEnabled),
-    todaysSpecialTitle: menu && menu.todaysSpecialTitle || "Today's Special",
-    todaysSpecialProductIds: menu && menu.todaysSpecialProductIds || [],
     pub:  menu ? menu.isPublished : false,
     slug: biz.slug || '',
     qr:   menu && menu.qrCode ? menu.qrCode : null
@@ -1696,10 +1595,9 @@ async function saveMenuUpload(){
   if(!S.menuUploadImage){throw new Error('Please upload your menu image');}
   var r=await api('POST','/menu/'+S.menuId+'/upload-image',{imageBase64:S.menuUploadImage});
   if(S.data){
+    S.data.menuMode='UPLOAD';
     S.data.uploadedMenuImage=r.imageUrl||S.menuUploadImage;
   }
-  await api('PATCH','/menu/'+S.menuId+'/mode',{mode:'UPLOAD'});
-  if(S.data) S.data.menuMode='UPLOAD';
   S.obMode='UPLOAD';
   return r;
 }
@@ -1711,7 +1609,7 @@ async function switchToEditor(){
     syncFromAPI(S.biz,m);
     toast('Menu Editor enabled ✓');
     setModeUI();
-    tab('editor',document.getElementById('nav-editor'));
+    tab('editor',document.querySelectorAll('.nav-item')[1]);
   }catch(e){toast(e.message||'Could not enable Menu Editor','error');}
 }
 
@@ -1744,23 +1642,9 @@ function show(id){
   var el=document.getElementById(id);
   if(el) el.classList.add('active');
   window.scrollTo(0,0);
-  if(id==='s-dashboard') { refreshDash(); renderEmenuAccountProfile(); renderCommonAccountSettings(); }
+  if(id==='s-dashboard') refreshDash();
   if(id==='s-onboard') initOb();
   if(id==='s-menu') renderPubMenu();
-}
-
-function showBootError(message, actionLabel, actionHandler){
-  var spinner=document.getElementById('boot-spinner');
-  var label=document.getElementById('boot-message');
-  var retry=document.getElementById('boot-retry');
-  if(spinner) spinner.style.display='none';
-  if(label) label.textContent=message;
-  if(retry) {
-    retry.textContent=actionLabel || 'Try again';
-    retry.onclick=typeof actionHandler==='function' ? actionHandler : function(){init();};
-    retry.style.display='inline-flex';
-  }
-  show('s-boot');
 }
 
 async function init(){
@@ -1862,27 +1746,6 @@ function renderPubMenu(){
     }
     return;
   }
-  var publicUploadImages=(raw&&raw.menu&&Array.isArray(raw.menu.uploadedMenuImages)&&raw.menu.uploadedMenuImages.length)?raw.menu.uploadedMenuImages:(raw&&raw.menu&&raw.menu.uploadedMenuImage?[raw.menu.uploadedMenuImage]:[]);
-  if(raw && raw.menu && String(raw.menu.menuMode||'EDITOR').toUpperCase()==='UPLOAD' && publicUploadImages.length){
-    var uploadHtml='<div style="min-height:100vh;background:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column;align-items:center">';
-    uploadHtml+='<div style="width:100%;max-width:960px;padding:18px 16px 8px;text-align:center">';
-    uploadHtml+='<div style="font-size:1.05rem;font-weight:800;color:#111827">'+String(raw.business&&raw.business.name||'Menu')+'</div>';
-    if(raw.business&&raw.business.tagline) uploadHtml+='<div style="font-size:.78rem;color:#64748b;margin-top:4px">'+String(raw.business.tagline)+'</div>';
-    uploadHtml+='</div>';
-    uploadHtml+='<div style="width:100%;max-width:960px;padding:8px 16px 24px;display:flex;flex-direction:column;align-items:center;gap:16px">';
-    publicUploadImages.forEach(function(url,i){
-      uploadHtml+='<img src="'+url+'" alt="'+String(raw.business&&raw.business.name||'Menu')+' page '+(i+1)+'" style="display:block;max-width:100%;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08)">';
-    });
-    uploadHtml+='</div>';
-    uploadHtml+='<div style="padding:18px 16px 28px;color:#94a3b8;font-size:.78rem">Powered by <strong style="color:#166534">ZenVentora</strong></div>';
-    uploadHtml+='</div>';
-    document.getElementById('s-menu-preview').style.display=isQR?'none':'';
-    document.getElementById('s-menu-fullpage').style.display=isQR?'block':'none';
-    if(isQR) document.getElementById('pub-menu-full').innerHTML=uploadHtml;
-    else document.getElementById('pub-menu-frame').innerHTML=uploadHtml;
-    return;
-  }
-
   var d;
   if(raw){
     // Map API response shape to legacy d shape
@@ -1901,13 +1764,10 @@ function renderPubMenu(){
         return {name:cat.name,items:(cat.products||[]).map(function(p){
           return {name:p.name,price:parseFloat(p.price),desc:p.description||'',
             veg:p.isVeg===true?'veg':p.isVeg===false?'nonveg':'',
-            tag:p.isBestseller?'bestseller':p.isSpecial?'special':'',highlightLabel:p.highlightLabel||'',id:p.id,img:p.imageUrl||'',avail:true};
+            tag:p.isBestseller?'bestseller':p.isSpecial?'special':'',avail:true};
         })};
       })},
-      tmpl:tmplIdx,
-      todaysSpecialEnabled:!!(raw.menu&&raw.menu.todaysSpecialEnabled),
-      todaysSpecialTitle:raw.menu&&raw.menu.todaysSpecialTitle||"Today's Special",
-      todaysSpecialProductIds:raw.menu&&raw.menu.todaysSpecialProductIds||[]
+      tmpl:tmplIdx
     };
   } else {
     d=S.data;
@@ -1923,54 +1783,12 @@ function renderPubMenu(){
     document.getElementById('s-menu-preview').style.display='none';
     document.getElementById('s-menu-fullpage').style.display='block';
     document.getElementById('pub-menu-full').innerHTML=buildFullPageMenu(d,t);
-     initPublicCategoryNav();
   } else {
     document.getElementById('s-menu-preview').style.display='';
     document.getElementById('s-menu-fullpage').style.display='none';
-    document.getElementById('pub-menu-frame').innerHTML=buildMenuHTML(d.biz||{},d.menu.cats||[],t,d);
+    document.getElementById('pub-menu-frame').innerHTML=buildMenuHTML(d.biz||{},d.menu.cats||[],t);
   }
 }
-function setPublicCategoryActive(index){
-  var nav=document.getElementById('pub-cat-nav');
-  if(!nav) return;
-  var links=nav.querySelectorAll('.pub-cat-tab');
-  links.forEach(function(link,i){
-    var active=i===index;
-    var accent=nav.getAttribute('data-accent')||'#0ea5a4';
-    var muted=nav.getAttribute('data-muted')||'#64748b';
-    link.style.color=active?accent:muted;
-    link.style.borderBottomColor=active?accent:'transparent';
-    link.setAttribute('aria-current',active?'true':'false');
-  });
-}
-function initPublicCategoryNav(){
-  var nav=document.getElementById('pub-cat-nav');
-  if(!nav) return;
-  var sections=Array.prototype.slice.call(document.querySelectorAll('#pub-menu-full [data-pub-cat-section]'));
-  var links=nav.querySelectorAll('.pub-cat-tab');
-  if(!sections.length||!links.length) return;
-  var updateActive=function(){
-    var navBottom=nav.getBoundingClientRect().bottom, active=0;
-    sections.forEach(function(section,i){if(section.getBoundingClientRect().top<=navBottom+18) active=i;});
-    setPublicCategoryActive(active);
-  };
-  if(nav._pubScrollHandler) window.removeEventListener('scroll',nav._pubScrollHandler);
-  nav._pubScrollHandler=function(){window.requestAnimationFrame(updateActive);};
-  window.addEventListener('scroll',nav._pubScrollHandler,{passive:true});
-  links.forEach(function(link,i){
-    link.onclick=function(){
-      setPublicCategoryActive(i);
-      var target=document.getElementById(link.getAttribute('data-target'));
-      if(target){
-        var offset=nav.getBoundingClientRect().height+8;
-        var top=window.scrollY+target.getBoundingClientRect().top-offset;
-        window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
-      }
-    };
-  });
-  updateActive();
-}
-
 function buildFullPageMenu(d,t){
   var biz=d.biz||{}, cats=d.menu&&d.menu.cats||[];
   t=t||TEMPLATES[0];
@@ -2047,47 +1865,23 @@ function buildFullPageMenu(d,t){
   }
   h+='</div></header>';
 
-  // The special section is a view over existing product records, not a duplicate category.
-  var specialIds=(d.menu&&d.menu.todaysSpecialProductIds)||[];
-  var specialItems=[];
-  if(d.menu&&d.menu.todaysSpecialEnabled){
-    cats.forEach(function(cat){(cat.items||[]).forEach(function(item){
-      if(item.id&&specialIds.includes(item.id)&&item.avail!==false&&!specialItems.some(function(x){return x.id===item.id;})) specialItems.push(item);
-    });});
-  }
   // Template-driven category navigation.
   var visCats=cats.filter(function(cat){return (cat.items||[]).some(function(i){return i.avail!==false;});});
   if(visCats.length>1){
-    h+='<nav id="pub-cat-nav" data-accent="'+esc(accent)+'" data-muted="'+esc(muted)+'" style="position:sticky;top:0;z-index:50;background:'+(isDark?'rgba(15,23,42,.94)':'rgba(255,255,255,.96)')+';backdrop-filter:blur(12px);border-bottom:1px solid '+cardBorder+';display:flex;overflow-x:auto;scrollbar-width:none">';
+    h+='<nav style="position:sticky;top:0;z-index:50;background:'+(isDark?'rgba(15,23,42,.94)':'rgba(255,255,255,.96)')+';backdrop-filter:blur(12px);border-bottom:1px solid '+cardBorder+';display:flex;overflow-x:auto;scrollbar-width:none">';
     visCats.forEach(function(cat,ci){
-      h+='<a class="pub-cat-tab" data-target="fcat'+ci+'" href="#fcat'+ci+'" aria-current="'+(ci===0?'true':'false')+'" style="flex-shrink:0;padding:14px 18px;font-size:.82rem;font-weight:800;color:'+(ci===0?accent:muted)+';text-decoration:none;white-space:nowrap;border-bottom:2px solid '+(ci===0?accent:'transparent')+'">'+esc(cat.name)+'</a>';
+      h+='<a href="#fcat'+ci+'" style="flex-shrink:0;padding:14px 18px;font-size:.82rem;font-weight:800;color:'+(ci===0?accent:muted)+';text-decoration:none;white-space:nowrap;border-bottom:2px solid '+(ci===0?accent:'transparent')+'">'+esc(cat.name)+'</a>';
     });
     h+='</nav>';
   }
 
   h+='<main style="max-width:'+maxWidth+'px;margin:0 auto;padding:20px 18px 48px">';
   var any=false;
-  if(specialItems.length){
-    any=true;
-    h+='<section style="padding-top:10px;margin-bottom:28px">';
-    h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0 10px;border-bottom:2px solid '+(isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)')+'"><span style="font-size:.85rem;font-weight:900;color:'+accent+'">'+esc((d.menu&&d.menu.todaysSpecialTitle)||"Today's Special")+'</span><span style="height:1px;flex:1;background:'+(isDark?'rgba(255,255,255,.08)':'#e5e7eb')+'"></span></div>';
-    specialItems.forEach(function(item){
-      var label=String(item.highlightLabel||'').trim();
-      var badge=label?'<span style="font-size:.62rem;background:#ede9fe;color:#5b21b6;font-weight:800;padding:3px 7px;border-radius:6px;margin-left:7px;white-space:nowrap">'+esc(label)+'</span>':'';
-      h+='<article style="display:flex;align-items:center;gap:14px;padding:14px;margin-top:8px;background:'+cardBg+';border:1px solid '+cardBorder+';border-radius:14px;box-shadow:'+(isDark?'none':'0 2px 10px rgba(0,0,0,.035)')+'">';
-      h+='<div style="flex:1;min-width:0"><div style="font-size:.98rem;font-weight:750;color:'+textColor+';line-height:1.35">'+esc(item.name)+badge+'</div>';
-      if(item.desc)h+='<div style="font-size:.76rem;color:'+muted+';margin-top:4px;line-height:1.5">'+esc(item.desc)+'</div>';
-      h+='</div>';
-      if(item.img)h+='<img src="'+esc(item.img)+'" alt="'+esc(item.name)+'" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:12px;flex-shrink:0;border:1px solid '+cardBorder+'">';
-      h+='<div style="font-size:1.05rem;font-weight:900;color:'+price+';white-space:nowrap;flex-shrink:0">₹'+esc(item.price)+'</div></article>';
-    });
-    h+='</section>';
-  }
   visCats.forEach(function(cat,ci){
     var avItems=(cat.items||[]).filter(function(i){return i.avail!==false;});
     if(!avItems.length) return;
     any=true;
-    h+='<section id="fcat'+ci+'" data-pub-cat-section="'+ci+'" style="padding-top:10px;margin-bottom:28px">';
+    h+='<section id="fcat'+ci+'" style="padding-top:10px;margin-bottom:28px">';
     h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0 10px;border-bottom:2px solid '+(isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)')+'">';
     h+='<span style="font-size:.76rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:'+accent+'">'+esc(cat.name)+'</span>';
     h+='<span style="height:1px;flex:1;background:'+(isDark?'rgba(255,255,255,.08)':'#e5e7eb')+'"></span>';
@@ -2099,8 +1893,7 @@ function buildFullPageMenu(d,t){
         nonveg?'<span style="width:14px;height:14px;border:1.5px solid #dc2626;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#dc2626"></span></span>':'';
 
       var tagBadge='';
-      if(item.highlightLabel) tagBadge='<span style="font-size:.62rem;background:#ede9fe;color:#5b21b6;font-weight:800;padding:2px 6px;border-radius:5px;margin-left:6px">'+esc(item.highlightLabel)+'</span>';
-      else if(item.tag==='bestseller') tagBadge='<span style="font-size:.62rem;background:#fef3c7;color:#92400e;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">⭐ Bestseller</span>';
+      if(item.tag==='bestseller') tagBadge='<span style="font-size:.62rem;background:#fef3c7;color:#92400e;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">⭐ Bestseller</span>';
       else if(item.tag==='special') tagBadge='<span style="font-size:.62rem;background:#fee2e2;color:#b91c1c;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">🔥 Special</span>';
       else if(item.tag==='new') tagBadge='<span style="font-size:.62rem;background:#dcfce7;color:#166534;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px">✨ New</span>';
 
@@ -2132,23 +1925,16 @@ function buildFullPageMenu(d,t){
 // LOGOUT
 // ─────────────────────────────────────────
 async function doLogout(){
-  if(!confirm('Sign out of your ZenVentora account? This will sign you out of connected products.')) return;
-  try {
-    await api('POST','/auth/logout');
-  } catch(e) {
-    toast(e.message || 'Sign out failed. Please retry.','error');
-    return;
-  }
+  if(!confirm('Log out of E-Menu?')) return;
+  try{await api('POST','/auth/logout');}catch(e){}
   resetState();
-  window.location.assign(commonAccountUrl('signin', true) + '&signout=1');
+  toast('Logged out','info'); show('s-login');
 }
 
 // ─────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init, {once:true});
-else init();
+window.addEventListener('load', init);
 </script>
-
 </body>
 </html>
