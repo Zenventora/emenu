@@ -502,6 +502,16 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 <!-- ═══════════════════════════════════════
      LOGIN
 ════════════════════════════════════════ -->
+<div id="s-boot" class="screen">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#f8fafc">
+    <div style="width:min(520px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:36px;text-align:center;box-shadow:0 10px 35px rgba(15,23,42,.08)">
+      <div id="boot-spinner" style="font-size:2rem;margin-bottom:14px">🍽️</div>
+      <h2 style="margin:0 0 10px">E-Menu</h2>
+      <p id="boot-message" style="margin:0;color:#64748b">Checking your ZenVentora account…</p>
+      <button id="boot-retry" class="btn btn-primary" style="display:none;margin:20px auto 0">Try again</button>
+    </div>
+  </div>
+</div>
 <div id="s-login" class="screen active">
   <div class="auth-wrap">
     <div class="auth-left">
@@ -1479,7 +1489,9 @@ async function api(method, path, body, _retry) {
     if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
     show('s-login');
-    throw new Error('Session expired');
+    var sessionError = new Error('Session expired');
+    sessionError.status = 401;
+    throw sessionError;
   }
   var json; try { json = await res.json(); } catch(e) { json = {}; }
   var err = new Error(json.message || 'Request failed ('+res.status+')');
