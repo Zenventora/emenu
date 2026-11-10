@@ -1245,7 +1245,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 var GOOGLE_CLIENT_ID = '147155455700-8tb2ova0g6i9cfrjlsvgjcqheqr2vbse.apps.googleusercontent.com';
 
 /* COMMON ZENVENTORA IDENTITY */
-var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in/';
+var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in';
 var EMENU_ORIGIN = window.location.origin;
 
 function commonAccountUrl(view, manage) {
@@ -1666,6 +1666,7 @@ var TEMPLATES = [
 // ROUTING
 // ─────────────────────────────────────────
 function show(id){
+  if(id==='s-signup'){ showEmenuSignup(); return; }
   document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
   var el=document.getElementById(id);
   if(el) el.classList.add('active');
@@ -1773,6 +1774,8 @@ function checkStrength(pw){
 // LOGIN
 // ─────────────────────────────────────────
 async function doLogin(){
+  openCommonAccount('signin');
+  return;
   var email=document.getElementById('li-email').value.trim().toLowerCase();
   var pass=document.getElementById('li-pass').value;
   if(!email||!pass){toast('Please fill in all fields','error');return;}
