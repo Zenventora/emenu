@@ -571,6 +571,50 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 </div>
 
 <!-- ═══════════════════════════════════════
+     SIGN UP — COMMON ZENVENTORA IDENTITY
+════════════════════════════════════════ -->
+<div id="s-signup" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
+        <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
+      </div>
+      <h2>Start with one ZenVentora ID.</h2>
+      <p>Create your account here. Your identity is created in ZenVentora Accounts, then you return to E-Menu to complete your setup.</p>
+      <div class="auth-features">
+        <div class="af-item"><div class="af-icon">🔐</div>One secure account across ZenVentora</div>
+        <div class="af-item"><div class="af-icon">📱</div>Continue directly into E-Menu setup</div>
+        <div class="af-item"><div class="af-icon">⚡</div>Google or email signup</div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-box" id="emenu-signup-form">
+        <h1>Create your E-Menu account</h1>
+        <p class="auth-sub">Your account is created in ZenVentora Accounts. E-Menu will be connected automatically after verification.</p>
+        <button class="g-btn" onclick="openCommonGoogleSignup()">Continue with Google</button>
+        <div class="g-divider">or sign up with email</div>
+        <div class="ig"><label>Full name</label><input id="su-name" autocomplete="name" placeholder="Your full name"/></div>
+        <div class="ig"><label>Phone number</label><input id="su-phone" type="tel" autocomplete="tel" placeholder="+91"/></div>
+        <div class="ig"><label>Email address</label><input id="su-email" type="email" autocomplete="email" placeholder="you@example.com"/></div>
+        <div class="ig"><label>Password</label><div class="pw-wrap"><input id="su-password" type="password" autocomplete="new-password" placeholder="At least 8 characters"/><button class="pw-eye" type="button" onclick="togglePwd('su-password',this)">👁️</button></div></div>
+        <div class="ig"><label>Confirm password</label><div class="pw-wrap"><input id="su-confirm" type="password" autocomplete="new-password" placeholder="Repeat your password"/><button class="pw-eye" type="button" onclick="togglePwd('su-confirm',this)">👁️</button></div></div>
+        <button class="btn btn-primary btn-full btn-lg" id="su-submit" onclick="submitEmenuSignup()">Create account →</button>
+        <p style="text-align:center;margin-top:18px;font-size:.82rem">Already have an account? <a class="alink" onclick="openCommonAccount('signin')">Sign in</a></p>
+      </div>
+      <div class="auth-form-box" id="emenu-signup-verify" style="display:none">
+        <h1>Verify your email</h1>
+        <p class="auth-sub">We created your ZenVentora identity. Enter the verification code sent to your email to activate E-Menu.</p>
+        <div class="ig"><label>Email address</label><input id="su-verify-email" type="email" readonly/></div>
+        <div class="otp-row" id="su-otp-inputs"></div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="verifyEmenuSignup()">Verify and continue →</button>
+        <p style="text-align:center;margin-top:18px;font-size:.82rem"><a class="alink" onclick="openCommonAccount('signin')">Already verified? Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
      FORGOT PASSWORD
 ════════════════════════════════════════ -->
 <div id="s-forgot" class="screen">
@@ -1290,6 +1334,81 @@ function commonAccountUrl(view, manage) {
 function openCommonAccount(view, manage) {
   window.location.assign(commonAccountUrl(view, !!manage));
 }
+function openCommonGoogleSignup() {
+  window.location.assign(commonAccountUrl('signup') + '&oauth=google');
+}
+function showEmenuSignup() {
+  show('s-signup');
+  var email = document.getElementById('su-email');
+  if (email) email.focus();
+}
+function renderSignupOtpInputs() {
+  var host = document.getElementById('su-otp-inputs');
+  if (!host || host.children.length) return;
+  for (var i=0;i<8;i++) {
+    var input=document.createElement('input');
+    input.type='text'; input.inputMode='numeric'; input.maxLength=1;
+    input.setAttribute('aria-label','Verification digit '+(i+1));
+    input.addEventListener('input',function(){
+      this.value=this.value.replace(/\\D/g,'').slice(0,1);
+      if(this.value && this.nextElementSibling) this.nextElementSibling.focus();
+    });
+    input.addEventListener('keydown',function(e){
+      if(e.key==='Backspace'&&!this.value&&this.previousElementSibling) this.previousElementSibling.focus();
+    });
+    host.appendChild(input);
+  }
+}
+async function submitEmenuSignup() {
+  var name=(document.getElementById('su-name')||{}).value||'';
+  var phone=(document.getElementById('su-phone')||{}).value||'';
+  var email=(document.getElementById('su-email')||{}).value||'';
+  var password=(document.getElementById('su-password')||{}).value||'';
+  var confirm=(document.getElementById('su-confirm')||{}).value||'';
+  if(!name.trim()||!phone.trim()||!email.trim()||!password) return toast('Please complete all required fields.','error');
+  if(password.length<8) return toast('Password must be at least 8 characters.','error');
+  if(password!==confirm) return toast('The passwords do not match.','error');
+  var btn=document.getElementById('su-submit'); if(btn){btn.disabled=true;btn.textContent='Creating account…';}
+  try {
+    var result=await api('POST','/auth/signup',{name:name.trim(),phone:phone.trim(),email:email.trim().toLowerCase(),password:password},false,true);
+    if(result.requiresVerification){
+      document.getElementById('emenu-signup-form').style.display='none';
+      document.getElementById('emenu-signup-verify').style.display='block';
+      document.getElementById('su-verify-email').value=email.trim().toLowerCase();
+      renderSignupOtpInputs();
+      toast('Account created. Check your email for the verification code.','success');
+      return;
+    }
+    S.user=result.user;
+    await bootstrapAuthenticatedProduct();
+  } catch(e) {
+    toast(e.message||'Could not create your account.','error');
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='Create account →';}
+  }
+}
+async function verifyEmenuSignup() {
+  var email=(document.getElementById('su-verify-email')||{}).value||'';
+  var inputs=[].slice.call(document.querySelectorAll('#su-otp-inputs input'));
+  var token=inputs.map(function(x){return x.value;}).join('');
+  if(!email||token.length<6) return toast('Enter the verification code from your email.','error');
+  try {
+    var result=await api('POST','/auth/verify-signup',{email:email,token:token},false,true);
+    S.user=result.user;
+    await bootstrapAuthenticatedProduct();
+  } catch(e) {
+    toast(e.message||'Email verification failed.','error');
+  }
+}
+async function bootstrapAuthenticatedProduct() {
+  var response=await api('GET','/business/me',null,false,false);
+  var business=response.business||null;
+  var menu=business && Array.isArray(business.menus) ? business.menus[0] : null;
+  syncFromAPI(business,menu);
+  S.initialized=true;
+  if(business) show('s-dashboard');
+  else show('s-onboard');
+}
 
 function safeAvatarUrl(value) {
   if (typeof value !== 'string') return '';
@@ -1670,16 +1789,33 @@ async function init(){
   }
 
   S._qrMenuData=null;
-  // Product signup is owned by Common ZenVentora Accounts.
-  // Keep /signup.html as a compatibility entry point, but never collect product-local credentials.
+  // Product signup is intentionally branded and hosted by E-Menu, but the identity
+  // is still created in the canonical ZenVentora Accounts service.
   var requestedSignup = window.location.pathname === '/signup.html' || new URLSearchParams(window.location.search).get('signup') === 'true';
   if (requestedSignup) {
-    openCommonAccount('signup');
+    showEmenuSignup();
+    return;
+  }
+
+  // Every authenticated E-Menu session is resolved through the Common Accounts identity.
+  // An unauthenticated direct visit must go straight to the canonical Accounts login.
+  try {
+    var me=await api('GET','/auth/me',null,false,false);
+    S.user=me.user;
+    await bootstrapAuthenticatedProduct();
+    return;
+  } catch(authError) {
+    if(authError && authError.status===401) {
+      openCommonAccount('signin');
+      return;
+    }
+    console.error('EMenu authentication bootstrap failed:',authError);
+    showBootError('Could not verify your ZenVentora account. Please retry.');
     return;
   }
 
   S._qrMenuData=null;
-  if(S.data.slug){
+  if(S.data && S.data.slug){
     try {
       // Fetch from public API — today-disabled items filtered server-side
       var r=await fetch('/api/public/menu/'+S.data.slug,{cache:'no-store'});
