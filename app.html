@@ -1249,7 +1249,8 @@ var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in';
 var EMENU_ORIGIN = window.location.origin;
 
 function commonAccountUrl(view, manage) {
-  var url = new URL(COMMON_ACCOUNTS_URL);
+  var route = view === 'signup' ? '/signup' : view === 'forgot' ? '/forgot' : '/login';
+  var url = new URL(route, COMMON_ACCOUNTS_URL);
   url.searchParams.set('view', view || 'signin');
   url.searchParams.set('product', 'emenu');
   if (view === 'signup') url.searchParams.set('productFlow', 'signup');
