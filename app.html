@@ -490,8 +490,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
   .mob-nav-btn{min-width:44px;padding:6px 8px}
 }
 </style>
-<link rel="stylesheet" href="https://zenventora.in/zenventora-account.css">
-<script src="https://zenventora.in/zenventora-account-client.js" defer></script>
 </head>
 <body>
 
@@ -1047,7 +1045,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
               <div class="ig"><label>Full Name</label><input type="text" id="st-name"/></div>
               <div class="ig"><label>Email</label><input type="email" id="st-email"/></div>
               <div class="ig"><label>Phone</label><input type="tel" id="st-phone"/></div>
-              <button class="btn btn-primary btn-sm" onclick="saveAccount()">Manage ZenVentora Account ↗</button>
+              <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
             </div>
             <div class="card card-p">
               <h3 style="font-size:.95rem;font-weight:800;color:var(--blue);margin-bottom:18px">Business Details</h3>
@@ -1247,8 +1245,7 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 var GOOGLE_CLIENT_ID = ''; // Google authentication is handled by ZenVentora Accounts.
 
 /* COMMON ZENVENTORA IDENTITY */
-// Temporary fallback until the canonical Accounts custom domain resolves.
-var COMMON_ACCOUNTS_URL = 'https://zenventora-accounts-bels.onrender.com';
+var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in';
 var EMENU_ORIGIN = window.location.origin;
 
 function commonAccountUrl(view, manage) {
@@ -1272,11 +1269,12 @@ function openCommonGoogleSignup() {
   window.location.assign(commonAccountUrl('signup') + '&oauth=google');
 }
 function showEmenuSignup() {
-  // All EMenu account creation is handled by the canonical ZenVentora Accounts UI.
-  // After signup/verification, Accounts hands the session back to EMenu, where
-  // /api/auth/common/session creates/links the EMenu identity and the existing
-  // onboarding flow continues without touching product data prematurely.
-  openCommonAccount('signup');
+  // EMenu signup is a product-branded entry on the ZenVentora main site.
+  // Account creation is still handled by the Common Accounts/EMenu auth API.
+  var url = new URL('https://zenventora.in/emenu/signup.html');
+  url.searchParams.set('product', 'emenu');
+  url.searchParams.set('returnTo', EMENU_ORIGIN);
+  window.location.assign(url.toString());
 }
 function renderSignupOtpInputs() {
   var host = document.getElementById('su-otp-inputs');
@@ -3033,10 +3031,14 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 // ─────────────────────────────────────────
 // SETTINGS
 // ─────────────────────────────────────────
-function saveAccount(){
-  // Personal identity is owned by ZenVentora Accounts.
-  // Product settings must never become a second profile source of truth.
-  window.location.assign(commonAccountUrl('dashboard', true));
+async function saveAccount(){
+  var name=document.getElementById('st-name').value.trim()||S.user.name;
+  var phone=document.getElementById('st-phone').value.trim();
+  try {
+    await api('PATCH','/auth/me',{name,phone});
+    S.user.name=name; S.user.phone=phone;
+    refreshDash(); toast('Account saved ✓');
+  } catch(e){ toast(e.message||'Failed to save','error'); }
 }
 async function saveBiz(){
   if(!S.biz) return;
