@@ -26,11 +26,6 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<ExternalRedirect to="https://accounts.zenventora.in/login?view=signin&product=emenu&returnTo=https%3A%2F%2Femenu.zenventora.in%2F" />} />
-      <Route path="/signup" element={<ExternalRedirect to="https://zenventora.in/emenu/signup.html" />} />
-      <Route path="/signup.html" element={<ExternalRedirect to="https://zenventora.in/emenu/signup.html" />} />
-      <Route path="/forgot-password" element={<ExternalRedirect to="https://accounts.zenventora.in/forgot?view=forgot&product=emenu&returnTo=https%3A%2F%2Femenu.zenventora.in%2F" />} />
-      <Route path="/reset-password" element={<ExternalRedirect to="https://accounts.zenventora.in/forgot?view=forgot&product=emenu&returnTo=https%3A%2F%2Femenu.zenventora.in%2F" />} />
       <Route path="/menu/:slug" element={<div>Menu View — Coming Soon</div>} />
       <Route path="/onboarding/template" element={<ProtectedRoute><TemplatePickerPage /></ProtectedRoute>} />
       <Route path="/dashboard/*" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
