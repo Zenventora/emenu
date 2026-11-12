@@ -147,9 +147,12 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
       setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken, refreshed.expires_in)
     }
     const productFlow = String(req.body?.productFlow || '')
+    const provisionOnly = req.body?.provisionOnly === true
     const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' })
-    setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken)
-    res.json({ message: 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
+    if (!provisionOnly) {
+      setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken)
+    }
+    res.json({ message: provisionOnly ? 'ZenVentora account provisioned for EMenu.' : 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
   } catch (err) {
     console.error('Common account handoff failed:', err)
     res.status(401).json({ message: err instanceof Error ? err.message : 'Could not connect your ZenVentora account.' })
