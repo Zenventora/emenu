@@ -372,11 +372,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
    MOBILE  (≤ 768px)
 ══════════════════════════════════════ */
 @media(max-width:768px){
-  /* Auth */
-  .auth-wrap{grid-template-columns:1fr}
-  .auth-left{display:none}
-  .auth-right{padding:28px 20px}
-
   /* Dashboard shell */
   .sidebar{display:none}
   .dash-shell{flex-direction:column}
@@ -447,7 +442,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
    SMALL PHONES  (≤ 480px)
 ══════════════════════════════════════ */
 @media(max-width:480px){
-  .auth-right{padding:20px 16px}
   .dash-topbar{padding:10px 12px}
   .dash-body{padding:10px}
   .stats-row{grid-template-columns:1fr 1fr;gap:8px}
@@ -1088,109 +1082,36 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 // Paste your Google Client ID here (see setup steps below)
 var GOOGLE_CLIENT_ID = ''; // Google authentication is handled by ZenVentora Accounts.
 
-/* COMMON ZENVENTORA IDENTITY */
+// COMMON ACCOUNT REDIRECTS
 var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in';
 var EMENU_ORIGIN = window.location.origin;
 
 function commonAccountUrl(view, manage) {
-  var route = view === 'signup' ? '/signup' : view === 'forgot' ? '/forgot' : '/login';
+  var route = view === 'forgot' ? '/forgot' : '/login';
   var url = new URL(route, COMMON_ACCOUNTS_URL);
   url.searchParams.set('view', view || 'signin');
   url.searchParams.set('product', 'emenu');
-  if (view === 'signup') url.searchParams.set('productFlow', 'signup');
-  if (manage) {
-    url.searchParams.set('postLogoutTo', EMENU_ORIGIN);
-  } else {
-    url.searchParams.set('returnTo', EMENU_ORIGIN);
-  }
+  if (manage) url.searchParams.set('postLogoutTo', EMENU_ORIGIN);
+  else url.searchParams.set('returnTo', EMENU_ORIGIN);
   return url.toString();
 }
 
 function openCommonAccount(view, manage) {
   window.location.assign(commonAccountUrl(view, !!manage));
 }
-function openCommonGoogleSignup() {
-  window.location.assign(commonAccountUrl('signup') + '&oauth=google');
-}
-function showEmenuSignup() {
-  // EMenu signup is a product-branded entry on the ZenVentora main site.
-  // Account creation is still handled by the Common Accounts/EMenu auth API.
-  var url = new URL('https://zenventora.in/emenu/signup.html');
-  url.searchParams.set('product', 'emenu');
-  url.searchParams.set('returnTo', EMENU_ORIGIN);
-  window.location.assign(url.toString());
-}
-function renderSignupOtpInputs() {
-  var host = document.getElementById('su-otp-inputs');
-  if (!host || host.children.length) return;
-  for (var i=0;i<8;i++) {
-    var input=document.createElement('input');
-    input.type='text'; input.inputMode='numeric'; input.maxLength=1;
-    input.setAttribute('aria-label','Verification digit '+(i+1));
-    input.addEventListener('input',function(){
-      this.value=this.value.replace(/\\D/g,'').slice(0,1);
-      if(this.value && this.nextElementSibling) this.nextElementSibling.focus();
-    });
-    input.addEventListener('keydown',function(e){
-      if(e.key==='Backspace'&&!this.value&&this.previousElementSibling) this.previousElementSibling.focus();
-    });
-    host.appendChild(input);
-  }
-}
-async function submitEmenuSignup() {
-  var name=(document.getElementById('su-name')||{}).value||'';
-  var phone=(document.getElementById('su-phone')||{}).value||'';
-  var email=(document.getElementById('su-email')||{}).value||'';
-  var password=(document.getElementById('su-password')||{}).value||'';
-  var confirm=(document.getElementById('su-confirm')||{}).value||'';
-  if(!name.trim()||!phone.trim()||!email.trim()||!password) return toast('Please complete all required fields.','error');
-  if(password.length<8) return toast('Password must be at least 8 characters.','error');
-  if(password!==confirm) return toast('The passwords do not match.','error');
-  var btn=document.getElementById('su-submit'); if(btn){btn.disabled=true;btn.textContent='Creating account…';}
-  try {
-    var result=await api('POST','/auth/signup',{name:name.trim(),phone:phone.trim(),email:email.trim().toLowerCase(),password:password},false,true);
-    if(result.requiresVerification){
-      document.getElementById('emenu-signup-form').style.display='none';
-      document.getElementById('emenu-signup-verify').style.display='block';
-      document.getElementById('su-verify-email').value=email.trim().toLowerCase();
-      renderSignupOtpInputs();
-      toast('Account created. Check your email for the verification code.','success');
-      return;
-    }
-    S.user=result.user;
-    await bootstrapAuthenticatedProduct();
-  } catch(e) {
-    toast(e.message||'Could not create your account.','error');
-  } finally {
-    if(btn){btn.disabled=false;btn.textContent='Create account →';}
-  }
-}
-async function verifyEmenuSignup() {
-  var email=(document.getElementById('su-verify-email')||{}).value||'';
-  var inputs=[].slice.call(document.querySelectorAll('#su-otp-inputs input'));
-  var token=inputs.map(function(x){return x.value;}).join('');
-  if(!email||token.length<6) return toast('Enter the verification code from your email.','error');
-  try {
-    var result=await api('POST','/auth/verify-signup',{email:email,token:token},false,true);
-    S.user=result.user;
-    await bootstrapAuthenticatedProduct();
-  } catch(e) {
-    toast(e.message||'Email verification failed.','error');
-  }
-}
+
 function showBootError(message, actionLabel, actionHandler) {
-  var spinner=document.getElementById('boot-spinner');
   var label=document.getElementById('boot-message');
   var retry=document.getElementById('boot-retry');
-  if(spinner) spinner.style.display='none';
-  if(label) label.textContent=message;
+  if(label) label.textContent=message || 'Could not load E-Menu.';
   if(retry) {
-    retry.textContent=actionLabel||'Try again';
-    retry.onclick=typeof actionHandler==='function'?actionHandler:function(){init();};
+    retry.textContent=actionLabel || 'Retry';
+    retry.onclick=typeof actionHandler==='function' ? actionHandler : function(){window.location.reload();};
     retry.style.display='inline-flex';
   }
   show('s-boot');
 }
+
 async function bootstrapAuthenticatedProduct() {
   var response=await api('GET','/business/me',null,false,false);
   var business=response.business||null;
@@ -1511,8 +1432,7 @@ var TEMPLATES = [
 // ROUTING
 // ─────────────────────────────────────────
 function show(id){
-  if(id==='s-login'){ openCommonAccount('signin'); return; }\n  if(id==='s-signup'){ showEmenuSignup(); return; }
-  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el=document.getElementById(id);
   if(el) el.classList.add('active');
   window.scrollTo(0,0);
@@ -1521,7 +1441,7 @@ function show(id){
   if(id==='s-menu') renderPubMenu();
 }
 
-async async function init(){
+async function init(){
   var pathParts=window.location.pathname.split('/');
   var mSlug=(pathParts[1]==='menu'&&pathParts[2])?pathParts[2]:new URLSearchParams(window.location.search).get('m');
 
