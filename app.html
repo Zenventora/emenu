@@ -1241,7 +1241,7 @@ var GOOGLE_CLIENT_ID = ''; // Google sign-in is handled by ZenVentora Accounts.
 // API HELPER — all calls go to the same-origin Express server
 // ─────────────────────────────────────────
 async function api(method, path, body, _retry) {
-  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+  var opts = { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, cache: 'no-store' };
   if (body) opts.body = JSON.stringify(body);
   var res = await fetch('/api' + path, opts);
   // Auth endpoints return 401 for wrong credentials — never for expired tokens.
