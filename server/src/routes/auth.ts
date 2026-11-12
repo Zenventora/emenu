@@ -148,7 +148,11 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
       if (!provisionOnly) setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken, refreshed.expires_in)
     }
     const productFlow = String(req.body?.productFlow || '')
-    const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' })
+    // A verified Common Accounts user who reaches EMenu through the Connected Products
+    // flow is allowed to activate the product on first access. Product signup still owns
+    // the explicit signup experience; this prevents a valid account from being bounced
+    // back to Accounts simply because its EMenu profile has not been provisioned yet.
+    const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' || productFlow === 'signin' })
     if (!provisionOnly) {
       setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken)
     }
