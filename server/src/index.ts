@@ -51,6 +51,15 @@ app.get('/signup.html', (_req, res) => {
   res.sendFile(path.join(process.env.NODE_ENV === 'production' ? path.join(__dirname, '../') : path.join(__dirname, '../../'), 'app.html'))
 })
 
+// Product dashboard deep-link: Accounts activates the EMenu session and then
+// redirects here. Express must serve the SPA shell for this client-side route.
+app.get('/dashboard', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+  res.sendFile(path.join(staticRoot, 'app.html'))
+})
+
 // ─── Static: serve app.html ──────────────────────────────────────────────────
 // Local dev  (ts-node): __dirname = server/src  → ../../ = Emenu/
 // Production (Docker):  __dirname = dist/       → ../   = /app  (app.html copied here)
