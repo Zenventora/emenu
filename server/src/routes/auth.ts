@@ -128,6 +128,7 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
   try {
     const accessToken = String(req.body?.accessToken || '')
     const refreshToken = String(req.body?.refreshToken || '')
+    const provisionOnly = req.body?.provisionOnly === true
     if (!accessToken || !refreshToken || refreshToken.length > 2048) {
       res.status(400).json({ message: 'A complete ZenVentora account session is required.' })
       return
@@ -144,10 +145,9 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
       sessionAccessToken = refreshed.access_token
       sessionRefreshToken = refreshed.refresh_token
       commonUser = await verifyCommonAccessToken(sessionAccessToken)
-      setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken, refreshed.expires_in)
+      if (!provisionOnly) setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken, refreshed.expires_in)
     }
     const productFlow = String(req.body?.productFlow || '')
-    const provisionOnly = req.body?.provisionOnly === true
     const emenuUser = await resolveEmenuUser(commonUser, { allowCreate: productFlow === 'signup' })
     if (!provisionOnly) {
       setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken)
