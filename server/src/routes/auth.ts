@@ -31,14 +31,14 @@ function setCommonAuthCookies(res: Response, accessToken: string, refreshToken: 
   res.cookie('emenu_common_access_token', accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'none',
     path: '/',
     maxAge: Math.max(60, expiresIn) * 1000,
   })
   res.cookie('emenu_common_refresh_token', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'none',
     path: '/',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   })
@@ -48,7 +48,7 @@ function clearCommonAuthCookies(res: Response) {
   const options = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
+    sameSite: 'none' as const,
     path: '/',
   }
   res.clearCookie('emenu_common_access_token', options)
