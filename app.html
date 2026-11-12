@@ -45,36 +45,6 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
 .ig textarea{resize:vertical;min-height:80px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
-/* AUTH LAYOUT */
-.auth-wrap{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
-.auth-left{background:var(--grad-h);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 40px;color:#fff;position:relative;overflow:hidden}
-.auth-left h2{font-size:2rem;font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:16px}
-.auth-left p{color:rgba(255,255,255,.68);line-height:1.7;font-size:.95rem;max-width:340px}
-.auth-features{margin-top:40px;display:flex;flex-direction:column;gap:14px}
-.af-item{display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.8);font-size:.88rem}
-.af-icon{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem}
-.auth-right{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 48px;background:#fff;overflow-y:auto}
-.auth-form-box{width:100%;max-width:420px}
-.g-divider{display:flex;align-items:center;gap:14px;margin:20px 0;color:#9ca3af;font-size:.8rem;font-weight:500}
-.g-divider::before,.g-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
-.g-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:12px 20px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;color:#374151;transition:all .2s;margin-bottom:4px}
-.g-btn:hover{border-color:#9ca3af;background:#fafafa;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.g-btn svg{flex-shrink:0}
-.auth-form-box h1{font-size:1.7rem;font-weight:900;color:var(--blue);margin-bottom:6px}
-.auth-sub{color:#6b7280;font-size:.9rem;margin-bottom:32px;line-height:1.6}
-.alink{color:var(--teal);font-weight:600;text-decoration:none;cursor:pointer}
-.alink:hover{text-decoration:underline}
-.pw-wrap{position:relative}
-.pw-wrap input{padding-right:48px}
-.pw-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.9rem;padding:4px}
-.ps-bars{margin-top:6px;display:flex;gap:4px}
-.ps-bar{flex:1;height:3px;border-radius:2px;background:#e5e7eb;transition:background .3s}
-.ps-bar.weak{background:#ef4444}.ps-bar.medium{background:#f59e0b}.ps-bar.strong{background:#22c55e}
-.otp-row{display:flex;gap:10px;justify-content:center;margin:24px 0}
-.otp-row input{width:48px;height:54px;text-align:center;font-size:1.3rem;font-weight:800;border-radius:12px;border:2px solid #e2e8f0;color:var(--blue);outline:none;font-family:'Inter',sans-serif}
-.otp-row input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,165,164,.12)}
-.otp-row input.filled{border-color:var(--teal);background:rgba(14,165,164,.05)}
-
 /* ONBOARDING */
 .ob-shell{min-height:100vh;display:flex;flex-direction:column;background:#f8fafc}
 .ob-header{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px}
@@ -499,140 +469,14 @@ body{font-family:'Inter',sans-serif;color:#111;background:#f8fafc;-webkit-font-s
      LANDING PAGE
 ════════════════════════════════════════ -->
 
-<!-- ═══════════════════════════════════════
-     LOGIN
-════════════════════════════════════════ -->
-<div id="s-boot" class="screen">
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#f8fafc">
-    <div style="width:min(520px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:36px;text-align:center;box-shadow:0 10px 35px rgba(15,23,42,.08)">
-      <div id="boot-spinner" style="font-size:2rem;margin-bottom:14px">🍽️</div>
-      <h2 style="margin:0 0 10px">E-Menu</h2>
-      <p id="boot-message" style="margin:0;color:#64748b">Checking your ZenVentora account…</p>
-      <button id="boot-retry" class="btn btn-primary" style="display:none;margin:20px auto 0">Try again</button>
-    </div>
-  </div>
-</div>
-<div id="s-login" class="screen active">
-  <div class="auth-wrap">
-    <div class="auth-left">
-      <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
-      <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
-        <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
-      </div>
-      <h2>Welcome back to E-Menu</h2>
-      <p>Manage your digital menu, update prices in real-time, and track customer engagement.</p>
-      <div class="auth-features">
-        <div class="af-item"><div class="af-icon">⚡</div>Real-time menu updates</div>
-        <div class="af-item"><div class="af-icon">📱</div>Permanent QR code</div>
-        <div class="af-item"><div class="af-icon">🎙️</div>Voice menu input</div>
-        <div class="af-item"><div class="af-icon">🆓</div>Free forever plan</div>
-      </div>
-    </div>
-    <div class="auth-right">
-      <div class="auth-form-box">
-        <h1>Sign in</h1>
-        <p class="auth-sub">No account? <a class="alink" onclick="show('s-signup')">Sign up free →</a></p>
-        <div class="ig"><label>Email address</label><input type="email" id="li-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-        <div class="ig">
-          <label>Password</label>
-          <div class="pw-wrap"><input type="password" id="li-pass" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/><button class="pw-eye" onclick="togglePwd('li-pass',this)">👁️</button></div>
-        </div>
-        <div style="text-align:right;margin-top:-8px;margin-bottom:20px"><a class="alink" style="font-size:.82rem" onclick="show('s-forgot')">Forgot password?</a></div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">Sign In →</button>
-        <div class="g-divider">or</div>
-        <div id="g-btn-login" style="display:flex;justify-content:center;min-height:44px"></div>
-        <p style="text-align:center;margin-top:16px;font-size:.82rem;color:#9ca3af">New here? <a class="alink" onclick="show('s-signup')">Create a free account</a></p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     SIGNUP
-════════════════════════════════════════ -->
-<div id="s-signup" class="screen">
-  <div class="auth-wrap">
-    <div class="auth-left">
-      <div style="position:absolute;width:280px;height:280px;top:-50px;right:-50px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
-      <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
-        <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
-      </div>
-      <h2>Create your digital menu today</h2>
-      <p>Join thousands of restaurants and cafes using E-Menu to go digital in under 5 minutes.</p>
-      <div class="auth-features">
-        <div class="af-item"><div class="af-icon">✅</div>Free forever plan available</div>
-        <div class="af-item"><div class="af-icon">⏱️</div>Live in under 5 minutes</div>
-        <div class="af-item"><div class="af-icon">🔄</div>Update menu without new QR</div>
-        <div class="af-item"><div class="af-icon">🎙️</div>Voice-powered menu entry</div>
-      </div>
-    </div>
-    <div class="auth-right">
-      <div class="auth-form-box">
-        <h1>Create account</h1>
-        <p class="auth-sub">Already have one? <a class="alink" onclick="show('s-login')">Sign in</a></p>
-        <div class="row2">
-          <div class="ig"><label>Full Name *</label><input type="text" id="su-name" placeholder="Mohan Kumar"/></div>
-          <div class="ig"><label>Phone *</label><input type="tel" id="su-phone" placeholder="+91 98765 43210"/></div>
-        </div>
-        <div class="ig"><label>Email address *</label><input type="email" id="su-email" placeholder="you@example.com"/></div>
-        <div class="ig">
-          <label>Password *</label>
-          <div class="pw-wrap"><input type="password" id="su-pass" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/><button class="pw-eye" onclick="togglePwd('su-pass',this)">👁️</button></div>
-          <div class="ps-bars"><div class="ps-bar" id="pb1"></div><div class="ps-bar" id="pb2"></div><div class="ps-bar" id="pb3"></div><div class="ps-bar" id="pb4"></div></div>
-        </div>
-        <div class="ig">
-          <label>Confirm Password *</label>
-          <div class="pw-wrap"><input type="password" id="su-pass2" placeholder="Repeat password"/><button class="pw-eye" onclick="togglePwd('su-pass2',this)">👁️</button></div>
-        </div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()" style="margin-top:6px">Create Free Account →</button>
-        <div class="g-divider">or</div>
-        <div id="g-btn-signup" style="display:flex;justify-content:center;min-height:44px"></div>
-        <p style="text-align:center;margin-top:12px;font-size:.76rem;color:#9ca3af;line-height:1.6">By signing up you agree to our Terms of Service and Privacy Policy.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     FORGOT PASSWORD
-════════════════════════════════════════ -->
-<div id="s-forgot" class="screen">
-  <div class="auth-wrap">
-    <div class="auth-left">
-      <div style="margin-bottom:40px;display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">🍽️</div>
-        <span style="font-weight:800;font-size:1.25rem">E-Menu</span>
-      </div>
-      <h2>Reset your password</h2>
-      <p>We'll send a 6-digit OTP to your registered email. Use it to set a new password securely.</p>
-    </div>
-    <div class="auth-right">
-      <div class="auth-form-box">
-        <div id="fp-s1">
-          <h1>Forgot password?</h1>
-          <p class="auth-sub">Enter your email and we'll send a one-time code.</p>
-          <div class="ig"><label>Email address</label><input type="email" id="fp-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')sendOTP()"/></div>
-          <button class="btn btn-primary btn-full btn-lg" onclick="sendOTP()">Send OTP →</button>
-          <p style="text-align:center;margin-top:20px;font-size:.83rem"><a class="alink" onclick="show('s-login')">← Back to login</a></p>
-        </div>
-        <div id="fp-s2" style="display:none">
-          <h1>Enter OTP</h1>
-          <p class="auth-sub">We sent a 6-digit code to <strong id="fp-email-show"></strong></p>
-          <div class="otp-row" id="otp-inputs"></div>
-          <button class="btn btn-primary btn-full btn-lg" onclick="verifyOTP()">Verify Code</button>
-          <p style="text-align:center;margin-top:14px;font-size:.82rem;color:#9ca3af">Didn't receive it? <a class="alink" onclick="sendOTP()">Resend OTP</a></p>
-          <p style="text-align:center;margin-top:10px;font-size:.82rem"><a class="alink" onclick="document.getElementById('fp-s2').style.display='none';document.getElementById('fp-s1').style.display='block'">← Wrong email? Go back</a></p>
-        </div>
-        <div id="fp-s3" style="display:none">
-          <h1>New password</h1>
-          <p class="auth-sub">Set a strong new password for your account.</p>
-          <div class="ig"><label>New Password</label><div class="pw-wrap"><input type="password" id="np1" placeholder="Min. 8 characters"/><button class="pw-eye" onclick="togglePwd('np1',this)">👁️</button></div></div>
-          <div class="ig"><label>Confirm Password</label><div class="pw-wrap"><input type="password" id="np2" placeholder="Repeat password"/><button class="pw-eye" onclick="togglePwd('np2',this)">👁️</button></div></div>
-          <button class="btn btn-primary btn-full btn-lg" onclick="resetPwd()">Reset Password</button>
-        </div>
-      </div>
+<!-- E-MENU PRODUCT APP: authentication UI is intentionally not rendered here. -->
+<div id="s-boot" class="screen active">
+  <div class="ob-shell" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
+    <div style="text-align:center;padding:32px">
+      <div class="sb-logo-icon" style="margin:0 auto 14px">🍽️</div>
+      <h2 style="color:var(--blue);margin:0 0 8px">E-Menu</h2>
+      <p id="boot-message" style="margin:0;color:#64748b">Loading your menu workspace…</p>
+      <button id="boot-retry" class="btn btn-primary" style="display:none;margin:20px auto 0">Retry</button>
     </div>
   </div>
 </div>
@@ -1492,7 +1336,7 @@ async function api(method, path, body, _retry) {
     // Refresh failed — only show toast if user was actually logged in this session
     if(S.initialized && S.user) toast('Session expired — please log in again', 'error');
     resetState();
-    show('s-login');
+    openCommonAccount('signin');
     var sessionError = new Error('Session expired');
     sessionError.status = 401;
     throw sessionError;
@@ -1677,56 +1521,49 @@ function show(id){
   if(id==='s-menu') renderPubMenu();
 }
 
-async function init(){
-  // Public QR menu routes are independent of account authentication.
+async async function init(){
   var pathParts=window.location.pathname.split('/');
   var mSlug=(pathParts[1]==='menu'&&pathParts[2])?pathParts[2]:new URLSearchParams(window.location.search).get('m');
+
   if(mSlug){
     try {
       var _ld=new Date(),_td=_ld.getFullYear()+'-'+String(_ld.getMonth()+1).padStart(2,'0')+'-'+String(_ld.getDate()).padStart(2,'0');
       var pubData=await api('GET','/public/menu/'+mSlug+'?localDate='+_td);
-      S._qrMenuData=pubData; show('s-menu'); return;
-    } catch(e){ showBootError('Unable to load this menu. Check your connection and try again.'); return; }
+      S._qrMenuData=pubData;
+      show('s-menu');
+      return;
+    } catch(e) {
+      showBootError('Unable to load this menu. Check your connection and try again.');
+      return;
+    }
   }
 
-  // Accounts returns a one-time session handoff after sign-in/sign-up/verification.
+  if(window.location.pathname==='/signup.html' || new URLSearchParams(window.location.search).get('signup')==='true'){
+    window.location.assign('https://zenventora.in/emenu/signup.html');
+    return;
+  }
+
+  // Authentication UI does not exist in the E-Menu product app.
+  // It consumes the authenticated product session or redirects to Accounts.
   try {
     var signedOutFromAccounts=await clearCommonAccountSignoutFlag();
     if(!signedOutFromAccounts) await finishCommonAccountHandoff();
-  } catch(handoffError){
-    console.error('ZenVentora account handoff failed:',handoffError);
-    var handoffMessage=handoffError&&handoffError.message?handoffError.message:'Could not connect your ZenVentora account. Please try again.';
-    if(String(handoffMessage).indexOf('No EMenu profile is linked')!==-1){
-      showBootError(handoffMessage,'Create EMenu Account',showEmenuSignup);
-    } else {
-      showBootError(handoffMessage);
-    }
-    return;
-  }
 
-  // /signup.html is the product-branded signup entry. Identity creation itself
-  // still happens in the canonical ZenVentora Accounts service.
-  var requestedSignup=window.location.pathname==='/signup.html'||new URLSearchParams(window.location.search).get('signup')==='true';
-  if(requestedSignup){showEmenuSignup();return;}
-
-  // Direct product visits must authenticate against the Common Accounts identity.
-  // Never collect a second product-local login credential.
-  try {
     var meRes=await api('GET','/auth/me',null,false,false);
     S.user=meRes.user;
     await bootstrapAuthenticatedProduct();
-    return;
-  } catch(e){
-    if(e&&e.status===401){openCommonAccount('signin');return;}
-    console.error('EMenu authentication bootstrap failed:',e);
-    showBootError('Could not verify your ZenVentora account. Please retry.');
-    return;
+  } catch(e) {
+    if(e&&e.status===401){
+      openCommonAccount('signin');
+      return;
+    }
+    console.error('E-Menu bootstrap failed:',e);
+    showBootError('Could not load your E-Menu workspace. Please retry.');
   } finally {
     S.initialized=true;
   }
 }
 
-// ─────────────────────────────────────────
 // TOAST
 // ─────────────────────────────────────────
 function toast(msg,type){
@@ -1743,146 +1580,28 @@ function toast(msg,type){
 // renderLanding — no-op, s-landing is static HTML now
 
 // ─────────────────────────────────────────
-// AUTH HELPERS
-// ─────────────────────────────────────────
-function handleLogoUpload(input){
-  var file=input.files[0]; if(!file) return;
-  if(file.size>1.2*1024*1024){toast('Image too large (max 1MB)','error');return;}
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var data=e.target.result;
-    document.getElementById('b-logo-data').value=data;
-    var img=document.getElementById('b-logo-preview');
-    img.src=data; img.style.display='block';
-    document.getElementById('b-logo-placeholder').style.display='none';
-  };
-  reader.readAsDataURL(file);
-}
-function togglePwd(id,btn){ var i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; btn.textContent=i.type==='password'?'👁️':'🙈'; }
-function checkStrength(pw){
-  var bars=['pb1','pb2','pb3','pb4'];
-  bars.forEach(b=>{var e=document.getElementById(b);if(e)e.className='ps-bar';});
-  if(!pw) return;
-  var s=0;
-  if(pw.length>=8)s++;if(pw.length>=12)s++;
-  if(/[A-Z]/.test(pw)&&/[0-9]/.test(pw))s++;
-  if(/[^A-Za-z0-9]/.test(pw))s++;
-  var c=s<=1?'weak':s<=2?'medium':'strong';
-  for(var i=0;i<s;i++){var e=document.getElementById(bars[i]);if(e)e.className='ps-bar '+c;}
+// COMMON ACCOUNT REDIRECTS
+var COMMON_ACCOUNTS_URL = 'https://accounts.zenventora.in';
+var EMENU_ORIGIN = window.location.origin;
+
+function commonAccountUrl(view, manage) {
+  var route = view === 'forgot' ? '/forgot' : '/login';
+  var url = new URL(route, COMMON_ACCOUNTS_URL);
+  url.searchParams.set('view', view || 'signin');
+  url.searchParams.set('product', 'emenu');
+  if (manage) url.searchParams.set('postLogoutTo', EMENU_ORIGIN);
+  else url.searchParams.set('returnTo', EMENU_ORIGIN);
+  return url.toString();
 }
 
-// ─────────────────────────────────────────
-// LOGIN
-// ─────────────────────────────────────────
-async function doLogin(){
-  openCommonAccount('signin');
-  return;
-  var email=document.getElementById('li-email').value.trim().toLowerCase();
-  var pass=document.getElementById('li-pass').value;
-  if(!email||!pass){toast('Please fill in all fields','error');return;}
-  var btn=document.querySelector('#s-login .btn-primary');
-  if(btn){btn.disabled=true;btn.textContent='Signing in…';}
-  try {
-    resetState();
-    var r=await api('POST','/auth/login',{email,password:pass});
-    S.user=r.user;
-    var bizRes=await api('GET','/business/me');
-    var biz=bizRes.business, menu=biz&&biz.menus&&biz.menus[0]?biz.menus[0]:null;
-    syncFromAPI(biz,menu);
-    toast('Welcome back, '+r.user.name.split(' ')[0]+'! 👋');
-    show(biz&&biz.name?'s-dashboard':'s-onboard');
-  } catch(e){toast(e.message||'Login failed','error');}
-  finally{if(btn){btn.disabled=false;btn.textContent='Sign In →';}}
+function openCommonAccount(view, manage) {
+  window.location.assign(commonAccountUrl(view, !!manage));
 }
 
-// ─────────────────────────────────────────
-// SIGNUP
-// ─────────────────────────────────────────
-async function doSignup(){
-  var name=document.getElementById('su-name').value.trim();
-  var phone=document.getElementById('su-phone').value.trim();
-  var email=document.getElementById('su-email').value.trim().toLowerCase();
-  var pass=document.getElementById('su-pass').value;
-  var pass2=document.getElementById('su-pass2').value;
-  if(!name||!phone||!email||!pass){toast('Please fill in all required fields','error');return;}
-  if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
-  if(pass!==pass2){toast('Passwords do not match','error');return;}
-  var btn=document.querySelector('#s-signup .btn-primary');
-  if(btn){btn.disabled=true;btn.textContent='Creating account…';}
-  try {
-    resetState();
-    var r=await api('POST','/auth/signup',{name,phone,email,password:pass});
-    S.user=r.user; syncFromAPI(null,null);
-    toast('Account created! Let\'s set up your menu 🎉');
-    show('s-onboard');
-  } catch(e){
-    if(e.status===409){
-      // Account already exists — nudge the user to login instead
-      toast('An account with this email already exists. Please sign in.','error');
-      setTimeout(function(){ show('s-login'); }, 1800);
-    } else {
-      toast(e.message||'Signup failed','error');
-    }
-  }
-  finally{if(btn){btn.disabled=false;btn.textContent='Create Account →';}}
+function showEmenuSignup() {
+  window.location.assign('https://zenventora.in/emenu/signup.html');
 }
 
-// ─────────────────────────────────────────
-// FORGOT PASSWORD
-// ─────────────────────────────────────────
-async function sendOTP(){
-  var email=document.getElementById('fp-email').value.trim().toLowerCase();
-  if(!email){toast('Please enter your email','error');return;}
-  S.fpEmail=email;
-  try {
-    await api('POST','/auth/forgot-password',{email});
-    document.getElementById('fp-email-show').textContent=email;
-    var cont=document.getElementById('otp-inputs'); cont.innerHTML='';
-    for(var i=0;i<6;i++){
-      var inp=document.createElement('input');
-      inp.type='tel'; inp.maxLength=1; inp.dataset.i=i;
-      inp.addEventListener('input',function(e){
-        if(e.target.value.length===1){
-          e.target.classList.add('filled');
-          var next=document.querySelector('#otp-inputs input[data-i="'+(parseInt(e.target.dataset.i)+1)+'"]');
-          if(next) next.focus();
-        }
-      });
-      inp.addEventListener('keydown',function(e){
-        if(e.key==='Backspace'&&!e.target.value){
-          var prev=document.querySelector('#otp-inputs input[data-i="'+(parseInt(e.target.dataset.i)-1)+'"]');
-          if(prev){prev.value='';prev.classList.remove('filled');prev.focus();}
-        }
-      });
-      cont.appendChild(inp);
-    }
-    document.getElementById('fp-s1').style.display='none';
-    document.getElementById('fp-s2').style.display='block';
-    toast('OTP sent to your email ✉️');
-  } catch(e){toast(e.message||'Failed to send OTP','error');}
-}
-function verifyOTP(){
-  var entered=Array.from(document.querySelectorAll('#otp-inputs input')).map(i=>i.value).join('');
-  if(entered.length<6){toast('Please enter the full 6-digit code','error');return;}
-  S.fpOTP=entered;
-  document.getElementById('fp-s2').style.display='none';
-  document.getElementById('fp-s3').style.display='block';
-  toast('OTP accepted — set your new password');
-}
-async function resetPwd(){
-  var p1=document.getElementById('np1').value, p2=document.getElementById('np2').value;
-  if(p1.length<8){toast('Password must be at least 8 characters','error');return;}
-  if(p1!==p2){toast('Passwords do not match','error');return;}
-  try {
-    await api('POST','/auth/reset-password',{email:S.fpEmail,otp:S.fpOTP,newPassword:p1});
-    toast('Password reset! Please log in.');
-    document.getElementById('fp-s3').style.display='none';
-    document.getElementById('fp-s1').style.display='block';
-    show('s-login');
-  } catch(e){toast(e.message||'Failed to reset password','error');}
-}
-
-// ─────────────────────────────────────────
 // ONBOARDING
 // ─────────────────────────────────────────
 function initOb(){
@@ -3376,7 +3095,7 @@ async function doLogout(){
   if(!confirm('Log out of E-Menu?')) return;
   try{await api('POST','/auth/logout');}catch(e){}
   resetState();
-  toast('Logged out','info'); show('s-login');
+  window.location.assign('https://accounts.zenventora.in/login?view=signin&product=emenu&returnTo='+encodeURIComponent(EMENU_ORIGIN));
 }
 
 // ─────────────────────────────────────────
