@@ -51,21 +51,29 @@ app.get('/signup.html', (_req, res) => {
   res.sendFile(path.join(process.env.NODE_ENV === 'production' ? path.join(__dirname, '../') : path.join(__dirname, '../../'), 'app.html'))
 })
 
-// Product dashboard deep-link: Accounts activates the EMenu session and then
-// redirects here. Express must serve the SPA shell for this client-side route.
-app.get('/dashboard', (_req, res) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-  res.setHeader('Pragma', 'no-cache')
-  res.setHeader('Expires', '0')
-  res.sendFile(path.join(staticRoot, 'app.html'))
-})
-
 // ─── Static: serve app.html ──────────────────────────────────────────────────
 // Local dev  (ts-node): __dirname = server/src  → ../../ = Emenu/
 // Production (Docker):  __dirname = dist/       → ../   = /app  (app.html copied here)
 const staticRoot = process.env.NODE_ENV === 'production'
   ? path.join(__dirname, '../')
   : path.join(__dirname, '../../')
+
+// Product dashboard deep-link: Accounts activates the EMenu session and then
+// redirects here. Express must serve the SPA shell for this client-side route.
+// Keep this before the static middleware so /dashboard is always handled by
+// the SPA shell rather than falling through to Express' 404 handler.
+app.get('/dashboard', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+  res.sendFile(path.join(staticRoot, 'app.html'))
+})
+app.get('/dashboard/*', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+  res.sendFile(path.join(staticRoot, 'app.html'))
+})
 
 app.use(express.static(staticRoot, {
   index: 'app.html',
@@ -92,6 +100,19 @@ app.get('/api/health', (_req, res) => {
 app.get('/menu/:slug', (_req, res) => {
   // app.html contains the public-menu renderer. Do not let a browser/CDN keep
   // yesterday's renderer after a template is changed.
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+  res.sendFile(path.join(staticRoot, 'app.html'))
+})
+
+// ─── SPA fallback ─────────────────────────────────────────────────────────────
+// BrowserRouter owns client-side routes such as /dashboard. Any non-API GET
+// that is not a real static asset must receive the SPA shell so a direct
+// navigation/redirect never becomes Express' "Cannot GET /..." response.
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next()
+  if (req.path.startsWith('/uploads/')) return next()
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
   res.setHeader('Pragma', 'no-cache')
   res.setHeader('Expires', '0')
