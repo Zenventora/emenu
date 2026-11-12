@@ -156,6 +156,17 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
     if (!provisionOnly) {
       setCommonAuthCookies(res, sessionAccessToken, sessionRefreshToken)
     }
+
+    // Accounts uses a top-level POST navigation for product activation.
+    // This makes the EMenu origin receive and store its own HttpOnly session
+    // cookie before the browser enters the dashboard, without putting tokens
+    // into the URL or relying on cross-origin fetch cookie behavior.
+    if (req.body?.handoffMode === 'navigation') {
+      res.setHeader('Cache-Control', 'no-store')
+      res.redirect(303, '/dashboard')
+      return
+    }
+
     res.json({ message: provisionOnly ? 'ZenVentora account provisioned for EMenu.' : 'ZenVentora account connected.', user: commonUserResponse(emenuUser, commonUser) })
   } catch (err) {
     console.error('Common account handoff failed:', err)
