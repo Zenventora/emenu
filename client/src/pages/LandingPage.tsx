@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
   QrCode, Mic, RefreshCw, Smartphone, Palette, LayoutTemplate,
-  Star, ChevronDown, ChevronRight, Check, ArrowRight,
+  ChevronDown, Check, ArrowRight,
   MapPin, Clock, Share2, Zap, Shield, Globe
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
@@ -39,7 +39,7 @@ function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
+              <a
                 href="https://zenventora.in/emenu/signup.html"
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-brand-teal text-white font-bold text-base hover:bg-brand-teal-dark transition-all shadow-lg hover:shadow-xl active:scale-95"
               >
@@ -563,7 +563,7 @@ function PricingSection() {
                 }`}
               >
                 {plan.cta}
-              </Link>
+              </a>
             </div>
           ))}
         </div>
