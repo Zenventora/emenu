@@ -1,19 +1,14 @@
 import { Link } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
 import {
   QrCode, Mic, RefreshCw, Smartphone, Palette, LayoutTemplate,
   Star, ChevronDown, ChevronRight, Check, ArrowRight,
   MapPin, Clock, Share2, Zap, Shield, Globe
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
-import { useAuthStore } from '@/store/authStore'
 import { useState } from 'react'
 
 // ─── Hero Section ───────────────────────────────────────────────────────────
 function HeroSection() {
-  const { isAuthenticated } = useAuthStore()
-  const navigate = useNavigate()
-
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-hero pt-16">
       {/* Background decorations */}
@@ -45,12 +40,12 @@ function HeroSection() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/signup')}
+                href="https://zenventora.in/emenu/signup.html"
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-brand-teal text-white font-bold text-base hover:bg-brand-teal-dark transition-all shadow-lg hover:shadow-xl active:scale-95"
               >
-                {isAuthenticated ? 'Go to Dashboard' : 'Create Your Menu Free'}
+                Create Your Menu Free
                 <ArrowRight size={18} />
-              </button>
+              </a>
               <button
                 onClick={() => document.querySelector('#templates')?.scrollIntoView({ behavior: 'smooth' })}
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-white/10 border border-white/30 text-white font-semibold text-base hover:bg-white/20 transition-all"
@@ -377,9 +372,9 @@ function TemplatesSection() {
 
         <div className="text-center mt-12">
           <p className="text-gray-500 text-sm mb-4">100+ templates available on Standard and Premium plans</p>
-          <Link to="/signup" className="btn-primary inline-flex">
+          <a href="https://zenventora.in/emenu/signup.html" className="btn-primary inline-flex">
             Start with Free Templates <ArrowRight size={16} />
-          </Link>
+          </a>
         </div>
       </div>
     </section>
@@ -559,8 +554,8 @@ function PricingSection() {
                 ))}
               </ul>
 
-              <Link
-                to="/signup"
+              <a
+                href="https://zenventora.in/emenu/signup.html"
                 className={`w-full py-3 rounded-xl font-bold text-center text-sm transition-all active:scale-95 ${
                   plan.highlight
                     ? 'bg-white text-brand-teal hover:bg-white/90'
@@ -644,7 +639,6 @@ function FAQSection() {
 
 // ─── Final CTA ───────────────────────────────────────────────────────────────
 function CTASection() {
-  const { isAuthenticated } = useAuthStore()
   return (
     <section className="py-24 bg-gradient-hero text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -656,12 +650,12 @@ function CTASection() {
           Join thousands of restaurants already using E-Menu. Get your digital menu live in under 5 minutes — free, forever.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to={isAuthenticated ? '/dashboard' : '/signup'}
+          <a
+            href="https://zenventora.in/emenu/signup.html"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-brand-teal text-white font-bold text-base hover:bg-brand-teal-dark shadow-lg hover:shadow-xl transition-all active:scale-95"
           >
-            {isAuthenticated ? 'Go to Dashboard' : 'Create Your Free Menu'} <ArrowRight size={18} />
-          </Link>
+            Create Your Free Menu <ArrowRight size={18} />
+          </a>
           <button
             onClick={() => document.querySelector('#how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/10 border border-white/30 text-white font-semibold text-base hover:bg-white/20 transition-all"
@@ -692,7 +686,6 @@ function Footer() {
             <button onClick={() => document.querySelector('#templates')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Templates</button>
             <button onClick={() => document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Pricing</button>
             <button onClick={() => document.querySelector('#faq')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">FAQ</button>
-            <Link to="/login" className="hover:text-white transition-colors">Login</Link>
           </div>
           <p className="text-sm text-white/30">© {new Date().getFullYear()} E-Menu. All rights reserved.</p>
         </div>
