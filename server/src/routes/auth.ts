@@ -163,7 +163,7 @@ router.post('/common/session', authLimiter, async (req: Request, res: Response):
     // into the URL or relying on cross-origin fetch cookie behavior.
     if (req.body?.handoffMode === 'navigation') {
       res.setHeader('Cache-Control', 'no-store')
-      res.redirect(303, '/dashboard')
+      res.redirect(303, '/')
       return
     }
 
