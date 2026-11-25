@@ -1,0 +1,10 @@
+# GitHub Pages configuration for the repository's static preview.
+# Exclude vendored Node packages: Jekyll must not parse their Markdown/README files.
+exclude:
+  - node_modules
+  - server/node_modules
+  - client/node_modules
+  - server/dist
+  - client/dist
+  - .git
+  - .github
